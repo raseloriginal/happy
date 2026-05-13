@@ -1,5 +1,5 @@
 <?php
-// index.php — Login Page
+// index.php — Login Page (Last sync: 2026-05-13 20:46)
 require_once __DIR__ . '/config/session.php';
 
 // If already logged in, redirect to dashboard
