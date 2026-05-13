@@ -74,7 +74,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/categories.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/categories.php', 'POST', {
     company_id: document.getElementById('add-company').value,
     name: document.getElementById('add-name').value
   });
@@ -89,7 +89,7 @@ function editCat(c) {
 }
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/categories.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/categories.php', 'PUT', {
     id: document.getElementById('edit-id').value,
     company_id: document.getElementById('edit-company').value,
     name: document.getElementById('edit-name').value
@@ -99,7 +99,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 });
 async function deleteCat(id) {
   if (!confirmDelete('Delete this category?')) return;
-  const data = await api('/happycrm2/api/categories.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/categories.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Deleted!'); location.reload(); }
 }
 </script>

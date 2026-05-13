@@ -87,7 +87,7 @@ async function calcExpected() {
   const did = document.getElementById('dispatch-sel').value;
   if (!did) return;
   // Calculate expected: sum of (qty_out * selling_price) for this dispatch
-  const data = await api('/happycrm2/api/cashflow.php?dispatch_id=' + did);
+  const data = await api('<?= rootPath() ?>/api/cashflow.php?dispatch_id=' + did);
   if (data.success) {
     document.getElementById('amount-expected').value = data.expected.toFixed(2);
     calcDiff();
@@ -104,7 +104,7 @@ document.getElementById('settle-form').addEventListener('submit', async function
   const exp = parseFloat(document.getElementById('amount-expected').value) || 0;
   const sub = parseFloat(document.getElementById('amount-submitted').value) || 0;
   const diff = sub - exp;
-  const data = await api('/happycrm2/api/cashflow.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/cashflow.php', 'POST', {
     dispatch_id: parseInt(did), amount_expected: exp,
     amount_submitted: sub, difference: diff,
     notes: document.getElementById('notes').value

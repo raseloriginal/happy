@@ -51,7 +51,7 @@ include __DIR__ . '/../includes/header.php';
       </div>
 
       <div class="flex gap-3 mb-6">
-        <a href="/happycrm2/dsr/expenses.php" class="btn btn-primary">+ Add Expense</a>
+        <a href="<?= rootPath() ?>/dsr/expenses.php" class="btn btn-primary">+ Add Expense</a>
       </div>
 
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

@@ -43,18 +43,20 @@ function getDashboardUrl(): string {
 }
 
 /**
+ * Get the root path of the app (e.g., /happycrm2 or empty string)
+ */
+function rootPath(): string {
+    $is_localhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']);
+    return $is_localhost ? '/happycrm2' : '';
+}
+
+/**
  * Get the root URL of the app
  */
 function rootUrl(): string {
-    $is_localhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']);
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    
-    if ($is_localhost) {
-        return $protocol . '://' . $host . '/happycrm2';
-    } else {
-        return $protocol . '://' . $host;
-    }
+    return $protocol . '://' . $host . rootPath();
 }
 
 /**

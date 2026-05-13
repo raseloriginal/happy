@@ -31,7 +31,7 @@ include __DIR__ . '/../includes/header.php';
             <tr>
               <td>
                 <?php if ($p['image']): ?>
-                  <img src="/happycrm2/<?= htmlspecialchars($p['image']) ?>" class="w-10 h-10 rounded-lg object-cover" />
+                  <img src="<?= rootPath() ?>/<?= htmlspecialchars($p['image']) ?>" class="w-10 h-10 rounded-lg object-cover" />
                 <?php else: ?>
                   <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">N/A</div>
                 <?php endif; ?>
@@ -110,7 +110,7 @@ async function loadCategories(selectId, companyId) {
   const sel = document.getElementById(selectId);
   sel.innerHTML = '<option value="">Loading…</option>';
   if (!companyId) { sel.innerHTML = '<option value="">Select Company first</option>'; return; }
-  const data = await api('/happycrm2/api/categories.php?action=by_company&company_id=' + companyId);
+  const data = await api('<?= rootPath() ?>/api/categories.php?action=by_company&company_id=' + companyId);
   sel.innerHTML = '<option value="">No Category</option>';
   (data.data || []).forEach(c => { sel.innerHTML += `<option value="${c.id}">${c.name}</option>`; });
 }
@@ -125,7 +125,7 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
   fd.append('selling_price', document.getElementById('add-price').value);
   const img = document.getElementById('add-image').files[0];
   if (img) fd.append('image', img);
-  const data = await api('/happycrm2/api/products.php', 'POST', fd);
+  const data = await api('<?= rootPath() ?>/api/products.php', 'POST', fd);
   if (data.success) { showToast('Product added!'); closeModal('add-modal'); location.reload(); }
   else showToast(data.message || 'Error', 'error');
 });
@@ -144,7 +144,7 @@ function editProduct(p) {
 
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/products.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/products.php', 'PUT', {
     id: document.getElementById('edit-id').value,
     company_id: document.getElementById('edit-company').value,
     category_id: document.getElementById('edit-category').value,
@@ -158,7 +158,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 
 async function deleteProduct(id) {
   if (!confirmDelete('Delete this product?')) return;
-  const data = await api('/happycrm2/api/products.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/products.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Product deleted!'); location.reload(); }
 }
 

@@ -72,7 +72,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('exp-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/expenses.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/expenses.php', 'POST', {
     dispatch_id: document.getElementById('dispatch-sel').value || null,
     amount: document.getElementById('amount').value,
     description: document.getElementById('description').value,

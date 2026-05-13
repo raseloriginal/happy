@@ -16,7 +16,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-5xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Out for Delivery</h2><p class="text-sm text-gray-500">Scan QR boxes to load onto van</p></div>
-        <a href="/happycrm2/manager/orders.php" class="btn btn-ghost">← Orders</a>
+        <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost">← Orders</a>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -100,7 +100,7 @@ let scannedBoxes = [];   // [{qr_id, product_id, qr_uid, pieces_total}]
 
 // Load pending orders on page load
 window.addEventListener('DOMContentLoaded', async () => {
-  const data = await api('/happycrm2/api/delivery.php?action=pending_orders');
+  const data = await api('<?= rootPath() ?>/api/delivery.php?action=pending_orders');
   const sel  = document.getElementById('order-select');
   sel.innerHTML = '<option value="">Select Order</option>';
   (data.data || []).forEach(o => {
@@ -121,7 +121,7 @@ async function loadOrderItems() {
     return;
   }
 
-  const data = await api('/happycrm2/api/delivery.php?action=order_items&order_id=' + oid);
+  const data = await api('<?= rootPath() ?>/api/delivery.php?action=order_items&order_id=' + oid);
   const list  = document.getElementById('products-list');
   list.innerHTML = '';
   orderItems = [];
@@ -156,7 +156,7 @@ async function processQRScan(uid) {
   if (!oid) { showToast('Select an order first', 'warning'); return; }
 
   const scannedIds = scannedBoxes.map(s => s.qr_id);
-  const data = await api('/happycrm2/api/delivery.php?action=scan_box', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/delivery.php?action=scan_box', 'POST', {
     qr_uid: uid, order_id: parseInt(oid), scanned_ids: scannedIds
   });
 
@@ -234,7 +234,7 @@ async function completeDelivery() {
   btn.disabled = true; btn.textContent = 'Processing…';
   stopScan();
 
-  const data = await api('/happycrm2/api/delivery.php?action=complete', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/delivery.php?action=complete', 'POST', {
     order_id: parseInt(oid),
     dsr_id: parseInt(dsrId),
     scanned: scannedBoxes
@@ -242,7 +242,7 @@ async function completeDelivery() {
 
   if (data.success) {
     showToast('Order sent to van! 🚚');
-    setTimeout(() => window.location.href = '/happycrm2/manager/orders.php', 1500);
+    setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/orders.php', 1500);
   } else {
     showToast(data.message || 'Error', 'error');
     btn.disabled = false; btn.textContent = '✅ Complete — Send to Van';

@@ -60,12 +60,12 @@ try {
     echo '<div class="box" style="background:#f0fdf4;border-color:#bbf7d0">
         <h3 class="ok">✅ Setup Complete!</h3>
         <p>You can now login at:</p>
-        <p><strong>URL:</strong> <a href="/happycrm2/">http://localhost/happycrm2/</a></p>
+        <p><strong>URL:</strong> <a href="/">http://localhost/</a></p>
         <p><strong>Email:</strong> admin@happy.com</p>
         <p><strong>Password:</strong> admin123</p>
         <br>
         <p class="warn">⚠️ <strong>Important:</strong> Delete this setup.php file after logging in!</p>
-        <a href="/happycrm2/" class="btn">Go to Login →</a>
+        <a href="/" class="btn">Go to Login →</a>
     </div>';
 
 } catch (Exception $e) {

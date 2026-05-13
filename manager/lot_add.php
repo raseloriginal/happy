@@ -14,7 +14,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-4xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Add New Lot</h2><p class="text-sm text-gray-500">Record a new product batch received from company</p></div>
-        <a href="/happycrm2/manager/lots.php" class="btn btn-ghost">← Back to Lots</a>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Back to Lots</a>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -79,7 +79,7 @@ let products = [];
 async function loadCompanyProducts() {
   const cid = document.getElementById('company_id').value;
   if (!cid) return;
-  const data = await api('/happycrm2/api/products.php?action=by_company&company_id=' + cid);
+  const data = await api('<?= rootPath() ?>/api/products.php?action=by_company&company_id=' + cid);
   products = data.data || [];
   // Refresh all product selects
   document.querySelectorAll('.product-select').forEach(sel => refreshProductSelect(sel));
@@ -165,7 +165,7 @@ document.getElementById('lot-form').addEventListener('submit', async function(e)
 
   btn.disabled = true; btn.textContent = 'Saving…';
 
-  const data = await api('/happycrm2/api/lots.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/lots.php', 'POST', {
     company_id: document.getElementById('company_id').value,
     lot_date: document.getElementById('lot_date').value,
     grand_total: parseFloat(document.getElementById('grand-total').textContent),
@@ -174,7 +174,7 @@ document.getElementById('lot-form').addEventListener('submit', async function(e)
 
   if (data.success) {
     showToast('Lot created successfully!');
-    setTimeout(() => window.location.href = '/happycrm2/manager/lots.php', 1000);
+    setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/lots.php', 1000);
   } else {
     showToast(data.message || 'Error saving lot', 'error');
     btn.disabled = false; btn.textContent = 'Save Lot';

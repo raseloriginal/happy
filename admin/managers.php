@@ -87,7 +87,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/managers.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/managers.php', 'POST', {
     name: document.getElementById('add-name').value,
     email: document.getElementById('add-email').value,
     password: document.getElementById('add-password').value,
@@ -109,7 +109,7 @@ function editManager(m) {
 
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/managers.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/managers.php', 'PUT', {
     id: document.getElementById('edit-id').value,
     user_id: document.getElementById('edit-uid').value,
     name: document.getElementById('edit-name').value,
@@ -122,7 +122,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 
 async function deleteManager(id) {
   if (!confirmDelete('Delete this manager?')) return;
-  const data = await api('/happycrm2/api/managers.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/managers.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Manager deleted!'); location.reload(); }
 }
 </script>

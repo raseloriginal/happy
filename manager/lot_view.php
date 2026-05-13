@@ -18,7 +18,7 @@ include __DIR__ . '/../includes/header.php';
     <?php include __DIR__ . '/../includes/navbar.php'; ?>
     <div class="page-body max-w-3xl">
       <div class="flex items-center justify-between mb-6 print:hidden">
-        <a href="/happycrm2/manager/lots.php" class="btn btn-ghost">← Back</a>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Back</a>
         <button onclick="window.print()" class="btn btn-primary">🖨 Print Invoice</button>
       </div>
 

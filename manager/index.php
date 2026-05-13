@@ -70,11 +70,11 @@ include __DIR__ . '/../includes/header.php';
 
       <!-- Quick Actions -->
       <div class="flex flex-wrap gap-3 mb-6">
-        <a href="/happycrm2/manager/order_add.php" class="btn btn-primary">+ New Order</a>
-        <a href="/happycrm2/manager/lot_add.php" class="btn btn-success">+ Add Lot</a>
-        <a href="/happycrm2/manager/delivery.php" class="btn btn-warning">🚚 Delivery</a>
-        <a href="/happycrm2/manager/qr_generate.php" class="btn btn-ghost">🔲 Generate QR</a>
-        <a href="/happycrm2/manager/inventory.php" class="btn btn-ghost">📦 Inventory</a>
+        <a href="<?= rootPath() ?>/manager/order_add.php" class="btn btn-primary">+ New Order</a>
+        <a href="<?= rootPath() ?>/manager/lot_add.php" class="btn btn-success">+ Add Lot</a>
+        <a href="<?= rootPath() ?>/manager/delivery.php" class="btn btn-warning">🚚 Delivery</a>
+        <a href="<?= rootPath() ?>/manager/qr_generate.php" class="btn btn-ghost">🔲 Generate QR</a>
+        <a href="<?= rootPath() ?>/manager/inventory.php" class="btn btn-ghost">📦 Inventory</a>
       </div>
 
       <!-- Charts + Tables Row -->
@@ -88,7 +88,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 flex justify-between">
             <h3 class="font-semibold text-gray-700">⚠️ Low Stock</h3>
-            <a href="/happycrm2/manager/inventory.php" class="text-xs text-indigo-600">View All</a>
+            <a href="<?= rootPath() ?>/manager/inventory.php" class="text-xs text-indigo-600">View All</a>
           </div>
           <table class="data-table">
             <thead><tr><th>Product</th><th>Company</th><th class="text-right">Boxes</th></tr></thead>
@@ -110,7 +110,7 @@ include __DIR__ . '/../includes/header.php';
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 flex justify-between">
           <h3 class="font-semibold text-gray-700">Recent Orders</h3>
-          <a href="/happycrm2/manager/orders.php" class="text-xs text-indigo-600">View All →</a>
+          <a href="<?= rootPath() ?>/manager/orders.php" class="text-xs text-indigo-600">View All →</a>
         </div>
         <table class="data-table">
           <thead><tr><th>Order</th><th>SR</th><th>Company</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
@@ -126,7 +126,7 @@ include __DIR__ . '/../includes/header.php';
               <td><span class="badge <?= $sc[$o['status']] ?? 'badge-gray' ?>"><?= str_replace('_',' ',ucfirst($o['status'])) ?></span></td>
               <td>
                 <?php if ($o['status'] === 'pending'): ?>
-                <a href="/happycrm2/manager/delivery.php" class="btn btn-primary btn-sm">Load</a>
+                <a href="<?= rootPath() ?>/manager/delivery.php" class="btn btn-primary btn-sm">Load</a>
                 <?php endif; ?>
               </td>
             </tr>

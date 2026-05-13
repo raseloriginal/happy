@@ -40,7 +40,7 @@ include __DIR__ . '/../includes/header.php';
 
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Orders</h2><p class="text-sm text-gray-500">All SR orders with product-level breakdown</p></div>
-        <a href="/happycrm2/manager/order_add.php" class="btn btn-primary">+ Add New Order</a>
+        <a href="<?= rootPath() ?>/manager/order_add.php" class="btn btn-primary">+ Add New Order</a>
       </div>
 
       <!-- Stat Cards -->
@@ -121,7 +121,7 @@ include __DIR__ . '/../includes/header.php';
               </td>
             </tr>
             <?php endforeach; ?>
-            <?php if (empty($orders)): ?><tr><td colspan="11" class="text-center py-8 text-gray-400">No orders yet. <a href="/happycrm2/manager/order_add.php" class="text-indigo-600">Add one</a></td></tr><?php endif; ?>
+            <?php if (empty($orders)): ?><tr><td colspan="11" class="text-center py-8 text-gray-400">No orders yet. <a href="<?= rootPath() ?>/manager/order_add.php" class="text-indigo-600">Add one</a></td></tr><?php endif; ?>
           </tbody>
         </table>
       </div>
@@ -145,7 +145,7 @@ function clearFilters() {
 }
 async function cancelOrder(id) {
   if (!confirmDelete('Cancel this order?')) return;
-  const data = await api('/happycrm2/api/orders.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/orders.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Order cancelled'); location.reload(); }
   else showToast(data.message || 'Error', 'error');
 }

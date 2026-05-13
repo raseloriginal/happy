@@ -40,7 +40,7 @@ $basePath  = '/happycrm2';
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/happycrm2/assets/css/app.css" />
+  <link rel="stylesheet" href="<?= rootPath() ?>/assets/css/app.css" />
   <style>body { font-family: 'Inter', sans-serif; } * { box-sizing: border-box; }</style>
 </head>
 <body class="bg-gray-50">

@@ -82,7 +82,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/dsr.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/dsr.php', 'POST', {
     name: document.getElementById('add-name').value, email: document.getElementById('add-email').value,
     password: document.getElementById('add-password').value, phone: document.getElementById('add-phone').value,
     warehouse_id: document.getElementById('add-warehouse').value
@@ -97,7 +97,7 @@ function editDSR(d) {
 }
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/dsr.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/dsr.php', 'PUT', {
     id: document.getElementById('edit-id').value, user_id: document.getElementById('edit-uid').value,
     name: document.getElementById('edit-name').value, phone: document.getElementById('edit-phone').value,
     warehouse_id: document.getElementById('edit-warehouse').value
@@ -107,7 +107,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 });
 async function deleteDSR(id) {
   if (!confirmDelete('Delete this DSR?')) return;
-  const data = await api('/happycrm2/api/dsr.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/dsr.php?id=' + id, 'DELETE');
   if (data.success) { showToast('DSR deleted!'); location.reload(); }
 }
 </script>

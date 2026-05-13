@@ -98,7 +98,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/warehouses.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/warehouses.php', 'POST', {
     name: document.getElementById('add-name').value,
     area: document.getElementById('add-area').value,
     address: document.getElementById('add-address').value
@@ -117,7 +117,7 @@ function editWarehouse(w) {
 
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/warehouses.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/warehouses.php', 'PUT', {
     id: document.getElementById('edit-id').value,
     name: document.getElementById('edit-name').value,
     area: document.getElementById('edit-area').value,
@@ -129,7 +129,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 
 async function deleteWarehouse(id) {
   if (!confirmDelete('Delete this warehouse?')) return;
-  const data = await api('/happycrm2/api/warehouses.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/warehouses.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Warehouse deleted!'); location.reload(); }
   else showToast(data.message, 'error');
 }

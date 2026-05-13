@@ -77,7 +77,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/routes.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/routes.php', 'POST', {
     name: document.getElementById('add-name').value,
     area: document.getElementById('add-area').value,
     warehouse_id: document.getElementById('add-warehouse').value || null
@@ -94,7 +94,7 @@ function editRoute(r) {
 }
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/routes.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/routes.php', 'PUT', {
     id: document.getElementById('edit-id').value,
     name: document.getElementById('edit-name').value,
     area: document.getElementById('edit-area').value,
@@ -105,7 +105,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 });
 async function deleteRoute(id) {
   if (!confirmDelete('Delete this route?')) return;
-  const data = await api('/happycrm2/api/routes.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/routes.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Route deleted!'); location.reload(); }
 }
 </script>

@@ -17,7 +17,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-5xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Generate QR Codes</h2><p class="text-sm text-gray-500">Generate QR codes for each box in a lot</p></div>
-        <a href="/happycrm2/manager/lots.php" class="btn btn-ghost">← Lots</a>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Lots</a>
       </div>
 
       <!-- Controls -->
@@ -56,7 +56,7 @@ include __DIR__ . '/../includes/header.php';
       <div id="qr-section" style="display:none">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-gray-700">Generated QR Codes</h3>
-          <a href="/happycrm2/manager/qr_print.php" class="btn btn-ghost btn-sm">🖨 Go to Print Page</a>
+          <a href="<?= rootPath() ?>/manager/qr_print.php" class="btn btn-ghost btn-sm">🖨 Go to Print Page</a>
         </div>
         <div id="qr-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
       </div>
@@ -83,7 +83,7 @@ async function loadLotProducts() {
 
   if (!lid) { psel.innerHTML = '<option value="">Select Lot first</option>'; return; }
 
-  const data = await api('/happycrm2/api/qr.php?action=lot_products&lot_id=' + lid);
+  const data = await api('<?= rootPath() ?>/api/qr.php?action=lot_products&lot_id=' + lid);
   currentLotItems = data.data || [];
   psel.innerHTML = '<option value="">Select Product</option>';
   currentLotItems.forEach(item => {
@@ -111,7 +111,7 @@ async function generateQR() {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('qr-section').style.display = 'none';
 
-  const data = await api('/happycrm2/api/qr.php?action=generate', 'POST', { lot_id: parseInt(lot_id), lot_item_id: parseInt(lot_item_id), product_id: parseInt(product_id) });
+  const data = await api('<?= rootPath() ?>/api/qr.php?action=generate', 'POST', { lot_id: parseInt(lot_id), lot_item_id: parseInt(lot_item_id), product_id: parseInt(product_id) });
 
   document.getElementById('loading').style.display = 'none';
 

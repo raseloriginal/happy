@@ -83,7 +83,7 @@ include __DIR__ . '/../includes/header.php';
 let dispatchBoxes = [];
 
 window.addEventListener('DOMContentLoaded', async () => {
-  const data = await api('/happycrm2/api/returns.php?action=dispatches');
+  const data = await api('<?= rootPath() ?>/api/returns.php?action=dispatches');
   const sel  = document.getElementById('dispatch-select');
   sel.innerHTML = '<option value="">Select Dispatch</option>';
   (data.data || []).forEach(d => {
@@ -94,7 +94,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 async function loadDispatch() {
   const did = document.getElementById('dispatch-select').value;
   if (!did) { document.getElementById('no-dispatch').style.display = 'block'; document.getElementById('dispatch-panel').style.display = 'none'; return; }
-  const data = await api('/happycrm2/api/returns.php?action=dispatch_boxes&dispatch_id=' + did);
+  const data = await api('<?= rootPath() ?>/api/returns.php?action=dispatch_boxes&dispatch_id=' + did);
   dispatchBoxes = data.data || [];
   renderBoxTable();
   document.getElementById('no-dispatch').style.display = 'none';
@@ -173,7 +173,7 @@ async function completeReturn() {
     qr_code_id: b.qr_code_id, product_id: b.product_id, qty_in: b.returnQty, type: b.type || 'scan'
   }));
   if (items.length === 0) { showToast('No return quantities set', 'warning'); return; }
-  const data = await api('/happycrm2/api/returns.php?action=complete', 'POST', { dispatch_id: parseInt(did), items });
+  const data = await api('<?= rootPath() ?>/api/returns.php?action=complete', 'POST', { dispatch_id: parseInt(did), items });
   if (data.success) { showToast('Return completed!'); setTimeout(() => location.reload(), 1500); }
   else showToast(data.message || 'Error', 'error');
 }

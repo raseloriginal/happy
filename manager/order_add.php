@@ -14,7 +14,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-4xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Add New Order</h2><p class="text-sm text-gray-500">Select SR and add products manually</p></div>
-        <a href="/happycrm2/manager/orders.php" class="btn btn-ghost">← Orders</a>
+        <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost">← Orders</a>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -83,7 +83,7 @@ async function loadSRProducts() {
     return;
   }
 
-  const data = await api('/happycrm2/api/orders.php?action=sr_products&sr_id=' + srId);
+  const data = await api('<?= rootPath() ?>/api/orders.php?action=sr_products&sr_id=' + srId);
   srProducts  = data.data || [];
 
   if (srProducts.length === 0) {
@@ -153,14 +153,14 @@ document.getElementById('order-form').addEventListener('submit', async function(
   if (!valid || items.length === 0) { showToast('Add at least one product with a valid quantity', 'error'); return; }
   const btn = document.getElementById('save-btn');
   btn.disabled = true; btn.textContent = 'Saving…';
-  const data = await api('/happycrm2/api/orders.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/orders.php', 'POST', {
     sr_id: document.getElementById('sr-select').value,
     order_date: document.getElementById('order-date').value,
     items
   });
   if (data.success) {
     showToast('Order saved!');
-    setTimeout(() => window.location.href = '/happycrm2/manager/orders.php', 1000);
+    setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/orders.php', 1000);
   } else {
     showToast(data.message || 'Error', 'error');
     btn.disabled = false; btn.textContent = 'Save Order';

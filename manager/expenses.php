@@ -52,7 +52,7 @@ include __DIR__ . '/../includes/header.php';
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 <script>
 async function setStatus(id, status) {
-  const data = await api('/happycrm2/api/expenses.php', 'PUT', { id, status });
+  const data = await api('<?= rootPath() ?>/api/expenses.php', 'PUT', { id, status });
   if (data.success) { showToast('Expense ' + status); location.reload(); }
   else showToast(data.message || 'Error', 'error');
 }

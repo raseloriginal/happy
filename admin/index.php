@@ -84,7 +84,7 @@ include __DIR__ . '/../includes/header.php';
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h3 class="font-semibold text-gray-700">Recent Orders</h3>
-            <a href="/happycrm2/manager/orders.php" class="text-xs text-indigo-600 hover:underline">View All</a>
+            <a href="<?= rootPath() ?>/manager/orders.php" class="text-xs text-indigo-600 hover:underline">View All</a>
           </div>
           <table class="data-table">
             <thead><tr><th>SR</th><th>Company</th><th>Date</th><th>Status</th></tr></thead>

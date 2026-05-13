@@ -81,7 +81,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/dealers.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/dealers.php', 'POST', {
     name: document.getElementById('add-name').value,
     email: document.getElementById('add-email').value,
     password: document.getElementById('add-password').value,
@@ -103,7 +103,7 @@ function editDealer(d) {
 
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/dealers.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/dealers.php', 'PUT', {
     id: document.getElementById('edit-id').value,
     user_id: document.getElementById('edit-uid').value,
     name: document.getElementById('edit-name').value,
@@ -116,7 +116,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 
 async function deleteDealer(id) {
   if (!confirmDelete('Delete this dealer?')) return;
-  const data = await api('/happycrm2/api/dealers.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/dealers.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Dealer deleted!'); location.reload(); }
   else showToast(data.message, 'error');
 }

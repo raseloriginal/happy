@@ -89,7 +89,7 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/companies.php', 'POST', {
+  const data = await api('<?= rootPath() ?>/api/companies.php', 'POST', {
     dealer_id: document.getElementById('add-dealer').value,
     name: document.getElementById('add-name').value,
     contact: document.getElementById('add-contact').value,
@@ -110,7 +110,7 @@ function editCompany(c) {
 
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('/happycrm2/api/companies.php', 'PUT', {
+  const data = await api('<?= rootPath() ?>/api/companies.php', 'PUT', {
     id: document.getElementById('edit-id').value,
     dealer_id: document.getElementById('edit-dealer').value,
     name: document.getElementById('edit-name').value,
@@ -123,7 +123,7 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
 
 async function deleteCompany(id) {
   if (!confirmDelete('Delete this company?')) return;
-  const data = await api('/happycrm2/api/companies.php?id=' + id, 'DELETE');
+  const data = await api('<?= rootPath() ?>/api/companies.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Company deleted!'); location.reload(); }
 }
 </script>

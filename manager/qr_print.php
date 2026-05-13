@@ -18,7 +18,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-5xl">
       <div class="flex items-center justify-between mb-6 print:hidden">
         <div><h2 class="text-xl font-bold text-gray-800">Print QR Stickers</h2><p class="text-sm text-gray-500">75mm × 100mm thermal label format</p></div>
-        <a href="/happycrm2/manager/lots.php" class="btn btn-ghost">← Lots</a>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Lots</a>
       </div>
 
       <!-- Controls (hidden on print) -->
@@ -68,7 +68,7 @@ async function loadProducts() {
 
   if (!lid) { psel.innerHTML = '<option value="">Select Lot first</option>'; return; }
 
-  const data = await api('/happycrm2/api/qr.php?action=lot_products&lot_id=' + lid);
+  const data = await api('<?= rootPath() ?>/api/qr.php?action=lot_products&lot_id=' + lid);
   const items = (data.data || []).filter(i => i.qr_generated == 1);
   psel.innerHTML = '<option value="">Select Product</option>';
   items.forEach(item => {
@@ -87,7 +87,7 @@ async function loadStickers() {
   const productName = opt.dataset.name;
   const piecesPerBox = opt.dataset.ppb;
 
-  const data = await api('/happycrm2/api/qr.php?action=fetch&lot_item_id=' + lid);
+  const data = await api('<?= rootPath() ?>/api/qr.php?action=fetch&lot_item_id=' + lid);
   if (!data.success) { showToast('Failed to load QR codes', 'error'); return; }
 
   const grid = document.getElementById('stickers-grid');
