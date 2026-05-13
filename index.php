@@ -20,118 +20,272 @@ if (isLoggedIn()) {
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="assets/css/app.css" />
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .login-bg {
-      background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #0F172A 100%);
-      min-height: 100vh;
+    :root {
+      --bg: #0f111a;
+      --card-bg: #0f111a;
+      --shadow-light: #1a1d2b;
+      --shadow-dark: #07080d;
+      --neon-cyan: #00f3ff;
+      --neon-magenta: #ff00ff;
+      --text-dim: #94a3b8;
     }
-    .login-card {
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 1.5rem;
-    }
-    .grid-pattern {
-      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.08) 1px, transparent 0);
-      background-size: 32px 32px;
-    }
-    .glow { box-shadow: 0 0 80px rgba(79,70,229,0.35); }
-    .input-dark {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
+
+    body { 
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
       color: #fff;
-      border-radius: 0.625rem;
-      padding: 0.75rem 1rem;
+    }
+
+    .login-bg {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Neumorphic Card */
+    .login-card {
+      background: var(--card-bg);
+      border-radius: 2rem;
+      padding: 3rem 2.5rem;
       width: 100%;
-      font-size: 0.875rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      max-width: 400px;
+      box-shadow: 
+        10px 10px 20px var(--shadow-dark),
+        -10px -10px 20px var(--shadow-light);
+      position: relative;
+      z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    /* Neon Accent Border */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      background: linear-gradient(45deg, var(--neon-cyan), transparent, var(--neon-magenta));
+      border-radius: 2rem;
+      z-index: -1;
+      opacity: 0.15;
+      filter: blur(5px);
+    }
+
+    .logo-container {
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    .logo-hex {
+      width: 70px;
+      height: 70px;
+      background: var(--bg);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 1.25rem;
+      box-shadow: 
+        6px 6px 12px var(--shadow-dark),
+        -6px -6px 12px var(--shadow-light);
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .logo-hex span {
+      font-weight: 900;
+      font-size: 1.75rem;
+      background: linear-gradient(to bottom right, var(--neon-cyan), #fff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 5px rgba(0, 243, 255, 0.5));
+    }
+
+    .logo-hex::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 1.25rem;
+      box-shadow: inset 2px 2px 5px var(--shadow-light), inset -2px -2px 5px var(--shadow-dark);
+    }
+
+    /* Neumorphic Inset Input */
+    .input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group label {
+      display: block;
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      margin-left: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-wrapper {
+      position: relative;
+      background: var(--bg);
+      border-radius: 1rem;
+      box-shadow: 
+        inset 4px 4px 8px var(--shadow-dark),
+        inset -4px -4px 8px var(--shadow-light);
+      transition: all 0.3s ease;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 1rem 1.25rem;
+      color: #fff;
+      font-size: 0.95rem;
       outline: none;
+      border-radius: 1rem;
     }
-    .input-dark::placeholder { color: rgba(255,255,255,0.35); }
-    .input-dark:focus {
-      border-color: #6366F1;
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.25);
+
+    .input-wrapper:focus-within {
+      box-shadow: 
+        inset 2px 2px 4px var(--shadow-dark),
+        inset -2px -2px 4px var(--shadow-light),
+        0 0 10px rgba(0, 243, 255, 0.2);
+      border: 1px solid rgba(0, 243, 255, 0.3);
     }
+
+    .input-wrapper input::placeholder {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Neon Button */
     .btn-login {
       width: 100%;
-      background: linear-gradient(135deg, #4F46E5, #7C3AED);
-      color: #fff;
-      padding: 0.75rem;
-      border-radius: 0.625rem;
-      font-weight: 600;
-      font-size: 0.9rem;
+      background: var(--bg);
+      color: var(--neon-cyan);
+      padding: 1rem;
+      border-radius: 1rem;
+      font-weight: 700;
+      font-size: 1rem;
       border: none;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 
+        6px 6px 12px var(--shadow-dark),
+        -6px -6px 12px var(--shadow-light);
+      transition: all 0.2s ease;
+      margin-top: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
-    .btn-login:hover { opacity: 0.92; transform: translateY(-1px); }
-    .btn-login:active { transform: translateY(0); }
-    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-login:hover {
+      box-shadow: 
+        3px 3px 6px var(--shadow-dark),
+        -3px -3px 6px var(--shadow-light),
+        0 0 15px var(--neon-cyan);
+      background: var(--neon-cyan);
+      color: var(--bg);
+      transform: translateY(-1px);
+    }
+
+    .btn-login:active {
+      box-shadow: 
+        inset 3px 3px 6px var(--shadow-dark),
+        inset -3px -3px 6px var(--shadow-light);
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
     .error-msg {
-      background: rgba(239,68,68,0.15);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #FCA5A5;
-      border-radius: 0.5rem;
-      padding: 0.625rem 1rem;
-      font-size: 0.8rem;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
       display: none;
+      text-align: center;
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
     }
-    .floating-orb {
+
+    .eye-toggle {
       position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.15;
-      pointer-events: none;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.25rem;
     }
+
+    .eye-toggle:hover { color: var(--neon-cyan); }
+
+    /* Decorative Orbs */
+    .orb {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.05;
+      z-index: 1;
+    }
+    .orb-1 { top: -100px; left: -100px; background: var(--neon-cyan); }
+    .orb-2 { bottom: -100px; right: -100px; background: var(--neon-magenta); }
   </style>
 </head>
-<body class="login-bg grid-pattern flex items-center justify-center relative overflow-hidden">
+<body class="login-bg">
 
-  <!-- Floating orbs -->
-  <div class="floating-orb w-96 h-96 bg-indigo-500 -top-20 -left-20"></div>
-  <div class="floating-orb w-72 h-72 bg-purple-600 bottom-20 right-10"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
 
-  <div class="w-full max-w-sm mx-4 relative z-10">
-
-    <!-- Logo -->
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl shadow-lg mb-4 glow">
-        <span class="text-white font-black text-2xl">HB</span>
+  <div class="login-card">
+    <div class="logo-container">
+      <div class="logo-hex">
+        <span>HB</span>
       </div>
-      <h1 class="text-white text-2xl font-bold">Happy Bangladesh</h1>
-      <p class="text-slate-400 text-sm mt-1">ERP Management System</p>
+      <h1 class="text-white text-xl font-bold tracking-tight">HAPPY BANGLADESH</h1>
+      <p class="text-slate-500 text-xs font-medium mt-1">NEXUS ERP ECOSYSTEM</p>
     </div>
 
-    <!-- Card -->
-    <div class="login-card p-8 glow">
-      <h2 class="text-white font-semibold text-lg mb-6">Sign in to your account</h2>
+    <div id="error-msg" class="error-msg"></div>
 
-      <div id="error-msg" class="error-msg mb-4">Invalid credentials. Please try again.</div>
-
-      <form id="login-form" class="space-y-4">
-        <div>
-          <label class="block text-slate-300 text-xs font-medium mb-1.5">Email Address</label>
-          <input id="email" type="email" name="email" class="input-dark" placeholder="admin@happy.com" required autocomplete="email" />
+    <form id="login-form">
+      <div class="input-group">
+        <label for="email">Access Email</label>
+        <div class="input-wrapper">
+          <input id="email" type="email" name="email" placeholder="nexus@happy.com" required autocomplete="email" />
         </div>
-        <div>
-          <label class="block text-slate-300 text-xs font-medium mb-1.5">Password</label>
-          <div class="relative">
-            <input id="password" type="password" name="password" class="input-dark pr-10" placeholder="••••••••" required autocomplete="current-password" />
-            <button type="button" onclick="togglePwd()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition">
-              <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            </button>
-          </div>
-        </div>
-        <button type="submit" id="login-btn" class="btn-login mt-2">
-          Sign In
-        </button>
-      </form>
+      </div>
 
-      <p class="text-slate-500 text-xs text-center mt-6">
-        Default: admin@happy.com / password
+      <div class="input-group">
+        <label for="password">Security Token</label>
+        <div class="input-wrapper">
+          <input id="password" type="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+          <button type="button" onclick="togglePwd()" class="eye-toggle">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" id="login-btn" class="btn-login">
+        Authenticate
+      </button>
+    </form>
+
+    <div class="mt-8 pt-6 border-t border-white/5 text-center">
+      <p class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+        Secured by Happy Bangladesh Cloud
       </p>
     </div>
-
   </div>
 
   <script src="assets/js/app.js"></script>
@@ -146,24 +300,35 @@ if (isLoggedIn()) {
       const btn = document.getElementById('login-btn');
       const errEl = document.getElementById('error-msg');
       btn.disabled = true;
-      btn.textContent = 'Signing in…';
+      btn.textContent = 'Authenticating…';
       errEl.style.display = 'none';
 
-      const data = await api('api/auth.php', 'POST', {
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value
-      });
+      try {
+        const data = await api('api/auth.php', 'POST', {
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        });
 
-      if (data.success) {
-        btn.textContent = 'Redirecting…';
-        window.location.href = data.redirect;
-      } else {
-        errEl.textContent = data.message || 'Invalid credentials.';
+        if (data.success) {
+          btn.textContent = 'Access Granted…';
+          btn.style.color = 'var(--neon-cyan)';
+          btn.style.boxShadow = '0 0 20px var(--neon-cyan)';
+          window.location.href = data.redirect;
+        } else {
+          errEl.textContent = data.message || 'Authentication failed.';
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Authenticate';
+        }
+      } catch (err) {
+        errEl.textContent = 'System connection error.';
         errEl.style.display = 'block';
         btn.disabled = false;
-        btn.textContent = 'Sign In';
+        btn.textContent = 'Authenticate';
       }
     });
   </script>
+</body>
+</html>
 </body>
 </html>
