@@ -1,5 +1,7 @@
 // assets/js/qr.js — QR Scanner: Camera + USB keyboard-wedge
 
+let lastScannedCode = null;
+let lastScannedTime = 0;
 let activeCameraScanner = null;
 
 /**
@@ -17,6 +19,13 @@ function startCameraScanner(elementId, onScanCallback) {
     { facingMode: 'environment' },
     { fps: 10, qrbox: { width: 250, height: 250 } },
     (qrCodeMessage) => {
+      const now = Date.now();
+      // Lock: If same code is scanned within 2 seconds, ignore it
+      if (qrCodeMessage === lastScannedCode && (now - lastScannedTime) < 2000) {
+        return;
+      }
+      lastScannedCode = qrCodeMessage;
+      lastScannedTime = now;
       onScanCallback(qrCodeMessage);
     },
     (error) => { /* ignore scan errors */ }

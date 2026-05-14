@@ -151,14 +151,28 @@ async function loadOrderItems() {
   checkComplete();
 }
 
+let isScanning = false;
+
 async function processQRScan(uid) {
   const oid = document.getElementById('order-select').value;
   if (!oid) { showToast('Select an order first', 'warning'); return; }
+
+  // 1. Local Duplicate Check (Already fully scanned)
+  if (scannedBoxes.some(s => s.qr_uid === uid)) {
+    // showToast('Already scanned: ' + uid, 'info');
+    return;
+  }
+
+  // 2. Processing Lock (Currently sending to API)
+  if (isScanning) return;
+  isScanning = true;
 
   const scannedIds = scannedBoxes.map(s => s.qr_id);
   const data = await api('<?= rootPath() ?>/api/delivery.php?action=scan_box', 'POST', {
     qr_uid: uid, order_id: parseInt(oid), scanned_ids: scannedIds
   });
+
+  isScanning = false;
 
   if (!data.success) {
     const type = data.type || 'error';

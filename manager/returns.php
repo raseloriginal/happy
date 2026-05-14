@@ -125,6 +125,7 @@ function renderBoxTable() {
 async function scanReturn(uid) {
   const qr = dispatchBoxes.find(b => b.qr_uid === uid);
   if (!qr) { showToast('QR not in this dispatch', 'error'); return; }
+  if (qr.returnQty > 0) return;
   qr.returnQty = qr.pieces_remaining;
   qr.type = 'scan';
   renderBoxTable();
