@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS dsr (
 -- CATEGORIES
 CREATE TABLE IF NOT EXISTS categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  company_id INT NOT NULL,
+  company_id INT,
   name VARCHAR(100),
   status TINYINT DEFAULT 1,
   UNIQUE KEY unique_category (company_id, name),
@@ -107,9 +107,11 @@ CREATE TABLE IF NOT EXISTS products (
   company_id INT NOT NULL,
   category_id INT,
   name VARCHAR(150) NOT NULL,
+  box_type VARCHAR(50) NULL,
   image VARCHAR(255),
   pieces_per_box INT DEFAULT 1,
   selling_price DECIMAL(10,2),
+  dealer_percentage DECIMAL(5,2) DEFAULT 0.00,
   status TINYINT DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY unique_product (company_id, name),
@@ -137,6 +139,7 @@ CREATE TABLE IF NOT EXISTS lot_items (
   lot_id INT NOT NULL,
   product_id INT NOT NULL,
   qty_boxes INT NOT NULL,
+  expiry_date DATE NULL,
   buying_price DECIMAL(10,2),
   total DECIMAL(12,2),
   qr_generated TINYINT DEFAULT 0,
