@@ -43,6 +43,9 @@ function navLink(string $href, string $icon, string $label, string $current): st
       <div class="sidebar-section">Reports</div>
       <?= navLink(rootPath() . '/admin/reports.php', '📈', 'Reports', $current) ?>
 
+      <div class="sidebar-section">System</div>
+      <?= navLink(rootPath() . '/admin/db_sync.php', '🔄', 'Database Sync', $current) ?>
+
     <?php elseif ($role === 'manager'): ?>
       <div class="sidebar-section">Dashboard</div>
       <?= navLink(rootPath() . '/manager/index.php', '📊', 'Dashboard', $current) ?>

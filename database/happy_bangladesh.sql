@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- WAREHOUSES
 CREATE TABLE IF NOT EXISTS warehouses (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
+  name VARCHAR(100) UNIQUE NOT NULL,
   address TEXT,
   area VARCHAR(100),
   status TINYINT DEFAULT 1,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS dealers (
 CREATE TABLE IF NOT EXISTS companies (
   id INT AUTO_INCREMENT PRIMARY KEY,
   dealer_id INT NOT NULL,
-  name VARCHAR(100) NOT NULL,
+  name VARCHAR(100) UNIQUE NOT NULL,
   contact VARCHAR(50),
   address TEXT,
   status TINYINT DEFAULT 1,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS managers (
 -- ROUTES
 CREATE TABLE IF NOT EXISTS routes (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100),
+  name VARCHAR(100) UNIQUE,
   area VARCHAR(100),
   warehouse_id INT,
   status TINYINT DEFAULT 1,
@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS categories (
   company_id INT NOT NULL,
   name VARCHAR(100),
   status TINYINT DEFAULT 1,
+  UNIQUE KEY unique_category (company_id, name),
   FOREIGN KEY (company_id) REFERENCES companies(id)
 );
 
@@ -111,6 +112,7 @@ CREATE TABLE IF NOT EXISTS products (
   selling_price DECIMAL(10,2),
   status TINYINT DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_product (company_id, name),
   FOREIGN KEY (company_id) REFERENCES companies(id),
   FOREIGN KEY (category_id) REFERENCES categories(id)
 );
