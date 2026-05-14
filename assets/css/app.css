@@ -100,27 +100,72 @@
   font-size: 1.125rem;
 }
 
-/* ── Table ────────────────────────────────────────────────── */
-.data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+/* ── Table (Spreadsheet Style) ────────────────────────────── */
+.spreadsheet-container {
+  overflow: auto;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  background: #fff;
+  height: calc(100vh - 160px);
+  position: relative;
+}
+.data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8125rem; color: #1e293b; }
 .data-table th {
   background: #F8FAFC;
-  color: #64748B;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.625rem 1rem;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
   text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   border-bottom: 1px solid #E2E8F0;
+  border-right: 1px solid #E2E8F0;
+  white-space: nowrap;
 }
+.data-table th:last-child { border-right: none; }
 .data-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #F1F5F9;
-  color: #374151;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #E2E8F0;
+  border-right: 1px solid #E2E8F0;
   vertical-align: middle;
+  white-space: nowrap;
 }
+.data-table td:last-child { border-right: none; }
 .data-table tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover { background: #FAFAFA; }
+.data-table tbody tr:hover { background: #F1F5F9; }
+.data-table tbody tr.selected { background: #EEF2FF; }
+
+/* Sticky first column */
+.data-table th.sticky-col,
+.data-table td.sticky-col {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  z-index: 5;
+}
+.data-table th.sticky-col { z-index: 15; background: #F8FAFC; }
+.data-table td.sticky-col { background: #fff; }
+.data-table tbody tr:hover td.sticky-col { background: #F1F5F9; }
+.data-table tbody tr.selected td.sticky-col { background: #EEF2FF; }
+
+/* Inline Editing Input */
+.inline-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+}
+.inline-input:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px #4F46E5 inset;
+  border-radius: 2px;
+}
 
 /* ── Modal ────────────────────────────────────────────────── */
 .modal-overlay {
@@ -203,7 +248,7 @@
 .sidebar {
   width: 240px;
   min-height: 100vh;
-  background: #0F172A;
+  background: #0F172A; /* Dark mode enterprise sidebar */
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -211,17 +256,37 @@
   top: 0; left: 0; bottom: 0;
   overflow-y: auto;
   z-index: 40;
+  transition: width 0.3s ease;
 }
+.sidebar.collapsed { width: 64px; }
+.sidebar.collapsed .sidebar-text,
+.sidebar.collapsed .sidebar-section { display: none; }
+.sidebar.collapsed .sidebar-link { justify-content: center; padding: 0.75rem; }
+.sidebar.collapsed .sidebar-link span { display: none; }
 .main-content {
   flex: 1;
   margin-left: 240px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  transition: margin-left 0.3s ease;
 }
+.sidebar.collapsed ~ .main-content { margin-left: 64px; }
 .page-body {
   flex: 1;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* prevents layout breaking from table */
+}
+
+/* Action Bar Utilities */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
 }
 
 /* ── QR sticker cards ─────────────────────────────────────── */

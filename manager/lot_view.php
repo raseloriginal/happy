@@ -58,6 +58,7 @@ include __DIR__ . '/../includes/header.php';
               <th>#</th>
               <th>Product</th>
               <th class="text-right">Qty (Boxes)</th>
+              <th class="text-center">Expiry Date</th>
               <th class="text-right">Buying Price</th>
               <th class="text-right">Total</th>
               <th class="text-center">QR Status</th>
@@ -69,6 +70,7 @@ include __DIR__ . '/../includes/header.php';
               <td class="text-gray-400"><?= $i+1 ?></td>
               <td class="font-medium"><?= htmlspecialchars($item['product_name']) ?></td>
               <td class="text-right"><?= $item['qty_boxes'] ?></td>
+              <td class="text-center text-gray-600"><?= $item['expiry_date'] ? date('d M Y', strtotime($item['expiry_date'])) : '—' ?></td>
               <td class="text-right">৳<?= number_format($item['buying_price'], 2) ?></td>
               <td class="text-right font-semibold">৳<?= number_format($item['total'], 2) ?></td>
               <td class="text-center">

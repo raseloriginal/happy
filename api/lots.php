@@ -44,8 +44,8 @@ switch ($method) {
 
         foreach ($d['items'] as $item) {
             $total = $item['qty_boxes'] * $item['buying_price'];
-            $pdo->prepare('INSERT INTO lot_items (lot_id, product_id, qty_boxes, buying_price, total, qr_generated) VALUES (?,?,?,?,?,0)')
-                ->execute([$lot_id, $item['product_id'], $item['qty_boxes'], $item['buying_price'], $total]);
+            $pdo->prepare('INSERT INTO lot_items (lot_id, product_id, qty_boxes, expiry_date, buying_price, total, qr_generated) VALUES (?,?,?,?,?,?,0)')
+                ->execute([$lot_id, $item['product_id'], $item['qty_boxes'], $item['expiry_date'], $item['buying_price'], $total]);
 
             // Update inventory
             $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,0) ON DUPLICATE KEY UPDATE qty_boxes = qty_boxes + VALUES(qty_boxes)')

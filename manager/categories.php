@@ -5,7 +5,7 @@ requireRole('manager');
 $pageTitle  = 'Categories';
 $pdo        = getDB();
 $wid        = $_SESSION['warehouse_id'];
-$categories = $pdo->query('SELECT c.*, co.name as company_name FROM categories c JOIN companies co ON co.id=c.company_id WHERE c.status=1 ORDER BY c.id DESC')->fetchAll();
+$categories = $pdo->query('SELECT c.*, co.name as company_name FROM categories c LEFT JOIN companies co ON co.id=c.company_id WHERE c.status=1 ORDER BY c.id DESC')->fetchAll();
 $companies  = $pdo->query('SELECT id, name FROM companies WHERE status=1 ORDER BY name')->fetchAll();
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -26,7 +26,7 @@ include __DIR__ . '/../includes/header.php';
             <tr>
               <td class="text-gray-400 text-xs"><?= $i+1 ?></td>
               <td class="font-medium"><?= htmlspecialchars($c['name']) ?></td>
-              <td><span class="badge badge-info"><?= htmlspecialchars($c['company_name']) ?></span></td>
+              <td><span class="badge badge-info"><?= htmlspecialchars($c['company_name'] ?? 'General') ?></span></td>
               <td class="flex gap-2">
                 <button onclick='editCat(<?= json_encode($c) ?>)' class="btn btn-ghost btn-sm">Edit</button>
                 <button onclick="deleteCat(<?= $c['id'] ?>)" class="btn btn-danger btn-sm">Delete</button>
@@ -42,16 +42,18 @@ include __DIR__ . '/../includes/header.php';
 </div>
 <div id="add-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
-    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Add Category</h3><button onclick="closeModal('add-modal')">&times;</button></div>
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Bulk Add Categories</h3><button onclick="closeModal('add-modal')">&times;</button></div>
     <form id="add-form" class="space-y-3">
-      <div><label class="form-label">Company *</label>
-        <select id="add-company" class="form-input" required>
-          <option value="">Select Company</option>
+      <div><label class="form-label">Company (Optional)</label>
+        <select id="add-company" class="form-input">
+          <option value="">Select Company (Global)</option>
           <?php foreach ($companies as $c): ?><option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option><?php endforeach; ?>
         </select>
       </div>
-      <div><label class="form-label">Category Name *</label><input id="add-name" class="form-input" required /></div>
-      <div class="flex gap-2 pt-2"><button type="submit" class="btn btn-primary flex-1">Save</button><button type="button" onclick="closeModal('add-modal')" class="btn btn-ghost flex-1">Cancel</button></div>
+      <div><label class="form-label">Category Names * (One per line)</label>
+        <textarea id="add-names" class="form-input h-32" placeholder="Category 1&#10;Category 2&#10;Category 3" required></textarea>
+      </div>
+      <div class="flex gap-2 pt-2"><button type="submit" class="btn btn-primary flex-1">Save All</button><button type="button" onclick="closeModal('add-modal')" class="btn btn-ghost flex-1">Cancel</button></div>
     </form>
   </div>
 </div>
@@ -60,8 +62,9 @@ include __DIR__ . '/../includes/header.php';
     <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Edit Category</h3><button onclick="closeModal('edit-modal')">&times;</button></div>
     <form id="edit-form" class="space-y-3">
       <input type="hidden" id="edit-id" />
-      <div><label class="form-label">Company *</label>
-        <select id="edit-company" class="form-input" required>
+      <div><label class="form-label">Company (Optional)</label>
+        <select id="edit-company" class="form-input">
+          <option value="">Select Company (Global)</option>
           <?php foreach ($companies as $c): ?><option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option><?php endforeach; ?>
         </select>
       </div>
@@ -74,16 +77,18 @@ include __DIR__ . '/../includes/header.php';
 <script>
 document.getElementById('add-form').addEventListener('submit', async function(e) {
   e.preventDefault();
+  const names = document.getElementById('add-names').value.split('\n').map(s => s.trim()).filter(s => s);
+  if (names.length === 0) return;
   const data = await api('<?= rootPath() ?>/api/categories.php', 'POST', {
     company_id: document.getElementById('add-company').value,
-    name: document.getElementById('add-name').value
+    names: names
   });
-  if (data.success) { showToast('Category added!'); closeModal('add-modal'); location.reload(); }
+  if (data.success) { showToast('Categories added!'); closeModal('add-modal'); location.reload(); }
   else showToast(data.message, 'error');
 });
 function editCat(c) {
   document.getElementById('edit-id').value = c.id;
-  document.getElementById('edit-company').value = c.company_id;
+  document.getElementById('edit-company').value = c.company_id || '';
   document.getElementById('edit-name').value = c.name;
   openModal('edit-modal');
 }

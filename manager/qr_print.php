@@ -72,7 +72,7 @@ async function loadProducts() {
   const items = (data.data || []).filter(i => i.qr_generated == 1);
   psel.innerHTML = '<option value="">Select Product</option>';
   items.forEach(item => {
-    psel.innerHTML += `<option value="${item.lot_item_id}" data-name="${item.product_name}" data-ppb="${item.pieces_per_box}">${item.product_name}</option>`;
+    psel.innerHTML += `<option value="${item.lot_item_id}" data-name="${item.product_name}" data-ppb="${item.pieces_per_box}" data-expiry="${item.expiry_date}">${item.product_name}</option>`;
   });
   psel.disabled = false;
   document.getElementById('apply-btn').disabled = false;
@@ -86,6 +86,7 @@ async function loadStickers() {
   const opt         = psel.options[psel.selectedIndex];
   const productName = opt.dataset.name;
   const piecesPerBox = opt.dataset.ppb;
+  const expiryDate   = opt.dataset.expiry;
 
   const data = await api('<?= rootPath() ?>/api/qr.php?action=fetch&lot_item_id=' + lid);
   if (!data.success) { showToast('Failed to load QR codes', 'error'); return; }
@@ -101,10 +102,12 @@ async function loadStickers() {
     generateQRCanvas(canvas, qr.qr_uid, 150);
     div.appendChild(canvas);
 
+    const expText = expiryDate ? ` | Exp: ${expiryDate}` : '';
+
     div.innerHTML += `
       <div class="sticker-qr-uid">${qr.qr_uid}</div>
       <div class="sticker-product-name">${productName}</div>
-      <div class="sticker-qty">${piecesPerBox} pcs/box</div>
+      <div class="sticker-qty">${piecesPerBox} pcs/box ${expText}</div>
     `;
     // Re-append canvas (innerHTML overwrites it)
     grid.appendChild(div);

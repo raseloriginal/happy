@@ -14,12 +14,21 @@ $roleColors = [
 $roleBadge = $roleColors[$userRole] ?? 'badge-gray';
 $rootPath  = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/..';
 ?>
-<header class="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-  <div class="flex items-center gap-3">
-    <button id="sidebar-toggle" class="text-gray-500 hover:text-gray-700 lg:hidden" onclick="document.querySelector('.sidebar').classList.toggle('sidebar-open')">
+<header class="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center justify-between sticky top-0 z-30">
+  <div class="flex items-center gap-4">
+    <!-- Desktop Toggle -->
+    <button id="desktop-sidebar-toggle" class="text-gray-500 hover:text-gray-700 hidden lg:block" onclick="document.getElementById('app-sidebar').classList.toggle('collapsed')">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+    </button>
+    <!-- Mobile Toggle -->
+    <button id="mobile-sidebar-toggle" class="text-gray-500 hover:text-gray-700 lg:hidden" onclick="document.getElementById('app-sidebar').classList.toggle('sidebar-open')">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
-    <h1 class="text-sm font-semibold text-gray-700"><?= $pageTitle ?? 'Dashboard' ?></h1>
+    
+    <div class="relative hidden md:block">
+      <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" placeholder="Quick Search (Ctrl+K)" class="pl-9 pr-4 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-64 transition-all" />
+    </div>
   </div>
   <div class="flex items-center gap-3">
     <span class="badge <?= $roleBadge ?> uppercase"><?= $userRole ?></span>

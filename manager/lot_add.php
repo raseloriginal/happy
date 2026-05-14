@@ -45,8 +45,9 @@ include __DIR__ . '/../includes/header.php';
               <table class="data-table" id="items-table">
                 <thead>
                   <tr>
-                    <th class="w-1/2">Product</th>
+                    <th class="w-1/3">Product</th>
                     <th>Qty (Boxes)</th>
+                    <th>Expiry Date</th>
                     <th>Buying Price (৳)</th>
                     <th>Total (৳)</th>
                     <th></th>
@@ -106,6 +107,7 @@ function addRow() {
       </select>
     </td>
     <td><input type="number" class="form-input qty-input" min="1" value="1" oninput="calcRow(this)" required /></td>
+    <td><input type="date" class="form-input expiry-input" required /></td>
     <td><input type="number" class="form-input price-input" min="0" step="0.01" value="0" oninput="calcRow(this)" required /></td>
     <td class="font-medium row-total text-gray-700">৳0.00</td>
     <td><button type="button" onclick="removeRow(this)" class="btn btn-danger btn-sm">✕</button></td>
@@ -154,14 +156,15 @@ document.getElementById('lot-form').addEventListener('submit', async function(e)
   let valid    = true;
 
   document.querySelectorAll('#items-body tr').forEach(tr => {
-    const pid   = tr.querySelector('.product-select').value;
-    const qty   = parseInt(tr.querySelector('.qty-input').value);
-    const price = parseFloat(tr.querySelector('.price-input').value);
-    if (!pid || !qty) { valid = false; return; }
-    items.push({ product_id: pid, qty_boxes: qty, buying_price: price });
+    const pid    = tr.querySelector('.product-select').value;
+    const qty    = parseInt(tr.querySelector('.qty-input').value);
+    const expiry = tr.querySelector('.expiry-input').value;
+    const price  = parseFloat(tr.querySelector('.price-input').value);
+    if (!pid || !qty || !expiry) { valid = false; return; }
+    items.push({ product_id: pid, qty_boxes: qty, expiry_date: expiry, buying_price: price });
   });
 
-  if (!valid || items.length === 0) { showToast('Add at least one valid product row', 'error'); return; }
+  if (!valid || items.length === 0) { showToast('Add at least one valid product row with expiry date', 'error'); return; }
 
   btn.disabled = true; btn.textContent = 'Saving…';
 

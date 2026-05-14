@@ -37,7 +37,7 @@ $basePath  = '/happycrm2';
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <!-- QR Code Generator -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="<?= rootPath() ?>/assets/css/app.css" />

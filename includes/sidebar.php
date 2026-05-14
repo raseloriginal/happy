@@ -8,17 +8,17 @@ $root     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/..';
 
 function navLink(string $href, string $icon, string $label, string $current): string {
     $active = (strpos($current, $href) !== false) ? 'active' : '';
-    return '<a href="' . $href . '" class="sidebar-link ' . $active . '">' . $icon . '<span>' . $label . '</span></a>';
+    return '<a href="' . $href . '" class="sidebar-link ' . $active . '" title="' . $label . '"><span class="text-lg">' . $icon . '</span><span class="sidebar-text">' . $label . '</span></a>';
 }
 ?>
-<nav class="sidebar">
+<nav class="sidebar" id="app-sidebar">
   <!-- Logo -->
-  <div class="px-5 py-5 border-b border-white/10">
+  <div class="px-5 py-5 border-b border-white/10 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">HB</div>
-      <div>
-        <div class="text-white font-bold text-sm leading-tight">Happy Bangladesh</div>
-        <div class="text-slate-400 text-xs">ERP System</div>
+      <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">HB</div>
+      <div class="sidebar-text">
+        <div class="text-white font-bold text-sm leading-tight whitespace-nowrap">Happy Bangladesh</div>
+        <div class="text-slate-400 text-xs whitespace-nowrap">ERP System</div>
       </div>
     </div>
   </div>

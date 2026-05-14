@@ -11,7 +11,7 @@ $action = $_GET['action'] ?? '';
 if ($action === 'lot_products') {
     // Get products in a lot (for dropdowns)
     $lot_id = intval($_GET['lot_id'] ?? 0);
-    $stmt = $pdo->prepare('SELECT li.id as lot_item_id, li.qty_boxes, li.qr_generated, p.id as product_id, p.name as product_name, p.pieces_per_box FROM lot_items li JOIN products p ON p.id=li.product_id WHERE li.lot_id=?');
+    $stmt = $pdo->prepare('SELECT li.id as lot_item_id, li.qty_boxes, li.qr_generated, li.expiry_date, p.id as product_id, p.name as product_name, p.pieces_per_box FROM lot_items li JOIN products p ON p.id=li.product_id WHERE li.lot_id=?');
     $stmt->execute([$lot_id]);
     echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
     exit;
@@ -20,7 +20,7 @@ if ($action === 'lot_products') {
 if ($action === 'fetch') {
     // Fetch QR codes for a lot_item (for print page)
     $lot_item_id = intval($_GET['lot_item_id'] ?? 0);
-    $stmt = $pdo->prepare('SELECT qr.*, p.name as product_name, p.pieces_per_box FROM qr_codes qr JOIN products p ON p.id=qr.product_id WHERE qr.lot_item_id=? ORDER BY qr.serial_number');
+    $stmt = $pdo->prepare('SELECT qr.*, p.name as product_name, p.pieces_per_box, li.expiry_date FROM qr_codes qr JOIN products p ON p.id=qr.product_id JOIN lot_items li ON li.id=qr.lot_item_id WHERE qr.lot_item_id=? ORDER BY qr.serial_number');
     $stmt->execute([$lot_item_id]);
     echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
     exit;
