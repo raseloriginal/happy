@@ -64,17 +64,34 @@ switch ($method) {
                 }
             }
 
-            $pdo->prepare('INSERT INTO products (company_id, category_id, name, box_type, image, pieces_per_box, selling_price, dealer_percentage) VALUES (?,?,?,?,?,?,?,?)')
-                ->execute([$company_id, $cat_id, $name, $box_t, $image, $ppb, $price, $dp]);
+            try {
+                $pdo->prepare('INSERT INTO products (company_id, category_id, name, box_type, image, pieces_per_box, selling_price, dealer_percentage) VALUES (?,?,?,?,?,?,?,?)')
+                    ->execute([$company_id, $cat_id, $name, $box_t, $image, $ppb, $price, $dp]);
+            } catch (PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    echo json_encode(['success' => false, 'message' => 'Product name already exists for this company.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+                }
+                exit;
+            }
         }
         echo json_encode(['success' => true]);
         break;
 
     case 'PUT':
         $d = json_decode(file_get_contents('php://input'), true);
-        $pdo->prepare('UPDATE products SET company_id=?, category_id=?, name=?, box_type=?, pieces_per_box=?, selling_price=?, dealer_percentage=?, status=? WHERE id=?')
-            ->execute([$d['company_id'], $d['category_id'] ?: null, trim($d['name']), $d['box_type'] ?? '', $d['pieces_per_box'], $d['selling_price'] ?? 0, $d['dealer_percentage'] ?? 0, $d['status'] ?? 1, $d['id']]);
-        echo json_encode(['success' => true]);
+        try {
+            $pdo->prepare('UPDATE products SET company_id=?, category_id=?, name=?, box_type=?, pieces_per_box=?, selling_price=?, dealer_percentage=?, status=? WHERE id=?')
+                ->execute([$d['company_id'], $d['category_id'] ?: null, trim($d['name']), $d['box_type'] ?? '', $d['pieces_per_box'], $d['selling_price'] ?? 0, $d['dealer_percentage'] ?? 0, $d['status'] ?? 1, $d['id']]);
+            echo json_encode(['success' => true]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                echo json_encode(['success' => false, 'message' => 'Product name already exists for this company.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            }
+        }
         break;
 
     case 'DELETE':

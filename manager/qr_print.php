@@ -11,13 +11,15 @@ $lots->execute([$wid]); $lots = $lots->fetchAll();
 $preselect = intval($_GET['lot_id'] ?? 0);
 include __DIR__ . '/../includes/header.php';
 ?>
+<!-- Load jsPDF for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <div class="page-wrapper">
   <?php include __DIR__ . '/../includes/sidebar.php'; ?>
   <div class="main-content">
     <?php include __DIR__ . '/../includes/navbar.php'; ?>
     <div class="page-body max-w-5xl">
       <div class="flex items-center justify-between mb-6 print:hidden">
-        <div><h2 class="text-xl font-bold text-gray-800">Print QR Stickers</h2><p class="text-sm text-gray-500">75mm × 100mm thermal label format</p></div>
+        <div><h2 class="text-xl font-bold text-gray-800">Print QR Stickers</h2><p class="text-sm text-gray-500">38mm × 25mm (3.8×2.5cm) thermal label format</p></div>
         <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Lots</a>
       </div>
 
@@ -44,7 +46,8 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <div class="flex gap-3 mt-4">
           <button onclick="loadStickers()" class="btn btn-primary" id="apply-btn" disabled>Apply</button>
-          <button onclick="window.print()" class="btn btn-success" id="print-btn" style="display:none">🖨 Print Stickers</button>
+          <button onclick="downloadPDF()" class="btn btn-danger" id="pdf-btn" style="display:none">📄 Download PDF (38x25mm)</button>
+          <button onclick="downloadDoc()" class="btn btn-ghost" id="doc-btn" style="display:none">📥 Word Doc</button>
         </div>
       </div>
 
@@ -63,7 +66,8 @@ async function loadProducts() {
   psel.innerHTML = '<option value="">Loading…</option>';
   psel.disabled  = true;
   document.getElementById('apply-btn').disabled = true;
-  document.getElementById('print-btn').style.display = 'none';
+  document.getElementById('pdf-btn').style.display = 'none';
+  document.getElementById('doc-btn').style.display = 'none';
   document.getElementById('stickers-grid').innerHTML = '';
 
   if (!lid) { psel.innerHTML = '<option value="">Select Lot first</option>'; return; }
@@ -96,30 +100,162 @@ async function loadStickers() {
 
   for (const qr of data.data) {
     const div = document.createElement('div');
-    div.className = 'sticker-card';
-
-    const canvas = document.createElement('canvas');
-    generateQRCanvas(canvas, qr.qr_uid, 150);
-    div.appendChild(canvas);
+    div.className = 'sticker-card flex flex-row items-center';
 
     const expText = expiryDate ? ` | Exp: ${expiryDate}` : '';
 
-    div.innerHTML += `
-      <div class="sticker-qr-uid">${qr.qr_uid}</div>
-      <div class="sticker-product-name">${productName}</div>
-      <div class="sticker-qty">${piecesPerBox} pcs/box ${expText}</div>
+    div.innerHTML = `
+      <div class="sticker-left">
+        <!-- Canvas will be appended here -->
+        <div class="sticker-qr-uid">${qr.qr_uid}</div>
+      </div>
+      <div class="sticker-right">
+        <div class="sticker-product-name">${productName}</div>
+        <div class="sticker-qty">${piecesPerBox} pcs/box ${expText}</div>
+      </div>
     `;
-    // Re-append canvas (innerHTML overwrites it)
-    grid.appendChild(div);
 
-    // Re-generate canvas since innerHTML cleared it
-    const c2 = div.querySelector('canvas') || document.createElement('canvas');
-    if (!div.contains(c2)) div.prepend(c2);
-    generateQRCanvas(c2, qr.qr_uid, 150);
+    const canvas = document.createElement('canvas');
+    generateQRCanvas(canvas, qr.qr_uid, 80); // Reduced from 150 to 80 to prevent overlap
+    div.querySelector('.sticker-left').prepend(canvas);
+
+    grid.appendChild(div);
   }
 
-  document.getElementById('print-btn').style.display = 'inline-flex';
+  document.getElementById('pdf-btn').style.display = 'inline-flex';
+  document.getElementById('doc-btn').style.display = 'inline-flex';
   showToast(`Loaded ${data.data.length} stickers`);
+}
+
+async function downloadPDF() {
+  const grid = document.getElementById('stickers-grid');
+  if (!grid.children.length) { showToast('No stickers to download', 'warning'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({
+    orientation: 'l',
+    unit: 'mm',
+    format: [38, 25],
+    putOnlyUsedFonts: true,
+    floatPrecision: 16
+  });
+
+  const cards = grid.children;
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const canvas = card.querySelector('canvas');
+    if (!canvas) continue;
+    const qrData = canvas.toDataURL('image/png');
+    const productName = card.querySelector('.sticker-product-name').innerText;
+    const qtyText = card.querySelector('.sticker-qty').innerText;
+    const qrUid = card.querySelector('.sticker-qr-uid').innerText;
+
+    if (i > 0) pdf.addPage([38, 25], 'l');
+
+    // Draw QR Code (18mm x 18mm)
+    pdf.addImage(qrData, 'PNG', 2, 2, 18, 18);
+    
+    // Draw QR UID under QR (Center-aligned to QR)
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(qrUid, 11, 22.5, { align: 'center' });
+
+    // Draw Product Name (on the right)
+    pdf.setFontSize(7); // Smaller font for safety
+    pdf.setTextColor(0, 0, 0);
+    // Split text and limit to 3 lines
+    const splitTitle = pdf.splitTextToSize(productName, 17);
+    const limitedTitle = splitTitle.slice(0, 3);
+    pdf.text(limitedTitle, 20, 5);
+
+    // Draw Qty text (Fixed near bottom)
+    pdf.setFontSize(5);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(qtyText, 20, 18);
+  }
+
+  const lotSelect = document.getElementById('lot-select');
+  const lotText = lotSelect.options[lotSelect.selectedIndex].text.split('—')[0].trim();
+  pdf.save(`stickers_${lotText.replace('#', '')}.pdf`);
+  showToast('PDF Downloaded');
+}
+
+function downloadDoc() {
+  const grid = document.getElementById('stickers-grid');
+  if (!grid.children.length) { showToast('No stickers to download', 'warning'); return; }
+
+  let htmlContent = `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'>
+    <style>
+      @page Section1 { size: 38mm 25mm; margin: 0mm; }
+      div.Section1 { page: Section1; }
+      .sticker-card {
+        width: 38mm;
+        height: 25mm;
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+        display: block;
+        page-break-after: always;
+        font-family: Arial, sans-serif;
+      }
+      .sticker-container {
+        width: 38mm;
+        height: 25mm;
+        position: relative;
+        overflow: hidden;
+      }
+      .sticker-left { float: left; width: 19mm; height: 25mm; padding-top: 1mm; text-align: center; }
+      .sticker-right { float: left; width: 18mm; height: 25mm; padding-top: 3mm; padding-left: 0.5mm; }
+      .sticker-product-name { font-size: 7pt; font-weight: bold; line-height: 1; color: #000; word-wrap: break-word; }
+      .sticker-qty { font-size: 5pt; color: #111; margin-top: 1mm; }
+      .sticker-qr-uid { font-size: 6.5pt; font-weight: bold; margin-top: 0.2mm; color: #000; text-align: center; }
+      img.qr-code { width: 18mm; height: 18mm; display: block; margin: 0 auto; }
+    </style>
+    </head>
+    <body><div class="Section1">
+  `;
+
+  for (const card of grid.children) {
+    const canvas = card.querySelector('canvas');
+    if (!canvas) continue;
+    const qrImage = canvas.toDataURL('image/png');
+    const productName = card.querySelector('.sticker-product-name').innerText;
+    const qtyText = card.querySelector('.sticker-qty').innerText;
+    const qrUid = card.querySelector('.sticker-qr-uid').innerText;
+
+    htmlContent += `
+      <div class="sticker-card">
+        <div class="sticker-container">
+          <div class="sticker-left">
+            <img class="qr-code" src="${qrImage}" />
+            <div class="sticker-qr-uid">${qrUid}</div>
+          </div>
+          <div class="sticker-right">
+            <div class="sticker-product-name">${productName}</div>
+            <div class="sticker-qty">${qtyText}</div>
+          </div>
+          <div style="clear:both;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  htmlContent += `</div></body></html>`;
+
+  const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const lotSelect = document.getElementById('lot-select');
+  const lotText = lotSelect.options[lotSelect.selectedIndex].text.split('—')[0].trim();
+  
+  link.href = url;
+  link.download = `stickers_${lotText.replace('#', '')}.doc`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 // Auto-load if preset

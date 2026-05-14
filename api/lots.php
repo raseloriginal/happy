@@ -29,30 +29,35 @@ switch ($method) {
 
     case 'POST':
         $d = json_decode(file_get_contents('php://input'), true);
-        $pdo->beginTransaction();
+        try {
+            $pdo->beginTransaction();
 
-        // Get manager_id
-        $mgr = $pdo->prepare('SELECT id FROM managers WHERE user_id=? LIMIT 1');
-        $mgr->execute([$_SESSION['user_id']]);
-        $manager_id = $mgr->fetchColumn() ?: 0;
+            // Get manager_id
+            $mgr = $pdo->prepare('SELECT id FROM managers WHERE user_id=? LIMIT 1');
+            $mgr->execute([$_SESSION['user_id']]);
+            $manager_id = $mgr->fetchColumn() ?: 0;
 
-        $wid = $_SESSION['warehouse_id'] ?? ($d['warehouse_id'] ?? 0);
+            $wid = $_SESSION['warehouse_id'] ?? ($d['warehouse_id'] ?? 0);
 
-        $stmt = $pdo->prepare('INSERT INTO lots (company_id, warehouse_id, manager_id, lot_date, grand_total) VALUES (?,?,?,?,?)');
-        $stmt->execute([$d['company_id'], $wid, $manager_id, $d['lot_date'], $d['grand_total']]);
-        $lot_id = $pdo->lastInsertId();
+            $stmt = $pdo->prepare('INSERT INTO lots (company_id, warehouse_id, manager_id, lot_date, grand_total) VALUES (?,?,?,?,?)');
+            $stmt->execute([$d['company_id'], $wid, $manager_id, $d['lot_date'], $d['grand_total']]);
+            $lot_id = $pdo->lastInsertId();
 
-        foreach ($d['items'] as $item) {
-            $total = $item['qty_boxes'] * $item['buying_price'];
-            $pdo->prepare('INSERT INTO lot_items (lot_id, product_id, qty_boxes, expiry_date, buying_price, total, qr_generated) VALUES (?,?,?,?,?,?,0)')
-                ->execute([$lot_id, $item['product_id'], $item['qty_boxes'], $item['expiry_date'], $item['buying_price'], $total]);
+            foreach ($d['items'] as $item) {
+                $total = $item['qty_boxes'] * $item['buying_price'];
+                $pdo->prepare('INSERT INTO lot_items (lot_id, product_id, qty_boxes, expiry_date, buying_price, total, qr_generated) VALUES (?,?,?,?,?,?,0)')
+                    ->execute([$lot_id, $item['product_id'], $item['qty_boxes'], $item['expiry_date'], $item['buying_price'], $total]);
 
-            // Update inventory
-            $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,0) ON DUPLICATE KEY UPDATE qty_boxes = qty_boxes + VALUES(qty_boxes)')
-                ->execute([$item['product_id'], $wid, $item['qty_boxes']]);
+                // Update inventory
+                $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,0) ON DUPLICATE KEY UPDATE qty_boxes = qty_boxes + VALUES(qty_boxes)')
+                    ->execute([$item['product_id'], $wid, $item['qty_boxes']]);
+            }
+            $pdo->commit();
+            echo json_encode(['success' => true, 'lot_id' => $lot_id, 'message' => 'Lot created successfully']);
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
         }
-        $pdo->commit();
-        echo json_encode(['success' => true, 'lot_id' => $lot_id, 'message' => 'Lot created successfully']);
         break;
 
     case 'DELETE':

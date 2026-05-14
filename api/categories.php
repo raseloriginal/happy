@@ -30,15 +30,31 @@ switch ($method) {
         if (empty($names) && !empty($d['name'])) $names = [$d['name']];
 
         $stmt = $pdo->prepare('INSERT INTO categories (company_id, name) VALUES (?,?)');
-        foreach ($names as $name) {
-            if (trim($name)) $stmt->execute([$company_id, trim($name)]);
+        try {
+            foreach ($names as $name) {
+                if (trim($name)) $stmt->execute([$company_id, trim($name)]);
+            }
+            echo json_encode(['success' => true]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                echo json_encode(['success' => false, 'message' => 'Category already exists.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            }
         }
-        echo json_encode(['success' => true]);
         break;
     case 'PUT':
         $d = json_decode(file_get_contents('php://input'), true);
-        $pdo->prepare('UPDATE categories SET company_id=?, name=?, status=? WHERE id=?')->execute([$d['company_id'] ?: null, trim($d['name']), $d['status'] ?? 1, $d['id']]);
-        echo json_encode(['success' => true]);
+        try {
+            $pdo->prepare('UPDATE categories SET company_id=?, name=?, status=? WHERE id=?')->execute([$d['company_id'] ?: null, trim($d['name']), $d['status'] ?? 1, $d['id']]);
+            echo json_encode(['success' => true]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                echo json_encode(['success' => false, 'message' => 'Category name already exists.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            }
+        }
         break;
     case 'DELETE':
         $pdo->prepare('UPDATE categories SET status=0 WHERE id=?')->execute([$_GET['id'] ?? 0]);
