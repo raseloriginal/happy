@@ -51,6 +51,24 @@ switch ($method) {
                 // Update inventory
                 $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,0) ON DUPLICATE KEY UPDATE qty_boxes = qty_boxes + VALUES(qty_boxes)')
                     ->execute([$item['product_id'], $wid, $item['qty_boxes']]);
+
+                // Auto update product selling price
+                // Formula: selling_price = (buying_price + (buying_price * dealer_percentage / 100)) / pieces_per_box
+                $prodStmt = $pdo->prepare('SELECT pieces_per_box, dealer_percentage FROM products WHERE id=?');
+                $prodStmt->execute([$item['product_id']]);
+                $prod = $prodStmt->fetch();
+
+                if ($prod) {
+                    $ppb = (float)($prod['pieces_per_box'] ?: 1);
+                    $dp  = (float)($prod['dealer_percentage'] ?: 0);
+                    $buying_price = (float)$item['buying_price'];
+                    
+                    $selling_price_box = $buying_price * (1 + ($dp / 100));
+                    $selling_price_piece = $selling_price_box / $ppb;
+
+                    $pdo->prepare('UPDATE products SET selling_price=? WHERE id=?')
+                        ->execute([$selling_price_piece, $item['product_id']]);
+                }
             }
             $pdo->commit();
             echo json_encode(['success' => true, 'lot_id' => $lot_id, 'message' => 'Lot created successfully']);

@@ -76,7 +76,7 @@ async function loadProducts() {
   const items = (data.data || []).filter(i => i.qr_generated == 1);
   psel.innerHTML = '<option value="">Select Product</option>';
   items.forEach(item => {
-    psel.innerHTML += `<option value="${item.lot_item_id}" data-name="${item.product_name}" data-ppb="${item.pieces_per_box}" data-expiry="${item.expiry_date}">${item.product_name}</option>`;
+    psel.innerHTML += `<option value="${item.lot_item_id}" data-name="${item.product_name}" data-ppb="${item.pieces_per_box}" data-expiry="${item.expiry_date}" data-price="${item.selling_price}">${item.product_name}</option>`;
   });
   psel.disabled = false;
   document.getElementById('apply-btn').disabled = false;
@@ -102,22 +102,29 @@ async function loadStickers() {
     const div = document.createElement('div');
     div.className = 'sticker-card flex flex-row items-center';
 
-    const expText = expiryDate ? ` | Exp: ${expiryDate}` : '';
+    const priceText = qr.selling_price ? `${qr.selling_price}taka` : '';
+    const expText = expiryDate ? `Exp: ${expiryDate}` : '';
 
     div.innerHTML = `
       <div class="sticker-left">
-        <!-- Canvas will be appended here -->
+        <div class="sticker-qr-container"></div>
         <div class="sticker-qr-uid">${qr.qr_uid}</div>
       </div>
-      <div class="sticker-right">
-        <div class="sticker-product-name">${productName}</div>
-        <div class="sticker-qty">${piecesPerBox} pcs/box ${expText}</div>
+      <div class="sticker-right flex flex-col justify-between h-full">
+        <div>
+          <div class="sticker-product-name">${productName}</div>
+          <div class="sticker-price">${priceText}</div>
+        </div>
+        <div class="mt-auto">
+          <div class="sticker-qty">${piecesPerBox} pcs/box</div>
+          <div class="sticker-exp">${expText}</div>
+        </div>
       </div>
     `;
 
     const canvas = document.createElement('canvas');
-    generateQRCanvas(canvas, qr.qr_uid, 80); // Reduced from 150 to 80 to prevent overlap
-    div.querySelector('.sticker-left').prepend(canvas);
+    generateQRCanvas(canvas, qr.qr_uid, 80);
+    div.querySelector('.sticker-qr-container').appendChild(canvas);
 
     grid.appendChild(div);
   }
@@ -152,26 +159,47 @@ async function downloadPDF() {
 
     if (i > 0) pdf.addPage([38, 25], 'l');
 
-    // Draw QR Code (18mm x 18mm)
-    pdf.addImage(qrData, 'PNG', 2, 2, 18, 18);
+    // Draw QR Code (14mm x 14mm)
+    pdf.addImage(qrData, 'PNG', 1.5, 1.5, 14, 14);
     
-    // Draw QR UID under QR (Center-aligned to QR)
-    pdf.setFontSize(6);
+    // Draw QR UID under QR
+    pdf.setFontSize(5.5);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(qrUid, 11, 22.5, { align: 'center' });
+    pdf.text(qrUid, 8.5, 17.5, { align: 'center' });
 
-    // Draw Product Name (on the right)
-    pdf.setFontSize(7); // Smaller font for safety
-    pdf.setTextColor(0, 0, 0);
-    // Split text and limit to 3 lines
-    const splitTitle = pdf.splitTextToSize(productName, 17);
-    const limitedTitle = splitTitle.slice(0, 3);
-    pdf.text(limitedTitle, 20, 5);
+    // Draw Right Side Info
+    const textX = 17;
+    const textWidth = 19;
 
-    // Draw Qty text (Fixed near bottom)
-    pdf.setFontSize(5);
+    // 1. Product Name (Bolder/Larger)
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    const splitTitle = pdf.splitTextToSize(productName, textWidth);
+    pdf.text(splitTitle.slice(0, 2), textX, 4);
+    
+    // Calculate Y offset after title (approx 3.5mm per line)
+    let currentY = 4 + (Math.min(splitTitle.length, 2) * 3.5);
+
+    // 2. Price (5taka)
+    const priceText = card.querySelector('.sticker-price').innerText;
+    if (priceText) {
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(priceText, textX, currentY);
+      currentY += 4;
+    }
+
+    // 3. Qty (Bottom Area)
+    pdf.setFontSize(6);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(qtyText, 20, 18);
+    pdf.text(qtyText.split('\n')[0], textX, 18);
+
+    // 4. Exp
+    const expText = card.querySelector('.sticker-exp').innerText;
+    if (expText) {
+      pdf.setFontSize(6);
+      pdf.text(expText, textX, 21.5);
+    }
   }
 
   const lotSelect = document.getElementById('lot-select');
@@ -206,12 +234,14 @@ function downloadDoc() {
         position: relative;
         overflow: hidden;
       }
-      .sticker-left { float: left; width: 19mm; height: 25mm; padding-top: 1mm; text-align: center; }
-      .sticker-right { float: left; width: 18mm; height: 25mm; padding-top: 3mm; padding-left: 0.5mm; }
-      .sticker-product-name { font-size: 7pt; font-weight: bold; line-height: 1; color: #000; word-wrap: break-word; }
-      .sticker-qty { font-size: 5pt; color: #111; margin-top: 1mm; }
-      .sticker-qr-uid { font-size: 6.5pt; font-weight: bold; margin-top: 0.2mm; color: #000; text-align: center; }
-      img.qr-code { width: 18mm; height: 18mm; display: block; margin: 0 auto; }
+      .sticker-left { float: left; width: 16mm; height: 25mm; padding-top: 1.5mm; text-align: center; }
+      .sticker-right { float: left; width: 21mm; height: 25mm; padding-top: 2mm; padding-left: 1mm; }
+      .sticker-product-name { font-size: 8.5pt; font-weight: bold; line-height: 1; color: #000; margin-bottom: 0.5mm; }
+      .sticker-price { font-size: 7.5pt; font-weight: bold; color: #000; }
+      .sticker-qty { font-size: 6pt; color: #111; margin-top: 2.5mm; line-height: 1; }
+      .sticker-exp { font-size: 6pt; color: #111; line-height: 1; }
+      .sticker-qr-uid { font-size: 5.5pt; font-weight: bold; margin-top: 0.5mm; color: #000; text-align: center; }
+      img.qr-code { width: 14mm; height: 14mm; display: block; margin: 0 auto; }
     </style>
     </head>
     <body><div class="Section1">
@@ -220,10 +250,8 @@ function downloadDoc() {
   for (const card of grid.children) {
     const canvas = card.querySelector('canvas');
     if (!canvas) continue;
-    const qrImage = canvas.toDataURL('image/png');
-    const productName = card.querySelector('.sticker-product-name').innerText;
-    const qtyText = card.querySelector('.sticker-qty').innerText;
-    const qrUid = card.querySelector('.sticker-qr-uid').innerText;
+    const priceText = card.querySelector('.sticker-price').innerText;
+    const expText = card.querySelector('.sticker-exp').innerText;
 
     htmlContent += `
       <div class="sticker-card">
@@ -234,7 +262,9 @@ function downloadDoc() {
           </div>
           <div class="sticker-right">
             <div class="sticker-product-name">${productName}</div>
-            <div class="sticker-qty">${qtyText}</div>
+            <div class="sticker-price">${priceText}</div>
+            <div class="sticker-qty">${qtyText.split('\n')[0]}</div>
+            <div class="sticker-exp">${expText}</div>
           </div>
           <div style="clear:both;"></div>
         </div>

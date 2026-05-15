@@ -16,7 +16,12 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-5xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Out for Delivery</h2><p class="text-sm text-gray-500">Scan QR boxes to load onto van</p></div>
-        <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost">← Orders</a>
+        <div class="flex gap-2">
+          <a href="<?= rootPath() ?>/manager/delivery_scan.php" class="btn btn-primary" style="gap:6px;">
+            📱 Mobile Scan
+          </a>
+          <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost">← Orders</a>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -50,8 +50,23 @@ include __DIR__ . '/../includes/header.php';
             <div id="products-section" style="display:none">
               <div class="overflow-x-auto">
                 <table class="data-table" id="products-table">
-                  <thead><tr><th class="w-1/2">Product</th><th>Qty (pcs) *</th><th>Price</th><th></th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th class="w-1/2">Product</th>
+                      <th class="w-24">Qty (pcs) *</th>
+                      <th class="w-32 text-right">Price/Pcs</th>
+                      <th class="w-32 text-right">Total</th>
+                      <th class="w-10"></th>
+                    </tr>
+                  </thead>
                   <tbody id="products-body"></tbody>
+                  <tfoot>
+                    <tr class="bg-gray-50 font-bold">
+                      <td colspan="3" class="text-right py-3">Grand Total:</td>
+                      <td class="text-right py-3 text-indigo-600" id="grand-total">৳0.00</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>
@@ -77,6 +92,7 @@ async function loadSRProducts() {
   document.getElementById('products-section').style.display = 'none';
   document.getElementById('add-row-btn').disabled = true;
   document.getElementById('save-btn').disabled = true;
+  document.getElementById('grand-total').textContent = '৳0.00';
 
   if (!srId) {
     document.getElementById('no-sr-msg').style.display = 'block';
@@ -115,9 +131,10 @@ function addProductRow() {
         ${getProductOptions()}
       </select>
     </td>
-    <td><input type="number" class="form-input qty-inp" min="1" placeholder="qty in pcs" required /></td>
-    <td class="text-gray-500 text-sm row-price">—</td>
-    <td><button type="button" onclick="this.closest('tr').remove(); updateUsed()" class="btn btn-danger btn-sm">✕</button></td>
+    <td><input type="number" class="form-input qty-inp" min="1" placeholder="qty" required oninput="updateRowTotal(this)" /></td>
+    <td class="text-right text-gray-500 text-sm row-price">—</td>
+    <td class="text-right font-medium row-total">৳0.00</td>
+    <td><button type="button" onclick="this.closest('tr').remove(); updateUsed(); updateGrandTotal();" class="btn btn-danger btn-sm">✕</button></td>
   `;
   tbody.appendChild(tr);
   updateUsed();
@@ -127,7 +144,28 @@ function rowChanged(sel) {
   const opt = sel.options[sel.selectedIndex];
   const tr  = sel.closest('tr');
   tr.querySelector('.row-price').textContent = opt.value ? '৳' + parseFloat(opt.dataset.price || 0).toFixed(2) : '—';
+  updateRowTotal(tr.querySelector('.qty-inp'));
   updateUsed();
+}
+
+function updateRowTotal(input) {
+  const tr = input.closest('tr');
+  const sel = tr.querySelector('.product-sel');
+  const opt = sel.options[sel.selectedIndex];
+  const qty = parseFloat(input.value) || 0;
+  const price = opt.value ? parseFloat(opt.dataset.price || 0) : 0;
+  const total = qty * price;
+  tr.querySelector('.row-total').textContent = '৳' + total.toFixed(2);
+  updateGrandTotal();
+}
+
+function updateGrandTotal() {
+  let grand = 0;
+  document.querySelectorAll('.row-total').forEach(td => {
+    const val = parseFloat(td.textContent.replace('৳', '')) || 0;
+    grand += val;
+  });
+  document.getElementById('grand-total').textContent = '৳' + grand.toFixed(2);
 }
 
 function updateUsed() {
@@ -167,3 +205,4 @@ document.getElementById('order-form').addEventListener('submit', async function(
   }
 });
 </script>
+
