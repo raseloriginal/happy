@@ -1,1 +1,3 @@
-ALTER TABLE lot_items ADD COLUMN expiry_date DATE NULL AFTER qty_boxes;
+-- Migration: 003_add_expiry_date.sql
+-- (Already in base schema)
+SELECT 1;
