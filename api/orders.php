@@ -66,9 +66,6 @@ switch ($method) {
                 echo json_encode(['success' => false, 'message' => 'QR code is ' . $qr['status']]); exit;
             }
 
-            if ($qr['company_id'] != $sr_company) {
-                echo json_encode(['success' => false, 'message' => 'Product does not belong to this SR\'s company']); exit;
-            }
 
             echo json_encode(['success' => true, 'data' => [
                 'id' => $qr['product_id'],
