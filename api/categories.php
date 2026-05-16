@@ -29,17 +29,20 @@ switch ($method) {
         $names = $d['names'] ?? [];
         if (empty($names) && !empty($d['name'])) $names = [$d['name']];
 
-        $stmt = $pdo->prepare('INSERT INTO categories (company_id, name) VALUES (?,?)');
+        // Using ON DUPLICATE KEY UPDATE to restore deleted categories (status=0 -> status=1)
+        // and ignore duplicates in bulk without failing the whole request.
+        $stmt = $pdo->prepare('INSERT INTO categories (company_id, name, status) VALUES (?,?,1) ON DUPLICATE KEY UPDATE status=1');
         try {
             foreach ($names as $name) {
                 if (trim($name)) $stmt->execute([$company_id, trim($name)]);
             }
             echo json_encode(['success' => true]);
         } catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
+            $msg = $e->getMessage();
+            if (str_contains($msg, 'Duplicate entry')) {
                 echo json_encode(['success' => false, 'message' => 'Category already exists.']);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+                echo json_encode(['success' => false, 'message' => 'Database error: ' . $msg]);
             }
         }
         break;
