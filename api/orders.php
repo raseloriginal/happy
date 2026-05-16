@@ -24,6 +24,62 @@ switch ($method) {
             $sellPcs = $outPcs - $retPcs;
             $avgDel = $outPcs > 0 ? round(($sellPcs / $outPcs) * 100, 1) : 0;
             echo json_encode(['success' => true, 'grand_total' => $grand, 'out_pcs' => $outPcs, 'back_pcs' => $retPcs, 'avg_delivery' => $avgDel]);
+        } elseif ($action === 'scan_ready_sale') {
+            $qr_uid = trim($_GET['qr_uid'] ?? '');
+            $sr_id  = intval($_GET['sr_id'] ?? 0);
+
+            if (!$qr_uid) {
+                echo json_encode(['success' => false, 'message' => 'Missing QR UID']); exit;
+            }
+
+            // Find QR and Product
+            $stmt = $pdo->prepare('SELECT qr.*, p.name as product_name, p.pieces_per_box, p.selling_price, p.company_id 
+                                   FROM qr_codes qr 
+                                   JOIN products p ON p.id=qr.product_id 
+                                   WHERE qr.qr_uid=?');
+            $stmt->execute([$qr_uid]);
+            $qr = $stmt->fetch();
+
+            if (!$qr) {
+                echo json_encode(['success' => false, 'message' => 'QR code not found']); exit;
+            }
+
+            // Auto-detect SR if not provided
+            if (!$sr_id) {
+                $sr = $pdo->prepare('SELECT id FROM sr WHERE company_id=? AND status=1 LIMIT 1');
+                $sr->execute([$qr['company_id']]);
+                $sr_id = $sr->fetchColumn();
+                if (!$sr_id) {
+                    echo json_encode(['success' => false, 'message' => 'No active SR found for this product\'s company']); exit;
+                }
+            } else {
+                // Validate existing SR matches company
+                $sr = $pdo->prepare('SELECT company_id FROM sr WHERE id=?');
+                $sr->execute([$sr_id]);
+                $sr_company = $sr->fetchColumn();
+                if ($qr['company_id'] != $sr_company) {
+                    echo json_encode(['success' => false, 'message' => 'Product does not belong to the same company as previous items']); exit;
+                }
+            }
+
+            if ($qr['status'] !== 'active') {
+                echo json_encode(['success' => false, 'message' => 'QR code is ' . $qr['status']]); exit;
+            }
+
+            if ($qr['company_id'] != $sr_company) {
+                echo json_encode(['success' => false, 'message' => 'Product does not belong to this SR\'s company']); exit;
+            }
+
+            echo json_encode(['success' => true, 'data' => [
+                'id' => $qr['product_id'],
+                'name' => $qr['product_name'],
+                'pieces_per_box' => $qr['pieces_per_box'],
+                'selling_price' => $qr['selling_price'],
+                'scanned_pieces' => $qr['pieces_total'],
+                'qr_id' => $qr['id'],
+                'sr_id' => $sr_id
+            ]]);
+            exit;
         } else {
             // List orders with filters
             $where = ['1=1'];

@@ -32,6 +32,7 @@ $srs       = $pdo->query('SELECT s.id, u.name FROM sr s JOIN users u ON u.id=s.u
 
 include __DIR__ . '/../includes/header.php';
 ?>
+<link rel="stylesheet" href="<?= rootPath() ?>/assets/css/scanner.css">
 <div class="page-wrapper">
   <?php include __DIR__ . '/../includes/sidebar.php'; ?>
   <div class="main-content">
@@ -40,7 +41,12 @@ include __DIR__ . '/../includes/header.php';
 
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Orders</h2><p class="text-sm text-gray-500">All SR orders with product-level breakdown</p></div>
-        <a href="<?= rootPath() ?>/manager/order_add.php" class="btn btn-primary">+ Add New Order</a>
+        <div class="flex gap-2">
+          <button onclick="openReadyScanner()" class="btn btn-indigo">
+            <i class="fa-solid fa-qrcode"></i> Ready Sale
+          </button>
+          <a href="<?= rootPath() ?>/manager/order_add.php" class="btn btn-primary">+ Add New Order</a>
+        </div>
       </div>
 
       <!-- Stat Cards -->
@@ -129,6 +135,38 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
+
+<!-- Ready Sale Scanner Modal -->
+<div id="ready-scanner-overlay" class="scanner-modal-overlay">
+  <div class="scanner-modal">
+    <div class="scanner-header">
+      <h3 id="modal-title"><i class="fa-solid fa-qrcode text-indigo-500"></i> Ready Sale</h3>
+      <button onclick="closeReadyScanner()" class="scanner-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <!-- Step 2: Scanner -->
+    <div id="step-scan">
+      <div class="scanner-viewport">
+        <div id="ready-scan-reader"></div>
+        <div class="scanner-laser"></div>
+        <div id="success-flash" class="success-flash"></div>
+      </div>
+
+      <div class="scanned-list-container" id="scanned-items-list">
+        <div class="text-center py-10 text-gray-500" id="empty-scan-msg">
+          <i class="fa-solid fa-barcode text-3xl mb-3 block opacity-20"></i>
+          Scan QR codes to add products
+        </div>
+      </div>
+
+      <div class="scanner-footer">
+        <button onclick="saveReadyOrder()" id="complete-scan-btn" class="btn-complete" disabled>
+          Complete Order
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 function filterTable() {
   const q = (document.getElementById('f-search').value || '').toLowerCase();
@@ -148,5 +186,126 @@ async function cancelOrder(id) {
   const data = await api('<?= rootPath() ?>/api/orders.php?id=' + id, 'DELETE');
   if (data.success) { showToast('Order cancelled'); location.reload(); }
   else showToast(data.message || 'Error', 'error');
+}
+
+// ── Ready Sale Scanner Logic ──────────────────────────────
+let scannedData = {};
+let activeScanner = null;
+let selectedSrId = null;
+
+function openReadyScanner() {
+  document.getElementById('ready-scanner-overlay').classList.add('active');
+  document.getElementById('step-scan').style.display = 'block';
+  document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-qrcode text-indigo-500"></i> Ready Sale Scanner';
+  selectedSrId = null; // Reset for auto-detection
+  startReadyScanner();
+}
+
+function closeReadyScanner() {
+  if (activeScanner) {
+    activeScanner.stop().catch(() => {});
+    activeScanner = null;
+  }
+  document.getElementById('ready-scanner-overlay').classList.remove('active');
+  scannedData = {};
+  selectedSrId = null;
+  document.getElementById('scanned-items-list').innerHTML = `<div class="text-center py-10 text-gray-500" id="empty-scan-msg"><i class="fa-solid fa-barcode text-3xl mb-3 block opacity-20"></i>Scan QR codes to add products</div>`;
+}
+
+function startReadyScanner() {
+  activeScanner = new Html5Qrcode("ready-scan-reader");
+  activeScanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    (decodedText) => handleReadyScan(decodedText),
+    (errorMessage) => {}
+  ).catch(err => {
+    showToast('Camera error: ' + err, 'error');
+  });
+}
+
+async function handleReadyScan(uid) {
+  if (window._scanning) return;
+  window._scanning = true;
+  setTimeout(() => window._scanning = false, 1500);
+
+  const url = `<?= rootPath() ?>/api/orders.php?action=scan_ready_sale&qr_uid=${uid}` + (selectedSrId ? `&sr_id=${selectedSrId}` : '');
+  const res = await api(url);
+  
+  if (!res.success) {
+    triggerShake();
+    showToast(res.message, 'error');
+    return;
+  }
+
+  const p = res.data;
+  if (!selectedSrId) selectedSrId = p.sr_id; // Set SR ID from first scan
+
+  triggerFlash();
+
+  if (!scannedData[p.id]) {
+    scannedData[p.id] = { name: p.name, qty: p.scanned_pieces, price: p.selling_price, ppb: p.pieces_per_box, qrIds: [p.qr_id] };
+    renderScannedItem(p.id, true);
+  } else {
+    if (scannedData[p.id].qrIds.includes(p.qr_id)) { showToast('Already scanned', 'warning'); return; }
+    scannedData[p.id].qty += p.scanned_pieces;
+    scannedData[p.id].qrIds.push(p.qr_id);
+    renderScannedItem(p.id, false);
+  }
+  
+  document.getElementById('complete-scan-btn').disabled = false;
+  document.getElementById('empty-scan-msg').style.display = 'none';
+}
+
+function renderScannedItem(pid, isNew) {
+  const container = document.getElementById('scanned-items-list');
+  let row = document.getElementById(`scan-row-${pid}`);
+  const item = scannedData[pid];
+  if (!row) {
+    row = document.createElement('div');
+    row.id = `scan-row-${pid}`;
+    row.className = 'scanned-item';
+    container.prepend(row);
+  }
+  row.innerHTML = `<div class="scanned-info"><div class="scanned-name">${item.name}</div><div class="scanned-meta">${item.ppb} pcs/box • ৳${item.price}/pcs</div></div><div class="scanned-qty-badge" id="qty-badge-${pid}">${item.qty} pcs</div>`;
+  if (!isNew) {
+    row.classList.remove('updating'); void row.offsetWidth; row.classList.add('updating');
+    const badge = document.getElementById(`qty-badge-${pid}`);
+    badge.classList.add('bump'); setTimeout(() => badge.classList.remove('bump'), 300);
+  }
+}
+
+function triggerFlash() {
+  const flash = document.getElementById('success-flash');
+  flash.classList.remove('trigger'); void flash.offsetWidth; flash.classList.add('trigger');
+}
+
+function triggerShake() {
+  const modal = document.querySelector('.scanner-modal');
+  modal.classList.remove('shake'); void modal.offsetWidth; modal.classList.add('shake');
+}
+
+async function saveReadyOrder() {
+  const items = [];
+  for (const pid in scannedData) {
+    items.push({ product_id: pid, qty_pieces: scannedData[pid].qty });
+  }
+  
+  const btn = document.getElementById('complete-scan-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  const data = await api('<?= rootPath() ?>/api/orders.php', 'POST', {
+    sr_id: selectedSrId,
+    order_date: new Date().toISOString().split('T')[0],
+    items
+  });
+
+  if (data.success) {
+    showToast('Order created successfully!');
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    showToast(data.message || 'Error', 'error');
+    btn.disabled = false; btn.textContent = 'Complete Order';
+  }
 }
 </script>
