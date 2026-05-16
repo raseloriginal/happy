@@ -26,6 +26,7 @@ try {
     // 1. Create Connection (MySQLi for multi_query)
     $conn = new mysqli(DB_HOST, DB_USER, DB_PASS);
     if ($conn->connect_error) throw new Exception("Connection failed: " . $conn->connect_error);
+    $conn->set_charset('utf8mb4');
     
     echo '<div class="box"><p class="ok"><i class="fa-solid fa-check"></i> Connected to MySQL</p>';
 

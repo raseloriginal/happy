@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   role ENUM('admin','manager','sr','dsr','dealer') NOT NULL,
   status TINYINT DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- WAREHOUSES
 CREATE TABLE IF NOT EXISTS warehouses (
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS warehouses (
   area VARCHAR(100),
   status TINYINT DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- DEALERS (linked to user)
 CREATE TABLE IF NOT EXISTS dealers (
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS dealers (
   address TEXT,
   status TINYINT DEFAULT 1,
   FOREIGN KEY (user_id) REFERENCES users(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- COMPANIES (linked to dealer)
 CREATE TABLE IF NOT EXISTS companies (
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS companies (
   status TINYINT DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (dealer_id) REFERENCES dealers(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- MANAGERS (linked to user + warehouse)
 CREATE TABLE IF NOT EXISTS managers (
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS managers (
   status TINYINT DEFAULT 1,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ROUTES
 CREATE TABLE IF NOT EXISTS routes (
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS routes (
   warehouse_id INT,
   status TINYINT DEFAULT 1,
   FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- SR (Sales Representatives)
 CREATE TABLE IF NOT EXISTS sr (
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS sr (
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (company_id) REFERENCES companies(id),
   FOREIGN KEY (route_id) REFERENCES routes(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- DSR (Delivery Sales Representatives)
 CREATE TABLE IF NOT EXISTS dsr (
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS dsr (
   status TINYINT DEFAULT 1,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- CATEGORIES
 CREATE TABLE IF NOT EXISTS categories (
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS categories (
   status TINYINT DEFAULT 1,
   UNIQUE KEY unique_category (company_id, name),
   FOREIGN KEY (company_id) REFERENCES companies(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- PRODUCTS
 CREATE TABLE IF NOT EXISTS products (
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS products (
   UNIQUE KEY unique_product (company_id, name),
   FOREIGN KEY (company_id) REFERENCES companies(id),
   FOREIGN KEY (category_id) REFERENCES categories(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- LOTS (product batches received from company)
 CREATE TABLE IF NOT EXISTS lots (
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS lots (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (company_id) REFERENCES companies(id),
   FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- LOT ITEMS
 CREATE TABLE IF NOT EXISTS lot_items (
@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS lot_items (
   qr_generated TINYINT DEFAULT 0,
   FOREIGN KEY (lot_id) REFERENCES lots(id),
   FOREIGN KEY (product_id) REFERENCES products(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- QR CODES
 CREATE TABLE IF NOT EXISTS qr_codes (
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS qr_codes (
   FOREIGN KEY (lot_item_id) REFERENCES lot_items(id),
   FOREIGN KEY (product_id) REFERENCES products(id),
   FOREIGN KEY (lot_id) REFERENCES lots(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ORDERS
 CREATE TABLE IF NOT EXISTS orders (
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sr_id) REFERENCES sr(id),
   FOREIGN KEY (company_id) REFERENCES companies(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ORDER ITEMS
 CREATE TABLE IF NOT EXISTS order_items (
@@ -187,7 +187,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   unit_price DECIMAL(10,2),
   FOREIGN KEY (order_id) REFERENCES orders(id),
   FOREIGN KEY (product_id) REFERENCES products(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- DISPATCHES
 CREATE TABLE IF NOT EXISTS dispatches (
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS dispatches (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (dsr_id) REFERENCES dsr(id),
   FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- DISPATCH ITEMS
 CREATE TABLE IF NOT EXISTS dispatch_items (
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS dispatch_items (
   FOREIGN KEY (dispatch_id) REFERENCES dispatches(id),
   FOREIGN KEY (qr_code_id) REFERENCES qr_codes(id),
   FOREIGN KEY (product_id) REFERENCES products(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- RETURNS
 CREATE TABLE IF NOT EXISTS returns (
@@ -224,7 +224,7 @@ CREATE TABLE IF NOT EXISTS returns (
   return_date DATE NOT NULL,
   status ENUM('pending','completed') DEFAULT 'pending',
   FOREIGN KEY (dispatch_id) REFERENCES dispatches(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- RETURN ITEMS
 CREATE TABLE IF NOT EXISTS return_items (
@@ -236,7 +236,7 @@ CREATE TABLE IF NOT EXISTS return_items (
   type ENUM('scan','custom') DEFAULT 'scan',
   FOREIGN KEY (return_id) REFERENCES returns(id),
   FOREIGN KEY (qr_code_id) REFERENCES qr_codes(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- INVENTORY
 CREATE TABLE IF NOT EXISTS inventory (
@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS inventory (
   UNIQUE KEY unique_stock (product_id, warehouse_id),
   FOREIGN KEY (product_id) REFERENCES products(id),
   FOREIGN KEY (warehouse_id) REFERENCES warehouses(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- EXPENSES
 CREATE TABLE IF NOT EXISTS expenses (
