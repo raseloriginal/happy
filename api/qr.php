@@ -40,8 +40,8 @@ try {
         if (!empty($existingRows)) {
             echo json_encode(['success' => true, 'data' => $existingRows, 'message' => 'Already generated']);
         } else {
-            $maxSerial = $pdo->prepare('SELECT COALESCE(MAX(serial_number), 0) FROM qr_codes WHERE product_id=?');
-            $maxSerial->execute([$product_id]);
+            // Get global max serial across ALL products to prevent UID collisions
+            $maxSerial = $pdo->query('SELECT COALESCE(MAX(serial_number), 0) FROM qr_codes');
             $serial = intval($maxSerial->fetchColumn());
 
             $shortName = preg_replace('/[^A-Za-z]/', '', $li['product_name']);
