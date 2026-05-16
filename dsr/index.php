@@ -34,17 +34,17 @@ include __DIR__ . '/../includes/header.php';
 
       <div class="grid grid-cols-3 gap-4 mb-6">
         <div class="stat-card">
-          <div class="stat-card-icon bg-blue-100 mb-2">🚚</div>
+          <div class="stat-card-icon bg-blue-100 mb-2 text-blue-600"><i class="fa-solid fa-truck"></i></div>
           <div class="text-2xl font-bold"><?= $myDispatches ?></div>
           <div class="text-xs text-gray-500">Total Deliveries</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-yellow-100 mb-2">📦</div>
+          <div class="stat-card-icon bg-yellow-100 mb-2 text-yellow-600"><i class="fa-solid fa-box"></i></div>
           <div class="text-2xl font-bold"><?= $activeDisp ?></div>
           <div class="text-xs text-gray-500">Active Loads</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-red-100 mb-2">💰</div>
+          <div class="stat-card-icon bg-red-100 mb-2 text-red-600"><i class="fa-solid fa-money-bill-wave"></i></div>
           <div class="text-2xl font-bold"><?= $myExpenses ?></div>
           <div class="text-xs text-gray-500">Pending Expenses</div>
         </div>

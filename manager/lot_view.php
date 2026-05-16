@@ -18,8 +18,8 @@ include __DIR__ . '/../includes/header.php';
     <?php include __DIR__ . '/../includes/navbar.php'; ?>
     <div class="page-body max-w-3xl">
       <div class="flex items-center justify-between mb-6 print:hidden">
-        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Back</a>
-        <button onclick="window.print()" class="btn btn-primary">🖨 Print Invoice</button>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost"><i class="fa-solid fa-arrow-left mr-1"></i> Back</a>
+        <button onclick="window.print()" class="btn btn-primary"><i class="fa-solid fa-print mr-1"></i> Print Invoice</button>
       </div>
 
       <div id="invoice" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
@@ -75,7 +75,7 @@ include __DIR__ . '/../includes/header.php';
               <td class="text-right font-semibold">৳<?= number_format($item['total'], 2) ?></td>
               <td class="text-center">
                 <?php if ($item['qr_generated']): ?>
-                  <span class="badge badge-success">Generated ✓</span>
+                  <span class="badge badge-success">Generated <i class="fa-solid fa-check ml-1"></i></span>
                 <?php else: ?>
                   <span class="badge badge-warning">Pending</span>
                 <?php endif; ?>

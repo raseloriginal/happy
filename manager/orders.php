@@ -46,22 +46,22 @@ include __DIR__ . '/../includes/header.php';
       <!-- Stat Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="stat-card">
-          <div class="stat-card-icon bg-green-100 mb-2">💰</div>
+          <div class="stat-card-icon bg-green-100 mb-2 text-green-600"><i class="fa-solid fa-bangladeshi-taka-sign"></i></div>
           <div class="text-xl font-bold">৳<?= number_format($grand, 0) ?></div>
           <div class="text-xs text-gray-500 mt-1">Grand Total Sales</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-blue-100 mb-2">📤</div>
+          <div class="stat-card-icon bg-blue-100 mb-2 text-blue-600"><i class="fa-solid fa-truck-ramp-box"></i></div>
           <div class="text-xl font-bold"><?= number_format($outPcs) ?></div>
           <div class="text-xs text-gray-500 mt-1">Total Out (pcs)</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-red-100 mb-2">↩️</div>
+          <div class="stat-card-icon bg-red-100 mb-2 text-red-600"><i class="fa-solid fa-rotate-left"></i></div>
           <div class="text-xl font-bold"><?= number_format($retPcs) ?></div>
           <div class="text-xs text-gray-500 mt-1">Total Back (pcs)</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-indigo-100 mb-2">📊</div>
+          <div class="stat-card-icon bg-indigo-100 mb-2 text-indigo-600"><i class="fa-solid fa-chart-line"></i></div>
           <div class="text-xl font-bold"><?= $avgDel ?>%</div>
           <div class="text-xs text-gray-500 mt-1">Avg Delivery Rate</div>
         </div>

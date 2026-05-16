@@ -14,7 +14,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-4xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Add New Lot</h2><p class="text-sm text-gray-500">Record a new product batch received from company</p></div>
-        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Back to Lots</a>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Lots</a>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -110,7 +110,7 @@ function addRow() {
     <td><input type="date" class="form-input expiry-input" required /></td>
     <td><input type="number" class="form-input price-input" min="0" step="0.01" value="0" oninput="calcRow(this)" required /></td>
     <td class="font-medium row-total text-gray-700">৳0.00</td>
-    <td><button type="button" onclick="removeRow(this)" class="btn btn-danger btn-sm">✕</button></td>
+    <td><button type="button" onclick="removeRow(this)" class="btn btn-danger btn-sm"><i class="fa-solid fa-xmark"></i></button></td>
   `;
   tbody.appendChild(tr);
 }

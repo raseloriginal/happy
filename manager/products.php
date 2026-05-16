@@ -58,7 +58,7 @@ include __DIR__ . '/../includes/header.php';
 
 <div id="add-modal" class="modal-overlay" style="display:none">
   <div class="modal-box max-w-5xl">
-    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Bulk Add Products</h3><button onclick="closeModal('add-modal')">&times;</button></div>
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Bulk Add Products</h3><button onclick="closeModal('add-modal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div>
     <form id="add-form" class="space-y-4">
       <div class="flex gap-4 items-end">
         <div class="flex-1"><label class="form-label">Company *</label>
@@ -85,7 +85,7 @@ include __DIR__ . '/../includes/header.php';
 <!-- Edit Modal -->
 <div id="edit-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
-    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Edit Product</h3><button onclick="closeModal('edit-modal')">&times;</button></div>
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Edit Product</h3><button onclick="closeModal('edit-modal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div>
     <form id="edit-form" class="space-y-3">
       <input type="hidden" id="edit-id" />
       <div><label class="form-label">Company *</label>
@@ -165,7 +165,7 @@ function addBulkRow() {
     </td>
     <td><input type="number" class="form-input row-ppb" value="1" min="1" /></td>
     <td><input type="number" class="form-input row-dp" value="0.00" step="0.01" required /></td>
-    <td><button type="button" onclick="this.closest('tr').remove()" class="btn btn-ghost btn-sm text-red-500 hover:bg-red-50">✕</button></td>
+    <td><button type="button" onclick="this.closest('tr').remove()" class="btn btn-ghost btn-sm text-red-500 hover:bg-red-50"><i class="fa-solid fa-xmark"></i></button></td>
   `;
   tbody.appendChild(tr);
 }

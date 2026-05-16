@@ -8,7 +8,7 @@ $root     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/..';
 
 function navLink(string $href, string $icon, string $label, string $current): string {
     $active = (strpos($current, $href) !== false) ? 'active' : '';
-    return '<a href="' . $href . '" class="sidebar-link ' . $active . '" title="' . $label . '"><span class="text-lg">' . $icon . '</span><span class="sidebar-text">' . $label . '</span></a>';
+    return '<a href="' . $href . '" class="sidebar-link ' . $active . '" title="' . $label . '"><span class="text-lg flex items-center justify-center w-6"><i class="' . $icon . '"></i></span><span class="sidebar-text">' . $label . '</span></a>';
 }
 ?>
 <nav class="sidebar" id="app-sidebar">
@@ -27,58 +27,58 @@ function navLink(string $href, string $icon, string $label, string $current): st
 
     <?php if ($role === 'admin'): ?>
       <div class="sidebar-section">Dashboard</div>
-      <?= navLink(rootPath() . '/admin/index.php', '📊', 'Dashboard', $current) ?>
+      <?= navLink(rootPath() . '/admin/index.php', 'fa-solid fa-chart-line', 'Dashboard', $current) ?>
 
       <div class="sidebar-section">Master Data</div>
-      <?= navLink(rootPath() . '/admin/warehouses.php', '🏭', 'Warehouses', $current) ?>
-      <?= navLink(rootPath() . '/admin/dealers.php', '🤝', 'Dealers', $current) ?>
-      <?= navLink(rootPath() . '/admin/companies.php', '🏢', 'Companies', $current) ?>
-      <?= navLink(rootPath() . '/admin/routes.php', '🗺️', 'Routes', $current) ?>
+      <?= navLink(rootPath() . '/admin/warehouses.php', 'fa-solid fa-warehouse', 'Warehouses', $current) ?>
+      <?= navLink(rootPath() . '/admin/dealers.php', 'fa-solid fa-handshake', 'Dealers', $current) ?>
+      <?= navLink(rootPath() . '/admin/companies.php', 'fa-solid fa-building', 'Companies', $current) ?>
+      <?= navLink(rootPath() . '/admin/routes.php', 'fa-solid fa-route', 'Routes', $current) ?>
 
       <div class="sidebar-section">People</div>
-      <?= navLink(rootPath() . '/admin/managers.php', '👔', 'Managers', $current) ?>
-      <?= navLink(rootPath() . '/admin/sr.php', '🧑‍💼', 'Sales Reps (SR)', $current) ?>
-      <?= navLink(rootPath() . '/admin/dsr.php', '🚚', 'Delivery Reps (DSR)', $current) ?>
+      <?= navLink(rootPath() . '/admin/managers.php', 'fa-solid fa-user-tie', 'Managers', $current) ?>
+      <?= navLink(rootPath() . '/admin/sr.php', 'fa-solid fa-user-tag', 'Sales Reps (SR)', $current) ?>
+      <?= navLink(rootPath() . '/admin/dsr.php', 'fa-solid fa-truck', 'Delivery Reps (DSR)', $current) ?>
 
       <div class="sidebar-section">Reports</div>
-      <?= navLink(rootPath() . '/admin/reports.php', '📈', 'Reports', $current) ?>
+      <?= navLink(rootPath() . '/admin/reports.php', 'fa-solid fa-chart-bar', 'Reports', $current) ?>
 
       <div class="sidebar-section">System</div>
-      <?= navLink(rootPath() . '/admin/db_sync.php', '🔄', 'Database Sync', $current) ?>
+      <?= navLink(rootPath() . '/admin/db_sync.php', 'fa-solid fa-sync', 'Database Sync', $current) ?>
 
     <?php elseif ($role === 'manager'): ?>
       <div class="sidebar-section">Dashboard</div>
-      <?= navLink(rootPath() . '/manager/index.php', '📊', 'Dashboard', $current) ?>
+      <?= navLink(rootPath() . '/manager/index.php', 'fa-solid fa-chart-line', 'Dashboard', $current) ?>
 
       <div class="sidebar-section">Products</div>
-      <?= navLink(rootPath() . '/manager/categories.php', '🗂️', 'Categories', $current) ?>
-      <?= navLink(rootPath() . '/manager/products.php', '📦', 'Products', $current) ?>
+      <?= navLink(rootPath() . '/manager/categories.php', 'fa-solid fa-tags', 'Categories', $current) ?>
+      <?= navLink(rootPath() . '/manager/products.php', 'fa-solid fa-box', 'Products', $current) ?>
 
       <div class="sidebar-section">Lots & QR</div>
-      <?= navLink(rootPath() . '/manager/lots.php', '🗃️', 'Lots', $current) ?>
-      <?= navLink(rootPath() . '/manager/lot_add.php', '➕', 'Add Lot', $current) ?>
-      <?= navLink(rootPath() . '/manager/qr_generate.php', '🔲', 'Generate QR', $current) ?>
-      <?= navLink(rootPath() . '/manager/qr_print.php', '🖨️', 'Print QR', $current) ?>
+      <?= navLink(rootPath() . '/manager/lots.php', 'fa-solid fa-boxes-stacked', 'Lots', $current) ?>
+      <?= navLink(rootPath() . '/manager/lot_add.php', 'fa-solid fa-plus', 'Add Lot', $current) ?>
+      <?= navLink(rootPath() . '/manager/qr_generate.php', 'fa-solid fa-qrcode', 'Generate QR', $current) ?>
+      <?= navLink(rootPath() . '/manager/qr_print.php', 'fa-solid fa-print', 'Print QR', $current) ?>
 
       <div class="sidebar-section">Orders</div>
-      <?= navLink(rootPath() . '/manager/orders.php', '📋', 'Orders', $current) ?>
-      <?= navLink(rootPath() . '/manager/order_add.php', '➕', 'Add Order', $current) ?>
-      <?= navLink(rootPath() . '/manager/delivery.php', '🚚', 'Out for Delivery', $current) ?>
+      <?= navLink(rootPath() . '/manager/orders.php', 'fa-solid fa-clipboard-list', 'Orders', $current) ?>
+      <?= navLink(rootPath() . '/manager/order_add.php', 'fa-solid fa-plus', 'Add Order', $current) ?>
+      <?= navLink(rootPath() . '/manager/delivery.php', 'fa-solid fa-truck-fast', 'Out for Delivery', $current) ?>
 
       <div class="sidebar-section">Operations</div>
-      <?= navLink(rootPath() . '/manager/returns.php', '↩️', 'Returns', $current) ?>
-      <?= navLink(rootPath() . '/manager/inventory.php', '🏪', 'Inventory', $current) ?>
-      <?= navLink(rootPath() . '/manager/expenses.php', '💰', 'Expenses', $current) ?>
-      <?= navLink(rootPath() . '/manager/cashflow.php', '💵', 'Cash Flow', $current) ?>
+      <?= navLink(rootPath() . '/manager/returns.php', 'fa-solid fa-undo', 'Returns', $current) ?>
+      <?= navLink(rootPath() . '/manager/inventory.php', 'fa-solid fa-store', 'Inventory', $current) ?>
+      <?= navLink(rootPath() . '/manager/expenses.php', 'fa-solid fa-money-bill-wave', 'Expenses', $current) ?>
+      <?= navLink(rootPath() . '/manager/cashflow.php', 'fa-solid fa-money-check-dollar', 'Cash Flow', $current) ?>
 
     <?php elseif ($role === 'dsr'): ?>
       <div class="sidebar-section">Dashboard</div>
-      <?= navLink(rootPath() . '/dsr/index.php', '📊', 'Dashboard', $current) ?>
-      <?= navLink(rootPath() . '/dsr/expenses.php', '💰', 'My Expenses', $current) ?>
+      <?= navLink(rootPath() . '/dsr/index.php', 'fa-solid fa-chart-line', 'Dashboard', $current) ?>
+      <?= navLink(rootPath() . '/dsr/expenses.php', 'fa-solid fa-money-bill-wave', 'My Expenses', $current) ?>
 
     <?php elseif ($role === 'dealer'): ?>
       <div class="sidebar-section">Dashboard</div>
-      <?= navLink(rootPath() . '/dealer/index.php', '📊', 'Dashboard', $current) ?>
+      <?= navLink(rootPath() . '/dealer/index.php', 'fa-solid fa-chart-line', 'Dashboard', $current) ?>
     <?php endif; ?>
 
   </div>

@@ -51,10 +51,10 @@ include __DIR__ . '/../includes/header.php';
 
       <!-- Summary Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="stat-card"><div class="stat-card-icon bg-indigo-100 mb-2">📋</div><div class="text-2xl font-bold"><?= $totalOrders ?></div><div class="text-xs text-gray-500">Total Orders</div></div>
-        <div class="stat-card"><div class="stat-card-icon bg-green-100 mb-2">💰</div><div class="text-2xl font-bold">৳<?= number_format($totalRevenue,0) ?></div><div class="text-xs text-gray-500">Revenue</div></div>
-        <div class="stat-card"><div class="stat-card-icon bg-blue-100 mb-2">🚚</div><div class="text-2xl font-bold"><?= $totalDisp ?></div><div class="text-xs text-gray-500">Dispatches</div></div>
-        <div class="stat-card"><div class="stat-card-icon bg-red-100 mb-2">💸</div><div class="text-2xl font-bold">৳<?= number_format($totalExp,0) ?></div><div class="text-xs text-gray-500">Approved Expenses</div></div>
+        <div class="stat-card"><div class="stat-card-icon bg-indigo-100 mb-2 text-indigo-600"><i class="fa-solid fa-clipboard-list"></i></div><div class="text-2xl font-bold"><?= $totalOrders ?></div><div class="text-xs text-gray-500">Total Orders</div></div>
+        <div class="stat-card"><div class="stat-card-icon bg-green-100 mb-2 text-green-600"><i class="fa-solid fa-money-bill-wave"></i></div><div class="text-2xl font-bold">৳<?= number_format($totalRevenue,0) ?></div><div class="text-xs text-gray-500">Revenue</div></div>
+        <div class="stat-card"><div class="stat-card-icon bg-blue-100 mb-2 text-blue-600"><i class="fa-solid fa-truck"></i></div><div class="text-2xl font-bold"><?= $totalDisp ?></div><div class="text-xs text-gray-500">Dispatches</div></div>
+        <div class="stat-card"><div class="stat-card-icon bg-red-100 mb-2 text-red-600"><i class="fa-solid fa-file-invoice-dollar"></i></div><div class="text-2xl font-bold">৳<?= number_format($totalExp,0) ?></div><div class="text-xs text-gray-500">Approved Expenses</div></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

@@ -17,7 +17,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-5xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Generate QR Codes</h2><p class="text-sm text-gray-500">Generate QR codes for each box in a lot</p></div>
-        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Lots</a>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost"><i class="fa-solid fa-arrow-left mr-1"></i> Lots</a>
       </div>
 
       <!-- Controls -->
@@ -47,7 +47,7 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <div class="mt-4">
           <button id="generate-btn" onclick="generateQR()" class="btn btn-primary" disabled>
-            🔲 Generate QR Codes
+            <i class="fa-solid fa-qrcode mr-2"></i> Generate QR Codes
           </button>
         </div>
       </div>
@@ -56,7 +56,7 @@ include __DIR__ . '/../includes/header.php';
       <div id="qr-section" style="display:none">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-gray-700">Generated QR Codes</h3>
-          <a href="<?= rootPath() ?>/manager/qr_print.php" class="btn btn-ghost btn-sm">🖨 Go to Print Page</a>
+          <a href="<?= rootPath() ?>/manager/qr_print.php" class="btn btn-ghost btn-sm"><i class="fa-solid fa-print mr-1"></i> Go to Print Page</a>
         </div>
         <div id="qr-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
       </div>
@@ -87,7 +87,7 @@ async function loadLotProducts() {
   currentLotItems = data.data || [];
   psel.innerHTML = '<option value="">Select Product</option>';
   currentLotItems.forEach(item => {
-    const status = item.qr_generated ? ' ✓' : '';
+    const status = item.qr_generated ? ' (Generated)' : '';
     psel.innerHTML += `<option value="${item.lot_item_id}" data-qty="${item.qty_boxes}" data-pid="${item.product_id}">${item.product_name}${status}</option>`;
   });
   psel.disabled = false;

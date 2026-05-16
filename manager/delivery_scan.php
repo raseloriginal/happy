@@ -16,6 +16,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <title>Mobile Delivery Scan — Happy Bangladesh</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="<?= rootPath() ?>/assets/js/app.js" defer></script>
@@ -181,8 +182,8 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
 
 <!-- ── Header ── -->
 <div class="mob-header">
-  <a href="<?= rootPath() ?>/manager/delivery.php" class="back-btn">←</a>
-  <span class="title">🚚 Delivery Scan</span>
+  <a href="<?= rootPath() ?>/manager/delivery.php" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+  <span class="title"><i class="fa-solid fa-truck-fast mr-2"></i> Delivery Scan</span>
   <div class="status-dot" id="conn-dot"></div>
 </div>
 
@@ -191,17 +192,17 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <!-- ── QR Scanner Card ── -->
   <div class="mob-card">
     <div class="mob-card-header">
-      <div class="icon" style="background:rgba(79,70,229,0.15)">📷</div>
+      <div class="icon" style="background:rgba(79,70,229,0.15)"><i class="fa-solid fa-camera"></i></div>
       <span class="label">QR Camera Scanner</span>
     </div>
     <div class="mob-card-body">
       <div id="qr-reader" style="min-height:60px; border-radius:12px; overflow:hidden; background:#0a0a0a;"></div>
       <div class="scanner-actions">
         <button id="scan-btn" onclick="startMobileScan()" class="mob-btn mob-btn-primary" disabled>
-          📷 Start Camera
+          <i class="fa-solid fa-camera mr-1"></i> Start Camera
         </button>
         <button id="stop-btn" onclick="stopMobileScan()" class="mob-btn mob-btn-stop" style="display:none">
-          ⏹ Stop
+          <i class="fa-solid fa-stop mr-1"></i> Stop
         </button>
       </div>
       <!-- Manual input -->
@@ -216,7 +217,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <!-- ── Order Selection Card ── -->
   <div class="mob-card">
     <div class="mob-card-header">
-      <div class="icon" style="background:rgba(245,158,11,0.15)">📦</div>
+      <div class="icon" style="background:rgba(245,158,11,0.15)"><i class="fa-solid fa-box"></i></div>
       <span class="label">Select Order</span>
     </div>
     <div class="mob-card-body" style="padding-top:10px; padding-bottom:10px;">
@@ -229,7 +230,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <!-- ── DSR Selection Card ── -->
   <div class="mob-card">
     <div class="mob-card-header">
-      <div class="icon" style="background:rgba(16,185,129,0.15)">🧑‍✈️</div>
+      <div class="icon" style="background:rgba(16,185,129,0.15)"><i class="fa-solid fa-user-tie"></i></div>
       <span class="label">Select DSR (Driver)</span>
     </div>
     <div class="mob-card-body" style="padding-top:10px; padding-bottom:10px;">
@@ -246,7 +247,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <div class="mob-card" id="products-panel" style="display:none">
     <div class="mob-card-header" style="justify-content:space-between">
       <div style="display:flex; align-items:center; gap:8px;">
-        <div class="icon" style="background:rgba(124,58,237,0.15)">📋</div>
+        <div class="icon" style="background:rgba(124,58,237,0.15)"><i class="fa-solid fa-clipboard-list"></i></div>
         <span class="label">Products to Load</span>
       </div>
       <span id="total-badge" style="font-size:11px; color:#64748B; background:rgba(255,255,255,0.06); padding:3px 9px; border-radius:999px;">0 / 0</span>
@@ -257,7 +258,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <!-- ── Placeholder ── -->
   <div class="mob-card" id="order-placeholder">
     <div class="empty-state">
-      <span class="emoji">📦</span>
+      <i class="fa-solid fa-box-open text-3xl mb-2 block text-gray-600"></i>
       Select an order above to begin scanning boxes
     </div>
   </div>
@@ -266,7 +267,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <div class="mob-card">
     <div class="mob-card-header" style="justify-content:space-between">
       <div style="display:flex; align-items:center; gap:8px;">
-        <div class="icon" style="background:rgba(15,23,42,0.5)">🗂️</div>
+        <div class="icon" style="background:rgba(15,23,42,0.5)"><i class="fa-solid fa-list-check"></i></div>
         <span class="label">Scan Log</span>
       </div>
       <span id="scan-count-badge" style="font-size:11px; color:#10B981; font-weight:600;">0 scanned</span>
@@ -274,7 +275,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
     <div class="mob-card-body" style="max-height:200px; overflow-y:auto; padding-top:4px; padding-bottom:4px;">
       <div id="scan-log">
         <div class="empty-state" style="padding:12px 0;">
-          <span style="font-size:20px; display:block; margin-bottom:4px;">🔍</span>
+          <i class="fa-solid fa-magnifying-glass text-xl mb-1 block"></i>
           Scanned boxes will appear here
         </div>
       </div>
@@ -284,7 +285,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
   <!-- ── Complete Button ── -->
   <div id="complete-section" style="display:none; padding-bottom:20px;">
     <button id="complete-btn" onclick="completeDelivery()" class="mob-btn-success" disabled>
-      ✅ Complete — Send to Van
+      <i class="fa-solid fa-circle-check mr-1"></i> Complete — Send to Van
     </button>
   </div>
 
@@ -303,8 +304,8 @@ let scanCount    = 0;
 function mobToast(msg, type = 'success') {
   const t = document.getElementById('mob-toast');
   t.textContent = '';
-  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-  t.innerHTML = `<span>${icons[type] || '✅'}</span><span>${msg}</span>`;
+  const icons = { success: '<i class="fa-solid fa-check-circle"></i>', error: '<i class="fa-solid fa-circle-xmark"></i>', warning: '<i class="fa-solid fa-circle-exclamation"></i>', info: '<i class="fa-solid fa-circle-info"></i>' };
+  t.innerHTML = `<span>${icons[type] || icons.success}</span><span>${msg}</span>`;
   t.className = `show ${type}`;
   clearTimeout(t._timer);
   t._timer = setTimeout(() => { t.className = ''; }, 3000);
@@ -329,7 +330,7 @@ async function loadOrderItems() {
   orderItems   = [];
   scannedBoxes = [];
   scanCount    = 0;
-  document.getElementById('scan-log').innerHTML = '<div class="empty-state" style="padding:12px 0;"><span style="font-size:20px; display:block; margin-bottom:4px;">🔍</span>Scanned boxes will appear here</div>';
+  document.getElementById('scan-log').innerHTML = '<div class="empty-state" style="padding:12px 0;"><i class="fa-solid fa-magnifying-glass text-xl mb-1 block"></i>Scanned boxes will appear here</div>';
   document.getElementById('scan-count-badge').textContent = '0 scanned';
 
   if (!oid) {
@@ -418,9 +419,9 @@ async function processQRScan(uid) {
       bar.classList.add('complete');
       document.getElementById('prod-' + item.product_id).classList.add('done');
       cntEl.classList.add('done');
-      mobToast(`✅ ${item.product_name} — Complete!`, 'success');
+      mobToast(`${item.product_name} — Complete!`, 'success');
     } else {
-      mobToast(`📦 ${qr.product_name} scanned`, 'success');
+      mobToast(`${qr.product_name} scanned`, 'success');
     }
   }
 
@@ -438,7 +439,7 @@ function addLog(uid, ok, msg) {
   const div = document.createElement('div');
   div.className = 'log-item';
   div.innerHTML = `
-    <div class="log-icon ${ok ? 'ok' : 'err'}">${ok ? '✓' : '✗'}</div>
+    <div class="log-icon ${ok ? 'ok' : 'err'}"><i class="fa-solid fa-${ok ? 'check' : 'xmark'}"></i></div>
     <span class="log-uid">${uid}</span>
     <span class="log-msg">${msg}</span>
   `;
@@ -493,12 +494,12 @@ async function completeDelivery() {
   });
 
   if (data.success) {
-    mobToast('Order sent to van! 🚚', 'success');
-    btn.textContent = '🚚 Done!';
+    mobToast('Order sent to van!', 'success');
+    btn.textContent = 'Done!';
     setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/delivery.php', 1800);
   } else {
     mobToast(data.message || 'Error', 'error');
-    btn.disabled = false; btn.textContent = '✅ Complete — Send to Van';
+    btn.disabled = false; btn.textContent = 'Complete — Send to Van';
   }
 }
 </script>

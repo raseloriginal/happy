@@ -20,7 +20,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-5xl">
       <div class="flex items-center justify-between mb-6 print:hidden">
         <div><h2 class="text-xl font-bold text-gray-800">Print QR Stickers</h2><p class="text-sm text-gray-500">38mm × 25mm (3.8×2.5cm) thermal label format</p></div>
-        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost">← Lots</a>
+        <a href="<?= rootPath() ?>/manager/lots.php" class="btn btn-ghost"><i class="fa-solid fa-arrow-left mr-1"></i> Lots</a>
       </div>
 
       <!-- Controls (hidden on print) -->
@@ -46,8 +46,8 @@ include __DIR__ . '/../includes/header.php';
         </div>
         <div class="flex gap-3 mt-4">
           <button onclick="loadStickers()" class="btn btn-primary" id="apply-btn" disabled>Apply</button>
-          <button onclick="downloadPDF()" class="btn btn-danger" id="pdf-btn" style="display:none">📄 Download PDF (38x25mm)</button>
-          <button onclick="downloadDoc()" class="btn btn-ghost" id="doc-btn" style="display:none">📥 Word Doc</button>
+          <button onclick="downloadPDF()" class="btn btn-danger" id="pdf-btn" style="display:none"><i class="fa-solid fa-file-pdf mr-1"></i> Download PDF (38x25mm)</button>
+          <button onclick="downloadDoc()" class="btn btn-ghost" id="doc-btn" style="display:none"><i class="fa-solid fa-file-word mr-1"></i> Word Doc</button>
         </div>
       </div>
 

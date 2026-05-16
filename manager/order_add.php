@@ -14,7 +14,7 @@ include __DIR__ . '/../includes/header.php';
     <div class="page-body max-w-4xl">
       <div class="flex items-center justify-between mb-6">
         <div><h2 class="text-xl font-bold text-gray-800">Add New Order</h2><p class="text-sm text-gray-500">Select SR and add products manually</p></div>
-        <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost">← Orders</a>
+        <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost"><i class="fa-solid fa-arrow-left mr-1"></i> Orders</a>
       </div>
 
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -134,7 +134,7 @@ function addProductRow() {
     <td><input type="number" class="form-input qty-inp" min="1" placeholder="qty" required oninput="updateRowTotal(this)" /></td>
     <td class="text-right text-gray-500 text-sm row-price">—</td>
     <td class="text-right font-medium row-total">৳0.00</td>
-    <td><button type="button" onclick="this.closest('tr').remove(); updateUsed(); updateGrandTotal();" class="btn btn-danger btn-sm">✕</button></td>
+    <td><button type="button" onclick="this.closest('tr').remove(); updateUsed(); updateGrandTotal();" class="btn btn-danger btn-sm"><i class="fa-solid fa-xmark"></i></button></td>
   `;
   tbody.appendChild(tr);
   updateUsed();

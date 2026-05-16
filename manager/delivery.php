@@ -18,9 +18,9 @@ include __DIR__ . '/../includes/header.php';
         <div><h2 class="text-xl font-bold text-gray-800">Out for Delivery</h2><p class="text-sm text-gray-500">Scan QR boxes to load onto van</p></div>
         <div class="flex gap-2">
           <a href="<?= rootPath() ?>/manager/delivery_scan.php" class="btn btn-primary" style="gap:6px;">
-            📱 Mobile Scan
+            <i class="fa-solid fa-mobile-screen-button"></i> Mobile Scan
           </a>
-          <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost">← Orders</a>
+          <a href="<?= rootPath() ?>/manager/orders.php" class="btn btn-ghost"><i class="fa-solid fa-arrow-left mr-1"></i> Orders</a>
         </div>
       </div>
 
@@ -50,7 +50,7 @@ include __DIR__ . '/../includes/header.php';
 
           <!-- QR Scanner -->
           <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <h3 class="font-semibold text-gray-700 mb-3">📷 QR Scanner</h3>
+            <h3 class="font-semibold text-gray-700 mb-3"><i class="fa-solid fa-camera mr-1"></i> QR Scanner</h3>
             <div id="qr-reader" class="rounded-lg overflow-hidden mb-3" style="min-height:80px"></div>
             <div class="flex gap-2">
               <button onclick="startScan()" id="scan-btn" class="btn btn-primary flex-1" disabled>Start Camera</button>
@@ -88,7 +88,7 @@ include __DIR__ . '/../includes/header.php';
 
             <div class="mt-4">
               <button id="complete-btn" onclick="completeDelivery()" class="btn btn-success w-full py-3 text-base" disabled>
-                ✅ Complete — Send to Van
+                <i class="fa-solid fa-circle-check mr-1"></i> Complete — Send to Van
               </button>
             </div>
           </div>
@@ -213,7 +213,7 @@ function addLog(uid, success, msg) {
   const log  = document.getElementById('scan-log');
   const div  = document.createElement('div');
   div.className = `flex items-center gap-2 py-1 border-b border-gray-50`;
-  div.innerHTML = `<span class="${success ? 'text-green-500' : 'text-red-500'}">${success ? '✓' : '✗'}</span><span class="font-mono text-xs">${uid}</span><span class="text-gray-400 text-xs">${msg}</span>`;
+  div.innerHTML = `<span class="${success ? 'text-green-500' : 'text-red-500'}"><i class="fa-solid fa-${success ? 'check' : 'xmark'}"></i></span><span class="font-mono text-xs">${uid}</span><span class="text-gray-400 text-xs">${msg}</span>`;
   log.prepend(div);
 }
 
@@ -260,11 +260,11 @@ async function completeDelivery() {
   });
 
   if (data.success) {
-    showToast('Order sent to van! 🚚');
+    showToast('Order sent to van!');
     setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/orders.php', 1500);
   } else {
     showToast(data.message || 'Error', 'error');
-    btn.disabled = false; btn.textContent = '✅ Complete — Send to Van';
+    btn.disabled = false; btn.textContent = 'Complete — Send to Van';
   }
 }
 </script>

@@ -32,7 +32,7 @@ include __DIR__ . '/../includes/header.php';
             <h3 class="font-semibold text-gray-700 mb-3">QR Scan Return</h3>
             <div id="return-qr-reader" class="rounded-lg overflow-hidden mb-3"></div>
             <div class="flex gap-2 mb-3">
-              <button onclick="startReturnScan()" class="btn btn-primary btn-sm flex-1">📷 Camera</button>
+              <button onclick="startReturnScan()" class="btn btn-primary btn-sm flex-1"><i class="fa-solid fa-camera mr-1"></i> Camera</button>
               <button onclick="stopCameraScanner()" class="btn btn-ghost btn-sm flex-1">Stop</button>
             </div>
             <input id="manual-return" type="text" class="form-input scanner-input" placeholder="Scan QR UID…" onkeydown="if(event.key==='Enter'){scanReturn(this.value);this.value=''}" />
@@ -68,7 +68,7 @@ include __DIR__ . '/../includes/header.php';
 <!-- Custom Return Modal -->
 <div id="custom-modal" class="modal-overlay" style="display:none">
   <div class="modal-box modal-box-lg">
-    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Custom Return</h3><button onclick="closeModal('custom-modal')">&times;</button></div>
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Custom Return</h3><button onclick="closeModal('custom-modal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div>
     <p class="text-sm text-gray-500 mb-4">Enter partial quantities for each box manually.</p>
     <div id="custom-boxes" class="space-y-2 max-h-96 overflow-y-auto"></div>
     <div class="flex gap-2 mt-4">

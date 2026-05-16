@@ -42,27 +42,27 @@ include __DIR__ . '/../includes/header.php';
       <!-- Stat Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <div class="stat-card">
-          <div class="stat-card-icon bg-yellow-100 mb-2">📋</div>
+          <div class="stat-card-icon bg-yellow-100 mb-2 text-yellow-600"><i class="fa-solid fa-clipboard-list"></i></div>
           <div class="text-2xl font-bold text-gray-800"><?= $pendingOrdersCnt ?></div>
           <div class="text-xs text-gray-500 mt-1">Pending Orders</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-blue-100 mb-2">🚚</div>
+          <div class="stat-card-icon bg-blue-100 mb-2 text-blue-600"><i class="fa-solid fa-truck"></i></div>
           <div class="text-2xl font-bold text-gray-800"><?= $outDelivery ?></div>
           <div class="text-xs text-gray-500 mt-1">Out for Delivery</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-green-100 mb-2">📦</div>
+          <div class="stat-card-icon bg-green-100 mb-2 text-green-600"><i class="fa-solid fa-box"></i></div>
           <div class="text-2xl font-bold text-gray-800"><?= $inStockCnt ?></div>
           <div class="text-xs text-gray-500 mt-1">Products in Stock</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-red-100 mb-2">⚠️</div>
+          <div class="stat-card-icon bg-red-100 mb-2 text-red-600"><i class="fa-solid fa-triangle-exclamation"></i></div>
           <div class="text-2xl font-bold <?= $lowStock > 0 ? 'text-red-600' : 'text-gray-800' ?>"><?= $lowStock ?></div>
           <div class="text-xs text-gray-500 mt-1">Low Stock Alerts</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-purple-100 mb-2">💰</div>
+          <div class="stat-card-icon bg-purple-100 mb-2 text-purple-600"><i class="fa-solid fa-money-bill-wave"></i></div>
           <div class="text-2xl font-bold text-gray-800"><?= $pendingExp ?></div>
           <div class="text-xs text-gray-500 mt-1">Pending Expenses</div>
         </div>
@@ -70,11 +70,11 @@ include __DIR__ . '/../includes/header.php';
 
       <!-- Quick Actions -->
       <div class="flex flex-wrap gap-3 mb-6">
-        <a href="<?= rootPath() ?>/manager/order_add.php" class="btn btn-primary">+ New Order</a>
-        <a href="<?= rootPath() ?>/manager/lot_add.php" class="btn btn-success">+ Add Lot</a>
-        <a href="<?= rootPath() ?>/manager/delivery.php" class="btn btn-warning">🚚 Delivery</a>
-        <a href="<?= rootPath() ?>/manager/qr_generate.php" class="btn btn-ghost">🔲 Generate QR</a>
-        <a href="<?= rootPath() ?>/manager/inventory.php" class="btn btn-ghost">📦 Inventory</a>
+        <a href="<?= rootPath() ?>/manager/order_add.php" class="btn btn-primary"><i class="fa-solid fa-plus mr-1"></i> New Order</a>
+        <a href="<?= rootPath() ?>/manager/lot_add.php" class="btn btn-success"><i class="fa-solid fa-plus mr-1"></i> Add Lot</a>
+        <a href="<?= rootPath() ?>/manager/delivery.php" class="btn btn-warning"><i class="fa-solid fa-truck mr-1"></i> Delivery</a>
+        <a href="<?= rootPath() ?>/manager/qr_generate.php" class="btn btn-ghost"><i class="fa-solid fa-qrcode mr-1"></i> Generate QR</a>
+        <a href="<?= rootPath() ?>/manager/inventory.php" class="btn btn-ghost"><i class="fa-solid fa-box mr-1"></i> Inventory</a>
       </div>
 
       <!-- Charts + Tables Row -->
@@ -87,7 +87,7 @@ include __DIR__ . '/../includes/header.php';
         <!-- Low Stock -->
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div class="px-5 py-4 border-b border-gray-100 flex justify-between">
-            <h3 class="font-semibold text-gray-700">⚠️ Low Stock</h3>
+            <h3 class="font-semibold text-gray-700"><i class="fa-solid fa-triangle-exclamation text-red-500 mr-2"></i> Low Stock</h3>
             <a href="<?= rootPath() ?>/manager/inventory.php" class="text-xs text-indigo-600">View All</a>
           </div>
           <table class="data-table">
@@ -100,7 +100,7 @@ include __DIR__ . '/../includes/header.php';
                 <td class="text-right"><span class="badge <?= $p['qty_boxes'] == 0 ? 'badge-danger' : 'badge-warning' ?>"><?= $p['qty_boxes'] ?></span></td>
               </tr>
               <?php endforeach; ?>
-              <?php if (empty($lowStockProducts)): ?><tr><td colspan="3" class="text-center py-4 text-gray-400">All stock OK ✓</td></tr><?php endif; ?>
+              <?php if (empty($lowStockProducts)): ?><tr><td colspan="3" class="text-center py-4 text-gray-400">All stock OK</td></tr><?php endif; ?>
             </tbody>
           </table>
         </div>
@@ -110,7 +110,7 @@ include __DIR__ . '/../includes/header.php';
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100 flex justify-between">
           <h3 class="font-semibold text-gray-700">Recent Orders</h3>
-          <a href="<?= rootPath() ?>/manager/orders.php" class="text-xs text-indigo-600">View All →</a>
+          <a href="<?= rootPath() ?>/manager/orders.php" class="text-xs text-indigo-600">View All <i class="fa-solid fa-arrow-right ml-1"></i></a>
         </div>
         <table class="data-table">
           <thead><tr><th>Order</th><th>SR</th><th>Company</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>

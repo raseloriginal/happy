@@ -42,7 +42,7 @@ include __DIR__ . '/../includes/header.php';
 </div>
 <div id="add-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
-    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Bulk Add Categories</h3><button onclick="closeModal('add-modal')">&times;</button></div>
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Bulk Add Categories</h3><button onclick="closeModal('add-modal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div>
     <form id="add-form" class="space-y-3">
       <div><label class="form-label">Company (Optional)</label>
         <select id="add-company" class="form-input">
@@ -59,7 +59,7 @@ include __DIR__ . '/../includes/header.php';
 </div>
 <div id="edit-modal" class="modal-overlay" style="display:none">
   <div class="modal-box">
-    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Edit Category</h3><button onclick="closeModal('edit-modal')">&times;</button></div>
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold">Edit Category</h3><button onclick="closeModal('edit-modal')" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button></div>
     <form id="edit-form" class="space-y-3">
       <input type="hidden" id="edit-id" />
       <div><label class="form-label">Company (Optional)</label>

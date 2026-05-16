@@ -46,17 +46,17 @@ include __DIR__ . '/../includes/header.php';
       <!-- Stat Cards -->
       <div class="grid grid-cols-3 gap-4 mb-6">
         <div class="stat-card">
-          <div class="stat-card-icon bg-indigo-100 mb-2">🏢</div>
+          <div class="stat-card-icon bg-indigo-100 mb-2 text-indigo-600"><i class="fa-solid fa-building"></i></div>
           <div class="text-2xl font-bold"><?= count($companies) ?></div>
           <div class="text-xs text-gray-500">My Companies</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-green-100 mb-2">📋</div>
+          <div class="stat-card-icon bg-green-100 mb-2 text-green-600"><i class="fa-solid fa-clipboard-list"></i></div>
           <div class="text-2xl font-bold"><?= $totalOrders ?></div>
           <div class="text-xs text-gray-500">Total Orders</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-icon bg-yellow-100 mb-2">💰</div>
+          <div class="stat-card-icon bg-yellow-100 mb-2 text-yellow-600"><i class="fa-solid fa-money-bill-wave"></i></div>
           <div class="text-2xl font-bold">৳<?= number_format($totalRevenue, 0) ?></div>
           <div class="text-xs text-gray-500">Total Revenue</div>
         </div>

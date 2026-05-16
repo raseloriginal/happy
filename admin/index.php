@@ -47,23 +47,23 @@ include __DIR__ . '/../includes/header.php';
       <!-- Stat Cards (Compact) -->
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         <div class="bg-white border border-gray-200 rounded-md p-3 shadow-sm flex items-center gap-3">
-          <div class="w-10 h-10 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">📋</div>
+          <div class="w-10 h-10 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg"><i class="fa-solid fa-clipboard-list"></i></div>
           <div><div class="text-xs font-semibold text-gray-500 uppercase">Orders</div><div class="text-lg font-bold text-gray-800 leading-tight"><?= $totalOrders ?></div></div>
         </div>
         <div class="bg-white border border-gray-200 rounded-md p-3 shadow-sm flex items-center gap-3">
-          <div class="w-10 h-10 rounded bg-green-50 text-green-600 flex items-center justify-center text-lg">💰</div>
+          <div class="w-10 h-10 rounded bg-green-50 text-green-600 flex items-center justify-center text-lg"><i class="fa-solid fa-money-bill-wave"></i></div>
           <div><div class="text-xs font-semibold text-gray-500 uppercase">Revenue</div><div class="text-lg font-bold text-gray-800 leading-tight">৳<?= number_format($totalRevenue, 0) ?></div></div>
         </div>
         <div class="bg-white border border-gray-200 rounded-md p-3 shadow-sm flex items-center gap-3">
-          <div class="w-10 h-10 rounded bg-yellow-50 text-yellow-600 flex items-center justify-center text-lg">🚚</div>
+          <div class="w-10 h-10 rounded bg-yellow-50 text-yellow-600 flex items-center justify-center text-lg"><i class="fa-solid fa-truck"></i></div>
           <div><div class="text-xs font-semibold text-gray-500 uppercase">Active DSRs</div><div class="text-lg font-bold text-gray-800 leading-tight"><?= $activeDSRs ?></div></div>
         </div>
         <div class="bg-white border border-gray-200 rounded-md p-3 shadow-sm flex items-center gap-3">
-          <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center text-lg">📦</div>
+          <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-box"></i></div>
           <div><div class="text-xs font-semibold text-gray-500 uppercase">Stock Value</div><div class="text-lg font-bold text-gray-800 leading-tight">৳<?= number_format($stockValue, 0) ?></div></div>
         </div>
         <div class="bg-white border border-gray-200 rounded-md p-3 shadow-sm flex items-center gap-3">
-          <div class="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center text-lg">↩️</div>
+          <div class="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center text-lg"><i class="fa-solid fa-rotate-left"></i></div>
           <div><div class="text-xs font-semibold text-gray-500 uppercase">Returns</div><div class="text-lg font-bold text-gray-800 leading-tight"><?= $pendingRet ?></div></div>
         </div>
       </div>
@@ -115,7 +115,7 @@ include __DIR__ . '/../includes/header.php';
         <!-- Low Stock -->
         <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden flex flex-col h-80">
           <div class="px-3 py-2 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-gray-700 uppercase text-red-600">⚠️ Low Stock Alerts</h3>
+            <h3 class="text-xs font-bold text-gray-700 uppercase text-red-600"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Low Stock Alerts</h3>
           </div>
           <div class="overflow-auto flex-1">
             <table class="data-table">
@@ -128,7 +128,7 @@ include __DIR__ . '/../includes/header.php';
                   <td><span class="badge <?= $s['qty_boxes'] == 0 ? 'badge-danger' : 'badge-warning' ?>"><?= $s['qty_boxes'] ?></span></td>
                 </tr>
                 <?php endforeach; ?>
-                <?php if (empty($lowStock)): ?><tr><td colspan="3" class="text-center py-6 text-gray-400 text-sm">All stock levels OK ✓</td></tr><?php endif; ?>
+                <?php if (empty($lowStock)): ?><tr><td colspan="3" class="text-center py-6 text-gray-400 text-sm">All stock levels OK</td></tr><?php endif; ?>
               </tbody>
             </table>
           </div>
