@@ -140,7 +140,7 @@ async function loadStickers() {
  * Returns a PNG data-URL and the exact height in mm used.
  */
 function renderBengaliText(text, fontSizePt, maxWidthMm, maxLines) {
-  const SCALE   = 4;                          // high-res multiplier
+  const SCALE   = 2;                          // high-res multiplier
   const MM2PX   = 3.7795 * SCALE;            // mm → canvas px
   const fPx     = Math.round(fontSizePt * (96 / 72) * SCALE); // pt → px
   const lhMm    = fontSizePt * 25.4 / 72 * 1.45;   // line-height in mm
