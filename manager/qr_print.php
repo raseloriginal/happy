@@ -140,7 +140,7 @@ async function loadStickers() {
  * Returns a PNG data-URL and the exact height in mm used.
  */
 function renderBengaliText(text, fontSizePt, maxWidthMm, maxLines) {
-  const SCALE   = 2;                          // high-res multiplier
+  const SCALE   = 4;                          // high-res multiplier
   const MM2PX   = 3.7795 * SCALE;            // mm → canvas px
   const fPx     = Math.round(fontSizePt * (96 / 72) * SCALE); // pt → px
   const lhMm    = fontSizePt * 25.4 / 72 * 1.45;   // line-height in mm
@@ -207,23 +207,23 @@ async function downloadPDF() {
     if (i > 0) pdf.addPage([38, 25], 'l');
 
     // Draw QR Code (14mm x 14mm)
-    pdf.addImage(qrData, 'PNG', 1.5, 1.5, 14, 14);
+    pdf.addImage(qrData, 'PNG', 1.5, 3.5, 14, 14);
 
     // Draw QR UID under QR
     pdf.setFontSize(5.5);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(qrUid, 8.5, 17.5, { align: 'center' });
+    pdf.text(qrUid, 8.5, 19.5, { align: 'center' });
 
     // Right side constants
     const textX     = 17;
     const textWidth = 19;
 
     // 1. Product Name — rendered by browser canvas for correct Bengali shaping
-    const nr     = renderBengaliText(productName, 8, textWidth, 2);
-    const nameY  = 1.5;  // top of image (visually matches original baseline ~4mm)
+    const nr     = renderBengaliText(productName, 6, textWidth, 3);
+    const nameY  = 3.5;  // Aligned with QR Code top (3.5mm)
     const nameH  = nr.lines * nr.lhMm;
     pdf.addImage(nr.url, 'PNG', textX, nameY, textWidth, nameH);
-    let currentY = nameY + nameH + 0.5;
+    let currentY = nameY + nameH + 2;
 
     // 2. Price
     const priceText = card.querySelector('.sticker-price').innerText;
@@ -234,16 +234,17 @@ async function downloadPDF() {
       currentY += 4;
     }
 
-    // 3. Qty (fixed bottom position)
+    // 3. Qty — flows right after price
     pdf.setFontSize(6);
     pdf.setFont('helvetica', 'normal');
-    pdf.text(qtyText.split('\n')[0], textX, 18);
+    pdf.text(qtyText.split('\n')[0], textX, currentY);
+    currentY += 3;
 
-    // 4. Exp
+    // 4. Exp — flows right after Qty
     const expText = card.querySelector('.sticker-exp').innerText;
     if (expText) {
       pdf.setFontSize(6);
-      pdf.text(expText, textX, 21.5);
+      pdf.text(expText, textX, currentY);
     }
   }
 
