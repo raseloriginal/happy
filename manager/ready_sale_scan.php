@@ -81,10 +81,10 @@ $pdo       = getDB();
 
     /* ── Floating Footer ── */
     .app-footer {
-      padding: 16px;
-      background: rgba(15, 23, 42, 0.9);
+      padding: 12px 16px 24px;
+      background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(10px);
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .status-badge {
@@ -138,6 +138,7 @@ $pdo       = getDB();
 
 <script>
 let scannedData = {};
+let scannedQrIds = [];
 let activeScanner = null;
 let selectedSrId = null;
 
@@ -160,7 +161,7 @@ function startReadyScanner() {
 async function handleReadyScan(uid) {
   if (window._scanning) return;
   window._scanning = true;
-  setTimeout(() => window._scanning = false, 1500);
+  setTimeout(() => window._scanning = false, 1000);
 
   const url = `<?= rootPath() ?>/api/orders.php?action=scan_ready_sale&qr_uid=${uid}` + (selectedSrId ? `&sr_id=${selectedSrId}` : '');
   const res = await api(url);
@@ -172,6 +173,13 @@ async function handleReadyScan(uid) {
   }
 
   const p = res.data;
+  
+  // Strict Duplicate Check
+  if (scannedQrIds.includes(p.qr_id)) {
+    showToast('Box already scanned', 'warning');
+    return;
+  }
+
   if (!selectedSrId) {
     selectedSrId = p.sr_id;
     document.getElementById('sr-badge-container').style.display = 'block';
@@ -179,14 +187,15 @@ async function handleReadyScan(uid) {
   }
 
   triggerFlash();
+  scannedQrIds.push(p.qr_id);
+
+  const pieces = parseInt(p.scanned_pieces) || 0;
 
   if (!scannedData[p.id]) {
-    scannedData[p.id] = { name: p.name, qty: p.scanned_pieces, price: p.selling_price, ppb: p.pieces_per_box, qrIds: [p.qr_id] };
+    scannedData[p.id] = { name: p.name, qty: pieces, price: p.selling_price, ppb: p.pieces_per_box };
     renderScannedItem(p.id, true);
   } else {
-    if (scannedData[p.id].qrIds.includes(p.qr_id)) { showToast('Already scanned', 'warning'); return; }
-    scannedData[p.id].qty += p.scanned_pieces;
-    scannedData[p.id].qrIds.push(p.qr_id);
+    scannedData[p.id].qty = parseInt(scannedData[p.id].qty) + pieces;
     renderScannedItem(p.id, false);
   }
   
