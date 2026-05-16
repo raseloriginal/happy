@@ -52,7 +52,7 @@ $pdo       = getDB();
     .mobile-scanner-container {
       position: relative;
       width: 100%;
-      height: 35vh;
+      height: 45vh;
       background: #000;
       overflow: hidden;
       border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -149,7 +149,7 @@ function startReadyScanner() {
   activeScanner = new Html5Qrcode("ready-scan-reader");
   activeScanner.start(
     { facingMode: "environment" },
-    { fps: 10, qrbox: { width: 250, height: 250 } },
+    { fps: 15, qrbox: { width: 320, height: 320 } },
     (decodedText) => handleReadyScan(decodedText),
     (errorMessage) => {}
   ).catch(err => {
