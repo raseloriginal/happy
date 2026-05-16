@@ -134,26 +134,51 @@ async function loadStickers() {
   showToast(`Loaded ${data.data.length} stickers`);
 }
 
-async function loadBengaliFont(pdf) {
-  try {
-    const resp = await fetch('<?= rootPath() ?>/assets/fonts/NotoSansBengali-Regular.ttf');
-    const buf  = await resp.arrayBuffer();
-    // Convert ArrayBuffer → base64
-    const bytes = new Uint8Array(buf);
-    let b64 = '';
-    const chunk = 8192;
-    for (let i = 0; i < bytes.length; i += chunk) {
-      b64 += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-    }
-    b64 = btoa(b64);
-    pdf.addFileToVFS('NotoSansBengali-Regular.ttf', b64);
-    pdf.addFont('NotoSansBengali-Regular.ttf', 'NotoSansBengali', 'normal');
-    pdf.addFont('NotoSansBengali-Regular.ttf', 'NotoSansBengali', 'bold');
-    return true;
-  } catch(e) {
-    console.warn('Bengali font load failed, falling back to helvetica', e);
-    return false;
+/**
+ * Renders Bengali (or any Unicode) text via the browser's own 2D canvas,
+ * which applies full HarfBuzz shaping (conjuncts, matras, etc.).
+ * Returns a PNG data-URL and the exact height in mm used.
+ */
+function renderBengaliText(text, fontSizePt, maxWidthMm, maxLines) {
+  const SCALE   = 4;                          // high-res multiplier
+  const MM2PX   = 3.7795 * SCALE;            // mm → canvas px
+  const fPx     = Math.round(fontSizePt * (96 / 72) * SCALE); // pt → px
+  const lhMm    = fontSizePt * 25.4 / 72 * 1.45;   // line-height in mm
+  const lhPx    = Math.round(lhMm * MM2PX);
+  const maxWPx  = Math.round(maxWidthMm * MM2PX);
+
+  // ---- measure & word-wrap ----
+  const probe = document.createElement('canvas').getContext('2d');
+  probe.font  = `bold ${fPx}px 'Noto Sans Bengali', 'SolaimanLipi', sans-serif`;
+
+  const lines = [];
+  let cur = '';
+  for (const word of text.split(' ')) {
+    const test = cur ? cur + ' ' + word : word;
+    if (probe.measureText(test).width > maxWPx && cur) {
+      lines.push(cur);
+      cur = word;
+      if (lines.length >= maxLines) { cur = ''; break; }
+    } else { cur = test; }
   }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  const finalLines = lines.slice(0, maxLines);
+
+  // ---- draw ----
+  const c   = document.createElement('canvas');
+  c.width   = maxWPx;
+  c.height  = lhPx * (finalLines.length || 1);
+  const ctx = c.getContext('2d');
+  ctx.font        = `bold ${fPx}px 'Noto Sans Bengali', 'SolaimanLipi', sans-serif`;
+  ctx.fillStyle   = '#000000';
+  ctx.textBaseline = 'top';
+  finalLines.forEach((line, i) => ctx.fillText(line, 0, i * lhPx));
+
+  return {
+    url   : c.toDataURL('image/png'),
+    lines : finalLines.length,
+    lhMm              // height of one line in mm
+  };
 }
 
 async function downloadPDF() {
@@ -169,19 +194,15 @@ async function downloadPDF() {
     floatPrecision: 16
   });
 
-  // Load Bengali font so product names render correctly
-  const hasBengaliFont = await loadBengaliFont(pdf);
-  const nameFont = hasBengaliFont ? 'NotoSansBengali' : 'helvetica';
-
   const cards = grid.children;
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i];
     const canvas = card.querySelector('canvas');
     if (!canvas) continue;
-    const qrData = canvas.toDataURL('image/png');
+    const qrData      = canvas.toDataURL('image/png');
     const productName = card.querySelector('.sticker-product-name').innerText;
-    const qtyText = card.querySelector('.sticker-qty').innerText;
-    const qrUid = card.querySelector('.sticker-qr-uid').innerText;
+    const qtyText     = card.querySelector('.sticker-qty').innerText;
+    const qrUid       = card.querySelector('.sticker-qr-uid').innerText;
 
     if (i > 0) pdf.addPage([38, 25], 'l');
 
@@ -193,18 +214,16 @@ async function downloadPDF() {
     pdf.setFont('helvetica', 'bold');
     pdf.text(qrUid, 8.5, 17.5, { align: 'center' });
 
-    // Draw Right Side Info
-    const textX = 17;
+    // Right side constants
+    const textX     = 17;
     const textWidth = 19;
 
-    // 1. Product Name — uses Bengali font so Bangla text renders correctly
-    pdf.setFontSize(8);
-    pdf.setFont(nameFont, 'bold');
-    const splitTitle = pdf.splitTextToSize(productName, textWidth);
-    pdf.text(splitTitle.slice(0, 2), textX, 4);
-
-    // Calculate Y offset after title (approx 3.5mm per line)
-    let currentY = 4 + (Math.min(splitTitle.length, 2) * 3.5);
+    // 1. Product Name — rendered by browser canvas for correct Bengali shaping
+    const nr     = renderBengaliText(productName, 8, textWidth, 2);
+    const nameY  = 1.5;  // top of image (visually matches original baseline ~4mm)
+    const nameH  = nr.lines * nr.lhMm;
+    pdf.addImage(nr.url, 'PNG', textX, nameY, textWidth, nameH);
+    let currentY = nameY + nameH + 0.5;
 
     // 2. Price
     const priceText = card.querySelector('.sticker-price').innerText;
@@ -215,7 +234,7 @@ async function downloadPDF() {
       currentY += 4;
     }
 
-    // 3. Qty (Bottom Area)
+    // 3. Qty (fixed bottom position)
     pdf.setFontSize(6);
     pdf.setFont('helvetica', 'normal');
     pdf.text(qtyText.split('\n')[0], textX, 18);
