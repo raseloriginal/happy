@@ -11,8 +11,9 @@ $lots->execute([$wid]); $lots = $lots->fetchAll();
 $preselect = intval($_GET['lot_id'] ?? 0);
 include __DIR__ . '/../includes/header.php';
 ?>
-<!-- Load jsPDF for PDF generation -->
+<!-- Load jsPDF and html2canvas for PDF generation (html2canvas preserves Bengali/Unicode text) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <div class="page-wrapper">
   <?php include __DIR__ . '/../includes/sidebar.php'; ?>
   <div class="main-content">
@@ -138,68 +139,46 @@ async function downloadPDF() {
   const grid = document.getElementById('stickers-grid');
   if (!grid.children.length) { showToast('No stickers to download', 'warning'); return; }
 
+  showToast('Generating PDF…', 'info');
+
   const { jsPDF } = window.jspdf;
+  // Label size: 38mm wide × 25mm tall (landscape)
+  const W_MM = 38, H_MM = 25;
+  const SCALE = 4; // render at 4× for sharpness
+
   const pdf = new jsPDF({
     orientation: 'l',
     unit: 'mm',
-    format: [38, 25],
+    format: [W_MM, H_MM],
     putOnlyUsedFonts: true,
     floatPrecision: 16
   });
 
-  const cards = grid.children;
+  const cards = Array.from(grid.children);
+
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i];
-    const canvas = card.querySelector('canvas');
-    if (!canvas) continue;
-    const qrData = canvas.toDataURL('image/png');
-    const productName = card.querySelector('.sticker-product-name').innerText;
-    const qtyText = card.querySelector('.sticker-qty').innerText;
-    const qrUid = card.querySelector('.sticker-qr-uid').innerText;
 
-    if (i > 0) pdf.addPage([38, 25], 'l');
+    // Temporarily fix dimensions so html2canvas captures at exact label size
+    const origStyle = card.getAttribute('style') || '';
+    card.style.width  = (W_MM * 3.7795) + 'px';  // mm → px (96dpi)
+    card.style.height = (H_MM * 3.7795) + 'px';
+    card.style.overflow = 'hidden';
 
-    // Draw QR Code (14mm x 14mm)
-    pdf.addImage(qrData, 'PNG', 1.5, 1.5, 14, 14);
-    
-    // Draw QR UID under QR
-    pdf.setFontSize(5.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(qrUid, 8.5, 17.5, { align: 'center' });
+    const canvas = await html2canvas(card, {
+      scale: SCALE,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    });
 
-    // Draw Right Side Info
-    const textX = 17;
-    const textWidth = 19;
+    // Restore original style
+    card.setAttribute('style', origStyle);
 
-    // 1. Product Name (Bolder/Larger)
-    pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'bold');
-    const splitTitle = pdf.splitTextToSize(productName, textWidth);
-    pdf.text(splitTitle.slice(0, 2), textX, 4);
-    
-    // Calculate Y offset after title (approx 3.5mm per line)
-    let currentY = 4 + (Math.min(splitTitle.length, 2) * 3.5);
+    const imgData = canvas.toDataURL('image/png');
 
-    // 2. Price (5taka)
-    const priceText = card.querySelector('.sticker-price').innerText;
-    if (priceText) {
-      pdf.setFontSize(7);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(priceText, textX, currentY);
-      currentY += 4;
-    }
-
-    // 3. Qty (Bottom Area)
-    pdf.setFontSize(6);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(qtyText.split('\n')[0], textX, 18);
-
-    // 4. Exp
-    const expText = card.querySelector('.sticker-exp').innerText;
-    if (expText) {
-      pdf.setFontSize(6);
-      pdf.text(expText, textX, 21.5);
-    }
+    if (i > 0) pdf.addPage([W_MM, H_MM], 'l');
+    pdf.addImage(imgData, 'PNG', 0, 0, W_MM, H_MM);
   }
 
   const lotSelect = document.getElementById('lot-select');
