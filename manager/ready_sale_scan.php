@@ -69,6 +69,7 @@ $pdo       = getDB();
       flex-direction: column;
       gap: 12px;
       background: radial-gradient(circle at top, rgba(79, 70, 229, 0.05), transparent 40%);
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     }
 
     /* ── Scanned List ── */
@@ -81,10 +82,12 @@ $pdo       = getDB();
 
     /* ── Floating Footer ── */
     .app-footer {
-      padding: 12px 16px 24px;
-      background: rgba(15, 23, 42, 0.95);
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+      background: rgba(15, 23, 42, 0.98);
       backdrop-filter: blur(10px);
       border-top: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+      z-index: 60;
     }
 
     .status-badge {
