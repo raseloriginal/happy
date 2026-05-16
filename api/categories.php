@@ -24,8 +24,8 @@ switch ($method) {
         }
         break;
     case 'POST':
-        $d = json_decode(file_get_contents('php://input'), true);
-        $company_id = $d['company_id'] ?: null;
+        $d = json_decode(file_get_contents('php://input'), true) ?? [];
+        $company_id = !empty($d['company_id']) ? $d['company_id'] : null;
         $names = $d['names'] ?? [];
         if (empty($names) && !empty($d['name'])) $names = [$d['name']];
 

@@ -24,11 +24,16 @@ async function api(url, method = 'GET', body = null) {
   }
   try {
     const res = await fetch(url, opts);
-    const data = await res.json();
-    return data;
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error('Invalid JSON response from server:', text);
+      return { success: false, message: 'Server error: Invalid response format' };
+    }
   } catch (e) {
-    console.error('API Error:', e);
-    return { success: false, message: 'Network error' };
+    console.error('API connection failed:', e);
+    return { success: false, message: 'Network error: Please check your connection' };
   }
 }
 

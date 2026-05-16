@@ -46,8 +46,15 @@ function getDashboardUrl(): string {
  * Get the root path of the app (e.g., /happycrm2 or empty string)
  */
 function rootPath(): string {
-    $is_localhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', '::1']);
-    return $is_localhost ? '/happycrm2' : '';
+    static $path = null;
+    if ($path === null) {
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $scriptDir = str_replace('\\', '/', dirname($scriptName));
+        // Remove known subdirectories to find the root
+        $path = str_replace(['/manager', '/admin', '/api', '/dsr', '/dealer', '/config', '/includes'], '', $scriptDir);
+        $path = rtrim($path, '/');
+    }
+    return $path;
 }
 
 /**
