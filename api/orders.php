@@ -133,15 +133,26 @@ switch ($method) {
         // --- READY SALE INVENTORY DEDUCTION ---
         if ($status === 'ready_sale' && !empty($d['scanned_qrs'])) {
             $wid = $_SESSION['warehouse_id'] ?? 0;
-            foreach ($d['scanned_qrs'] as $qr_id) {
+            foreach ($d['scanned_qrs'] as $sqr) {
+                // Support both simple array of IDs and objects with qr_id & pieces_sold
+                $qr_id       = is_array($sqr) ? intval($sqr['qr_id']) : intval($sqr);
+                
                 // Fetch QR
                 $qrStmt = $pdo->prepare('SELECT product_id, pieces_remaining FROM qr_codes WHERE id=?');
                 $qrStmt->execute([$qr_id]);
                 $qr = $qrStmt->fetch();
                 if (!$qr) continue;
                 
-                // Update QR
-                $pdo->prepare("UPDATE qr_codes SET status='dispatched', pieces_remaining=0 WHERE id=?")->execute([$qr_id]);
+                $original_remaining = intval($qr['pieces_remaining']);
+                $pieces_sold        = is_array($sqr) ? intval($sqr['pieces_sold']) : $original_remaining;
+                if ($pieces_sold <= 0) continue;
+                
+                $new_qr_remaining = max($original_remaining - $pieces_sold, 0);
+                $qr_status        = ($new_qr_remaining == 0) ? 'dispatched' : 'active';
+                
+                // Update QR Status and remaining pieces
+                $pdo->prepare("UPDATE qr_codes SET status=?, pieces_remaining=? WHERE id=?")
+                    ->execute([$qr_status, $new_qr_remaining, $qr_id]);
                 
                 // Update inventory
                 $ppbStmt = $pdo->prepare('SELECT pieces_per_box FROM products WHERE id=?');
@@ -153,7 +164,7 @@ switch ($method) {
                 $row = $inv->fetch();
                 if ($row) {
                     $total_pieces_now = ($row['qty_boxes'] * $pieces_per_box) + $row['qty_pieces'];
-                    $new_total = max($total_pieces_now - intval($qr['pieces_remaining']), 0);
+                    $new_total = max($total_pieces_now - $pieces_sold, 0);
                     
                     $new_boxes = floor($new_total / $pieces_per_box);
                     $new_pieces = $new_total % $pieces_per_box;
