@@ -116,7 +116,7 @@ async function loadStickers() {
           <div class="sticker-price">${priceText}</div>
         </div>
         <div class="mt-auto">
-          <div class="sticker-qty">${piecesPerBox} pcs/box</div>
+          <div class="sticker-qty">${qr.pieces_remaining} pcs</div>
           <div class="sticker-exp">${expText}</div>
         </div>
       </div>

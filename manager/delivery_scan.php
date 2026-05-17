@@ -402,7 +402,7 @@ async function processQRScan(uid) {
   }
 
   const qr = data.data;
-  scannedBoxes.push({ qr_id: qr.id, product_id: qr.product_id, qr_uid: uid, pieces_total: qr.pieces_total });
+  scannedBoxes.push({ qr_id: qr.id, product_id: qr.product_id, qr_uid: uid, pieces_total: qr.pieces_remaining });
   scanCount++;
   document.getElementById('scan-count-badge').textContent = scanCount + ' scanned';
 
@@ -419,14 +419,14 @@ async function processQRScan(uid) {
       bar.classList.add('complete');
       document.getElementById('prod-' + item.product_id).classList.add('done');
       cntEl.classList.add('done');
-      mobToast(`${item.product_name} — Complete!`, 'success');
+      mobToast(`${item.product_name} (${qr.pieces_remaining} pcs) — Complete!`, 'success');
     } else {
-      mobToast(`${qr.product_name} scanned`, 'success');
+      mobToast(`${qr.product_name} scanned (${qr.pieces_remaining} pcs)`, 'success');
     }
   }
 
   updateTotalBadge();
-  addLog(uid, true, qr.product_name);
+  addLog(uid, true, `${qr.product_name} (${qr.pieces_remaining} pcs)`);
   checkComplete();
   document.getElementById('manual-qr').value = '';
 }

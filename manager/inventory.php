@@ -63,7 +63,9 @@ include __DIR__ . '/../includes/header.php';
             <?php foreach ($inventory as $i => $inv):
               $isLow = $inv['qty_boxes'] < 5;
               $rowClass = $inv['qty_boxes'] == 0 ? 'bg-red-50' : ($isLow ? 'bg-yellow-50' : '');
-              $value = $inv['qty_boxes'] * $inv['selling_price'];
+              $ppb = max((int)$inv['pieces_per_box'], 1);
+              $total_pieces = ($inv['qty_boxes'] * $ppb) + $inv['qty_pieces'];
+              $value = $total_pieces * $inv['selling_price'];
             ?>
             <tr class="<?= $rowClass ?>" data-company="<?= htmlspecialchars($inv['company_name']) ?>" data-cat="<?= htmlspecialchars($inv['category_name'] ?? '') ?>" data-low="<?= $isLow ? '1' : '0' ?>">
               <td class="text-gray-400 text-xs"><?= $i+1 ?></td>

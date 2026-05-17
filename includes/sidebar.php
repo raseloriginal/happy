@@ -91,3 +91,6 @@ function navLink(string $href, string $icon, string $label, string $current): st
     </a>
   </div>
 </nav>
+
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" onclick="document.getElementById('app-sidebar').classList.remove('sidebar-open')"></div>

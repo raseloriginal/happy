@@ -73,10 +73,26 @@ if ($action === 'complete' && $method === 'POST') {
         $pdo->prepare('INSERT INTO dispatch_items (dispatch_id, order_id, qr_code_id, product_id, qty_out) VALUES (?,?,?,?,?)')
             ->execute([$dispatch_id, $order_id, $item['qr_id'], $item['product_id'], $item['pieces_total']]);
         // Mark QR as dispatched
-        $pdo->prepare("UPDATE qr_codes SET status='dispatched' WHERE id=?")->execute([$item['qr_id']]);
-        // Update inventory (subtract)
-        $pdo->prepare('UPDATE inventory SET qty_boxes = GREATEST(qty_boxes - 1, 0) WHERE product_id=? AND warehouse_id=?')
-            ->execute([$item['product_id'], $wid]);
+        $pdo->prepare("UPDATE qr_codes SET status='dispatched', pieces_remaining=0 WHERE id=?")->execute([$item['qr_id']]);
+        
+        // Update inventory (subtract actual pieces dispatched)
+        $ppbStmt = $pdo->prepare('SELECT pieces_per_box FROM products WHERE id=?');
+        $ppbStmt->execute([$item['product_id']]);
+        $pieces_per_box = max((int)$ppbStmt->fetchColumn(), 1);
+
+        $inv = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
+        $inv->execute([$item['product_id'], $wid]);
+        $row = $inv->fetch();
+        if ($row) {
+            $total_pieces_now = ($row['qty_boxes'] * $pieces_per_box) + $row['qty_pieces'];
+            $new_total = max($total_pieces_now - intval($item['pieces_total']), 0);
+            
+            $new_boxes = floor($new_total / $pieces_per_box);
+            $new_pieces = $new_total % $pieces_per_box;
+
+            $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
+                ->execute([$new_boxes, $new_pieces, $item['product_id'], $wid]);
+        }
     }
 
     // Update order status

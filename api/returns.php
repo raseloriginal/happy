@@ -48,23 +48,51 @@ if ($action === 'complete' && $method === 'POST') {
             ->execute([$return_id, $item['qr_code_id'], $item['product_id'], $item['qty_in'], $item['type'] ?? 'scan']);
 
         // Update qr_codes
-        $remaining = $pdo->prepare('SELECT pieces_remaining FROM qr_codes WHERE id=?');
+        $remaining = $pdo->prepare('SELECT pieces_remaining, pieces_total FROM qr_codes WHERE id=?');
         $remaining->execute([$item['qr_code_id']]);
-        $rem = intval($remaining->fetchColumn()) + intval($item['qty_in']);
-        $total = $pdo->prepare('SELECT pieces_total FROM qr_codes WHERE id=?');
-        $total->execute([$item['qr_code_id']]);
-        $tot = intval($total->fetchColumn());
-        $newStatus = ($rem >= $tot) ? 'returned' : 'dispatched';
+        $qrRow = $remaining->fetch();
+        $rem = intval($qrRow['pieces_remaining']) + intval($item['qty_in']);
+        
+        $newStatus = 'active';
 
         $pdo->prepare('UPDATE qr_codes SET pieces_remaining=?, status=? WHERE id=?')->execute([$rem, $newStatus, $item['qr_code_id']]);
 
-        // Add back to inventory
-        $pdo->prepare('UPDATE inventory SET qty_pieces = qty_pieces + ? WHERE product_id=? AND warehouse_id=?')
-            ->execute([$item['qty_in'], $item['product_id'], $wid]);
+        // Add back to inventory (recalculate boxes and pieces)
+        $ppbStmt = $pdo->prepare('SELECT pieces_per_box FROM products WHERE id=?');
+        $ppbStmt->execute([$item['product_id']]);
+        $pieces_per_box = max((int)$ppbStmt->fetchColumn(), 1);
+
+        $inv = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
+        $inv->execute([$item['product_id'], $wid]);
+        $row = $inv->fetch();
+        if ($row) {
+            $total_pieces_now = ($row['qty_boxes'] * $pieces_per_box) + $row['qty_pieces'];
+            $new_total = $total_pieces_now + intval($item['qty_in']);
+            
+            $new_boxes = floor($new_total / $pieces_per_box);
+            $new_pieces = $new_total % $pieces_per_box;
+
+            $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
+                ->execute([$new_boxes, $new_pieces, $item['product_id'], $wid]);
+        } else {
+            $new_boxes = floor(intval($item['qty_in']) / $pieces_per_box);
+            $new_pieces = intval($item['qty_in']) % $pieces_per_box;
+            $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,?)')
+                ->execute([$item['product_id'], $wid, $new_boxes, $new_pieces]);
+        }
     }
 
     // Update dispatch status
     $pdo->prepare("UPDATE dispatches SET status='settled' WHERE id=?")->execute([$did]);
+    
+    // Mark order as delivered
+    $dispStmt = $pdo->prepare('SELECT order_id FROM dispatches WHERE id=?');
+    $dispStmt->execute([$did]);
+    $order_id = $dispStmt->fetchColumn();
+    if ($order_id) {
+        $pdo->prepare("UPDATE orders SET status='delivered' WHERE id=?")->execute([$order_id]);
+    }
+
     $pdo->commit();
 
     echo json_encode(['success' => true, 'message' => 'Return completed']);

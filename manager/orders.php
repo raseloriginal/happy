@@ -17,7 +17,9 @@ $orders = $pdo->query('
     SELECT o.id as order_id, o.order_date, o.status,
            u.name as sr_name, c.name as company_name,
            p.name as product_name, p.selling_price,
-           oi.qty_pieces, oi.unit_price, oi.product_id
+           oi.qty_pieces, oi.unit_price, oi.product_id,
+           (SELECT COALESCE(SUM(di.qty_out), 0) FROM dispatch_items di WHERE di.order_id=o.id AND di.product_id=oi.product_id) as dispatch_qty,
+           (SELECT COALESCE(SUM(ri.qty_in), 0) FROM return_items ri JOIN returns r ON r.id=ri.return_id JOIN dispatches d ON d.id=r.dispatch_id WHERE d.order_id=o.id AND ri.product_id=oi.product_id) as back_qty
     FROM orders o
     JOIN sr s ON s.id=o.sr_id
     JOIN users u ON u.id=s.user_id
@@ -80,7 +82,7 @@ include __DIR__ . '/../includes/header.php';
         <div><label class="form-label">Status</label>
           <select id="f-status" class="form-input">
             <option value="">All Status</option>
-            <option>pending</option><option>out_for_delivery</option><option>delivered</option><option>cancelled</option>
+            <option>pending</option><option value="ready_sale">Ready Sale</option><option>out_for_delivery</option><option>delivered</option><option>cancelled</option>
           </select>
         </div>
         <div><label class="form-label">Search</label><input type="text" id="f-search" class="form-input" placeholder="SR, Product…" oninput="filterTable()" /></div>
@@ -101,24 +103,27 @@ include __DIR__ . '/../includes/header.php';
           </thead>
           <tbody>
             <?php foreach ($orders as $o):
-              $sellQty  = $o['qty_pieces']; // simplified; back qty needs join
+              $dispatchQty = (int)$o['dispatch_qty'];
+              $backQty  = (int)$o['back_qty'];
+              // Sell Qty is whatever went out minus whatever came back
+              $sellQty  = max($dispatchQty - $backQty, 0);
               $saleVal  = $sellQty * $o['unit_price'];
-              $ratio    = 100; // full delivery until returns happen
-              $ratioClass = 'badge-success';
+              $ratio    = $dispatchQty > 0 ? round(($sellQty / $dispatchQty) * 100) : 0;
+              $ratioClass = $ratio >= 90 ? 'badge-success' : ($ratio >= 50 ? 'badge-warning' : 'badge-danger');
             ?>
             <tr>
               <td class="font-mono text-xs text-gray-500">#<?= str_pad($o['order_id'], 4, '0', STR_PAD_LEFT) ?></td>
               <td class="font-medium"><?= htmlspecialchars($o['product_name']) ?></td>
               <td><?= htmlspecialchars($o['sr_name']) ?></td>
               <td class="text-xs text-gray-500"><?= $o['order_date'] ?></td>
-              <td class="text-right"><?= number_format($o['qty_pieces']) ?></td>
-              <td class="text-right text-red-600">0</td>
-              <td class="text-right text-green-600"><?= number_format($sellQty) ?></td>
-              <td class="text-right font-medium">৳<?= number_format($saleVal, 0) ?></td>
+              <td class="text-right font-medium"><?= number_format($dispatchQty) ?></td>
+              <td class="text-right text-red-600"><?= number_format($backQty) ?></td>
+              <td class="text-right text-green-600 font-bold"><?= number_format($sellQty) ?></td>
+              <td class="text-right font-medium text-indigo-600">৳<?= number_format($saleVal, 0) ?></td>
               <td><span class="badge <?= $ratioClass ?>"><?= $ratio ?>%</span></td>
               <td>
                 <?php
-                $sc = ['pending'=>'badge-warning','out_for_delivery'=>'badge-info','delivered'=>'badge-success','cancelled'=>'badge-danger'];
+                $sc = ['pending'=>'badge-warning','ready_sale'=>'badge-success','out_for_delivery'=>'badge-info','delivered'=>'badge-success','cancelled'=>'badge-danger'];
                 echo '<span class="badge ' . ($sc[$o['status']] ?? 'badge-gray') . '">' . str_replace('_',' ',ucfirst($o['status'])) . '</span>';
                 ?>
               </td>

@@ -248,6 +248,7 @@ async function saveReadyOrder() {
   const data = await api('<?= rootPath() ?>/api/orders.php', 'POST', {
     sr_id: selectedSrId,
     order_date: new Date().toISOString().split('T')[0],
+    status: 'ready_sale',
     items
   });
 

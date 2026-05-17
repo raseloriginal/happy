@@ -256,7 +256,7 @@
   top: 0; left: 0; bottom: 0;
   overflow-y: auto;
   z-index: 40;
-  transition: width 0.3s ease;
+  transition: transform 0.3s ease, width 0.3s ease;
 }
 .sidebar.collapsed { width: 64px; }
 .sidebar.collapsed .sidebar-text,
@@ -270,6 +270,7 @@
   flex-direction: column;
   min-height: 100vh;
   transition: margin-left 0.3s ease;
+  width: 100%;
 }
 .sidebar.collapsed ~ .main-content { margin-left: 64px; }
 .page-body {
@@ -277,7 +278,57 @@
   padding: 1rem 1.5rem;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* prevents layout breaking from table */
+  overflow-x: hidden; /* prevents layout breaking from table */
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+  }
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0 !important;
+  }
+  .sidebar.collapsed ~ .main-content {
+    margin-left: 0 !important;
+  }
+  .page-body {
+    padding: 1rem;
+  }
+  /* Overlay for mobile sidebar */
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 35;
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s ease;
+  }
+  .sidebar.sidebar-open ~ .mobile-overlay {
+    display: block;
+  }
+  
+  /* Make tables responsive without wrappers */
+  .data-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix spreadsheet height on mobile */
+  .spreadsheet-container {
+    height: calc(100vh - 200px);
+  }
 }
 
 /* Action Bar Utilities */

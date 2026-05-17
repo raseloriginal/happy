@@ -114,7 +114,8 @@ switch ($method) {
         $company_id = $srRow['company_id'] ?? 0;
 
         $ord = $pdo->prepare('INSERT INTO orders (sr_id, company_id, order_date, status) VALUES (?,?,?,?)');
-        $ord->execute([$d['sr_id'], $company_id, $d['order_date'], 'pending']);
+        $status = !empty($d['status']) ? $d['status'] : 'pending';
+        $ord->execute([$d['sr_id'], $company_id, $d['order_date'], $status]);
         $order_id = $pdo->lastInsertId();
 
         foreach ($d['items'] as $item) {

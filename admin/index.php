@@ -10,7 +10,7 @@ $totalOrders   = $pdo->query("SELECT COUNT(*) FROM orders WHERE DATE(created_at)
 $totalRevenue  = $pdo->query("SELECT COALESCE(SUM(oi.qty_pieces * oi.unit_price),0) FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE DATE(o.created_at)=CURDATE()")->fetchColumn();
 $activeDSRs    = $pdo->query("SELECT COUNT(*) FROM dsr WHERE status=1")->fetchColumn();
 $pendingRet    = $pdo->query("SELECT COUNT(*) FROM returns WHERE status='pending'")->fetchColumn();
-$stockValue    = $pdo->query("SELECT COALESCE(SUM(i.qty_boxes * p.selling_price),0) FROM inventory i JOIN products p ON p.id=i.product_id")->fetchColumn();
+$stockValue    = $pdo->query("SELECT COALESCE(SUM( ((i.qty_boxes * GREATEST(p.pieces_per_box, 1)) + i.qty_pieces) * p.selling_price ),0) FROM inventory i JOIN products p ON p.id=i.product_id")->fetchColumn();
 
 // Chart: orders last 7 days
 $ordersChart = $pdo->query("SELECT DATE(created_at) as d, COUNT(*) as c FROM orders WHERE created_at >= DATE_SUB(CURDATE(),INTERVAL 7 DAY) GROUP BY DATE(created_at) ORDER BY d")->fetchAll();
