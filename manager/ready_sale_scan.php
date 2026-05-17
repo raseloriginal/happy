@@ -124,6 +124,11 @@ $pdo       = getDB();
 
   <!-- Content -->
   <div class="app-content">
+    <!-- Manual Input -->
+    <div style="margin-bottom: 4px; flex-shrink: 0;">
+      <input id="manual-qr" type="text" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px 14px; border-radius: 10px; font-size: 14px; outline: none;" placeholder="Or type/scan QR UID here…" onkeydown="handleManualInput(event)" />
+    </div>
+
     <div class="scanned-list" id="scanned-items-list">
       <div class="text-center py-20 text-gray-500 opacity-50" id="empty-scan-msg">
         <i class="fa-solid fa-barcode text-5xl mb-4 block"></i>
@@ -236,6 +241,17 @@ function triggerShake() {
   document.body.classList.add('shake');
 }
 
+function handleManualInput(e) {
+  if (e.key === 'Enter') {
+    const val = document.getElementById('manual-qr').value.trim();
+    if (val) {
+      handleReadyScan(val);
+      document.getElementById('manual-qr').value = '';
+    }
+  }
+}
+
+
 async function saveReadyOrder() {
   const items = [];
   for (const pid in scannedData) {
@@ -249,7 +265,8 @@ async function saveReadyOrder() {
     sr_id: selectedSrId,
     order_date: new Date().toISOString().split('T')[0],
     status: 'ready_sale',
-    items
+    items,
+    scanned_qrs: scannedQrIds
   });
 
   if (data.success) {

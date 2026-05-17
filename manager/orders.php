@@ -8,7 +8,7 @@ $wid       = $_SESSION['warehouse_id'];
 
 // Stat cards
 $grand  = $pdo->query("SELECT COALESCE(SUM(oi.qty_pieces * oi.unit_price),0) FROM order_items oi")->fetchColumn();
-$outPcs = $pdo->query("SELECT COALESCE(SUM(di.qty_out),0) FROM dispatch_items di")->fetchColumn();
+$outPcs = $pdo->query("SELECT (SELECT COALESCE(SUM(qty_out),0) FROM dispatch_items) + (SELECT COALESCE(SUM(oi.qty_pieces),0) FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE o.status='ready_sale')")->fetchColumn();
 $retPcs = $pdo->query("SELECT COALESCE(SUM(ri.qty_in),0) FROM return_items ri")->fetchColumn();
 $avgDel = $outPcs > 0 ? round((($outPcs - $retPcs) / $outPcs) * 100, 1) : 0;
 
@@ -18,7 +18,7 @@ $orders = $pdo->query('
            u.name as sr_name, c.name as company_name,
            p.name as product_name, p.selling_price,
            oi.qty_pieces, oi.unit_price, oi.product_id,
-           (SELECT COALESCE(SUM(di.qty_out), 0) FROM dispatch_items di WHERE di.order_id=o.id AND di.product_id=oi.product_id) as dispatch_qty,
+           IF(o.status=\'ready_sale\', oi.qty_pieces, (SELECT COALESCE(SUM(di.qty_out), 0) FROM dispatch_items di WHERE di.order_id=o.id AND di.product_id=oi.product_id)) as dispatch_qty,
            (SELECT COALESCE(SUM(ri.qty_in), 0) FROM return_items ri JOIN returns r ON r.id=ri.return_id JOIN dispatches d ON d.id=r.dispatch_id WHERE d.order_id=o.id AND ri.product_id=oi.product_id) as back_qty
     FROM orders o
     JOIN sr s ON s.id=o.sr_id

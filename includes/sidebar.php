@@ -62,6 +62,7 @@ function navLink(string $href, string $icon, string $label, string $current): st
 
       <div class="sidebar-section">Orders</div>
       <?= navLink(rootPath() . '/manager/orders.php', 'fa-solid fa-clipboard-list', 'Orders', $current) ?>
+      <?= navLink(rootPath() . '/manager/ready_sales.php', 'fa-solid fa-receipt', 'Ready Sales', $current) ?>
       <?= navLink(rootPath() . '/manager/order_add.php', 'fa-solid fa-plus', 'Add Order', $current) ?>
       <?= navLink(rootPath() . '/manager/delivery.php', 'fa-solid fa-truck-fast', 'Out for Delivery', $current) ?>
 
