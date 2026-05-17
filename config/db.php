@@ -31,6 +31,18 @@ function getDB(): PDO {
         ];
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+            
+            // Auto-migration: Check if retailer columns exist in orders table, add them if missing
+            try {
+                $pdo->query("SELECT retailer_name, retailer_phone FROM orders LIMIT 0");
+            } catch (PDOException $e) {
+                try {
+                    $pdo->exec("ALTER TABLE `orders` ADD COLUMN `retailer_name` VARCHAR(255) NULL DEFAULT NULL AFTER `status`");
+                    $pdo->exec("ALTER TABLE `orders` ADD COLUMN `retailer_phone` VARCHAR(50) NULL DEFAULT NULL AFTER `retailer_name`");
+                } catch (PDOException $ex) {
+                    // Ignore failure if the table itself doesn't exist yet
+                }
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));
