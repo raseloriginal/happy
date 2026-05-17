@@ -13,14 +13,13 @@ function navLink(string $href, string $icon, string $label, string $current): st
 ?>
 <nav class="sidebar" id="app-sidebar">
   <!-- Logo -->
-  <div class="px-5 py-5 border-b border-white/10 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">HB</div>
-      <div class="sidebar-text">
-        <div class="text-white font-bold text-sm leading-tight whitespace-nowrap">Happy Bangladesh</div>
-        <div class="text-slate-400 text-xs whitespace-nowrap">ERP System</div>
-      </div>
-    </div>
+  <div class="px-5 py-5 border-b border-white/10 flex items-center justify-between sidebar-brand-container">
+    <a href="<?= rootPath() ?>/manager/index.php" class="flex items-center no-underline">
+      <!-- Full Logo -->
+      <img src="<?= rootPath() ?>/assets/img/logo/logo.png" alt="Happy Bangladesh" class="h-9 w-auto object-contain sidebar-logo-full" />
+      <!-- Icon Logo -->
+      <img src="<?= rootPath() ?>/assets/img/logo/logo-icon.png" alt="Happy" class="h-9 w-auto object-contain sidebar-logo-icon" />
+    </a>
   </div>
 
   <div class="flex-1 px-3 py-4 space-y-0.5">

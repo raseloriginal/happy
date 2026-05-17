@@ -26,7 +26,7 @@ include __DIR__ . '/../includes/header.php';
         <!-- Header -->
         <div class="flex justify-between items-start mb-8">
           <div>
-            <div class="text-2xl font-black text-indigo-600">Happy Bangladesh</div>
+            <img src="<?= rootPath() ?>/assets/img/logo/logo-black.png" alt="Happy Bangladesh" class="h-9 w-auto object-contain mb-1" />
             <div class="text-gray-500 text-sm mt-1">Lot Invoice</div>
           </div>
           <div class="text-right">

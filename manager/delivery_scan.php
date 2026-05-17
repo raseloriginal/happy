@@ -428,24 +428,88 @@ async function processQRScan(uid) {
   }
 
   updateTotalBadge();
-  addLog(uid, true, `${qr.product_name} (${qr.pieces_remaining} pcs)`);
+  addLog(uid, true, `${qr.product_name} (${qr.pieces_remaining} pcs)`, qr.id, qr.product_id);
   checkComplete();
   document.getElementById('manual-qr').value = '';
 }
 
 // ── Scan log ──
-function addLog(uid, ok, msg) {
+function addLog(uid, ok, msg, qrId = null, productId = null) {
   const log = document.getElementById('scan-log');
   // Remove empty state
   if (log.querySelector('.empty-state')) log.innerHTML = '';
   const div = document.createElement('div');
   div.className = 'log-item';
+  if (qrId) {
+    div.id = 'log-qr-' + qrId;
+  }
+  
+  let undoButton = '';
+  if (ok && qrId && productId) {
+    undoButton = `
+      <button type="button" onclick="undoScannedBox('${qrId}', '${productId}', '${uid}')" class="w-5 h-5 rounded bg-slate-800 text-red-400 hover:bg-red-500/25 flex items-center justify-center active:scale-75 transition ml-2 flex-shrink-0 border border-slate-700">
+        <i class="fa-solid fa-undo text-[9px]"></i>
+      </button>
+    `;
+  }
+
   div.innerHTML = `
     <div class="log-icon ${ok ? 'ok' : 'err'}"><i class="fa-solid fa-${ok ? 'check' : 'xmark'}"></i></div>
     <span class="log-uid">${uid}</span>
-    <span class="log-msg">${msg}</span>
+    <span class="log-msg flex items-center gap-1.5">${msg} ${undoButton}</span>
   `;
   log.prepend(div);
+}
+
+// ── Undo Scanned Box ──
+function undoScannedBox(qrId, productId, uid) {
+  // Find index in scannedBoxes
+  const idx = scannedBoxes.findIndex(s => s.qr_id == qrId);
+  if (idx === -1) return;
+
+  // Remove from scannedBoxes array
+  scannedBoxes.splice(idx, 1);
+  scanCount--;
+  document.getElementById('scan-count-badge').textContent = scanCount + ' scanned';
+
+  // Update progress row
+  const item = orderItems.find(i => i.product_id == productId);
+  if (item) {
+    item.scanned = Math.max(item.scanned - 1, 0);
+    const pct = Math.min((item.scanned / item.required) * 100, 100);
+    
+    const bar = document.getElementById('bar-' + productId);
+    bar.style.width = pct + '%';
+    bar.classList.remove('complete');
+    
+    const row = document.getElementById('prod-' + productId);
+    row.classList.remove('done');
+    
+    const cntEl = document.getElementById('cnt-' + productId);
+    cntEl.textContent = `${item.scanned} / ${item.required} boxes`;
+    cntEl.classList.remove('done');
+  }
+
+  // Remove the row from the scan log DOM
+  const logItem = document.getElementById(`log-qr-${qrId}`);
+  if (logItem) {
+    logItem.remove();
+  }
+
+  // Show empty state if scan log becomes empty
+  const log = document.getElementById('scan-log');
+  if (log.children.length === 0) {
+    log.innerHTML = `
+      <div class="empty-state" style="padding:12px 0;">
+        <i class="fa-solid fa-magnifying-glass text-xl mb-1 block"></i>
+        Scanned boxes will appear here
+      </div>
+    `;
+  }
+
+  updateTotalBadge();
+  checkComplete();
+  mobToast(`Box ${uid.substring(0, 10)} removed/undone!`, 'info');
 }
 
 // ── Check all done ──

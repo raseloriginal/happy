@@ -366,7 +366,7 @@ $dueDate = date('M d, Y', strtotime($orderInfo['order_date'])); // Due immediate
             <table class="header-table">
                 <tr>
                     <td class="brand-section">
-                        <h1 class="brand-title">HAPPY BANGLADESH</h1>
+                        <img src="<?= rootPath() ?>/assets/img/logo/logo-black.png" alt="Happy Bangladesh" style="height: 35px; width: auto; object-fit: contain; display: block; margin-bottom: 5px;" />
                         <span class="copy-badge" style="background-color: #000000; color: #ffffff; border: 1px solid #000000;">OFFICE COPY</span>
                     </td>
                     <td class="company-details">
@@ -518,7 +518,7 @@ $dueDate = date('M d, Y', strtotime($orderInfo['order_date'])); // Due immediate
             <table class="header-table">
                 <tr>
                     <td class="brand-section">
-                        <h1 class="brand-title">HAPPY BANGLADESH</h1>
+                        <img src="<?= rootPath() ?>/assets/img/logo/logo-black.png" alt="Happy Bangladesh" style="height: 35px; width: auto; object-fit: contain; display: block; margin-bottom: 5px;" />
                         <span class="copy-badge" style="background-color: #ffffff; color: #000000; border: 1px solid #000000;">RETAILER RECEIVE COPY</span>
                     </td>
                     <td class="company-details">

@@ -66,7 +66,7 @@ include __DIR__ . '/../includes/header.php';
           <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <h3 class="font-semibold text-gray-700 mb-3">Scan Log</h3>
             <div id="scan-log" class="space-y-1 max-h-48 overflow-y-auto text-sm text-gray-600">
-              <div class="text-gray-400 text-xs">Scanned boxes will appear here</div>
+              <div id="scan-log-placeholder" class="text-gray-400 text-xs">Scanned boxes will appear here</div>
             </div>
           </div>
         </div>
@@ -117,7 +117,7 @@ async function loadOrderItems() {
   const oid = document.getElementById('order-select').value;
   orderItems   = [];
   scannedBoxes = [];
-  document.getElementById('scan-log').innerHTML = '<div class="text-gray-400 text-xs">Scanned boxes will appear here</div>';
+  document.getElementById('scan-log').innerHTML = '<div id="scan-log-placeholder" class="text-gray-400 text-xs">Scanned boxes will appear here</div>';
 
   if (!oid) {
     document.getElementById('order-placeholder').style.display = 'block';
@@ -204,17 +204,84 @@ async function processQRScan(uid) {
     }
   }
 
-  addLog(uid, true, qr.product_name);
+  addLog(uid, true, qr.product_name, qr.id, qr.product_id);
   checkComplete();
   document.getElementById('manual-qr').value = '';
 }
 
-function addLog(uid, success, msg) {
+function addLog(uid, success, msg, qrId = null, productId = null) {
   const log  = document.getElementById('scan-log');
+  // Remove empty state
+  const placeholder = document.getElementById('scan-log-placeholder');
+  if (placeholder) placeholder.remove();
+  
   const div  = document.createElement('div');
-  div.className = `flex items-center gap-2 py-1 border-b border-gray-50`;
-  div.innerHTML = `<span class="${success ? 'text-green-500' : 'text-red-500'}"><i class="fa-solid fa-${success ? 'check' : 'xmark'}"></i></span><span class="font-mono text-xs">${uid}</span><span class="text-gray-400 text-xs">${msg}</span>`;
+  div.className = `flex items-center justify-between gap-2 py-1 border-b border-gray-50`;
+  if (qrId) {
+    div.id = 'log-qr-' + qrId;
+  }
+  
+  let undoButton = '';
+  if (success && qrId && productId) {
+    undoButton = `
+      <button type="button" onclick="undoScannedBox('${qrId}', '${productId}', '${uid}')" class="w-5 h-5 rounded bg-gray-100 hover:bg-red-50 text-red-500 flex items-center justify-center active:scale-75 transition ml-2 border border-gray-200" title="Undo Scan">
+        <i class="fa-solid fa-rotate-left text-[9px]"></i>
+      </button>
+    `;
+  }
+  
+  div.innerHTML = `
+    <div class="flex items-center gap-2">
+      <span class="${success ? 'text-green-500' : 'text-red-500'}">
+        <i class="fa-solid fa-${success ? 'check' : 'xmark'}"></i>
+      </span>
+      <span class="font-mono text-xs">${uid}</span>
+      <span class="text-gray-400 text-xs">${msg}</span>
+    </div>
+    ${undoButton}
+  `;
   log.prepend(div);
+}
+
+function undoScannedBox(qrId, productId, uid) {
+  // Find index in scannedBoxes
+  const idx = scannedBoxes.findIndex(s => s.qr_id == qrId);
+  if (idx === -1) return;
+
+  // Remove from scannedBoxes array
+  scannedBoxes.splice(idx, 1);
+
+  // Update product row progress
+  const item = orderItems.find(i => i.product_id == productId);
+  if (item) {
+    item.scanned = Math.max(item.scanned - 1, 0);
+    const pct = Math.min((item.scanned / item.required) * 100, 100);
+    const bar = document.getElementById('bar-' + productId);
+    bar.style.width = pct + '%';
+    bar.classList.remove('complete');
+    
+    document.getElementById('cnt-' + productId).textContent = item.scanned;
+    
+    const row = document.getElementById('prod-' + productId);
+    if (item.scanned < item.required) {
+      row.style.background = '';
+    }
+  }
+
+  // Remove the row from the scan log DOM
+  const logItem = document.getElementById(`log-qr-${qrId}`);
+  if (logItem) {
+    logItem.remove();
+  }
+
+  // Show empty state if scan log becomes empty
+  const log = document.getElementById('scan-log');
+  if (log.children.length === 0) {
+    log.innerHTML = `<div id="scan-log-placeholder" class="text-gray-400 text-xs">Scanned boxes will appear here</div>`;
+  }
+
+  checkComplete();
+  showToast(`Box scan ${uid.substring(0, 10)}... undone!`, 'info');
 }
 
 function checkComplete() {

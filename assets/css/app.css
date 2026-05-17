@@ -263,6 +263,26 @@
 .sidebar.collapsed .sidebar-section { display: none; }
 .sidebar.collapsed .sidebar-link { justify-content: center; padding: 0.75rem; }
 .sidebar.collapsed .sidebar-link span { display: none; }
+
+/* Sidebar Branding States */
+.sidebar-logo-full {
+  display: block;
+}
+.sidebar-logo-icon {
+  display: none;
+}
+.sidebar.collapsed .sidebar-brand-container {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  justify-content: center !important;
+}
+.sidebar.collapsed .sidebar-logo-full {
+  display: none !important;
+}
+.sidebar.collapsed .sidebar-logo-icon {
+  display: block !important;
+}
+
 .main-content {
   flex: 1;
   margin-left: 240px;

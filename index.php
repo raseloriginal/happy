@@ -21,19 +21,19 @@ if (isLoggedIn()) {
   <link rel="stylesheet" href="assets/css/app.css" />
   <style>
     :root {
-      --bg: #0f111a;
-      --card-bg: #0f111a;
-      --shadow-light: #1a1d2b;
-      --shadow-dark: #07080d;
-      --neon-cyan: #00f3ff;
-      --neon-magenta: #ff00ff;
-      --text-dim: #94a3b8;
+      --bg: #e0e5ec;
+      --card-bg: #e0e5ec;
+      --shadow-light: #ffffff;
+      --shadow-dark: #a3b1c6;
+      --accent: #4f46e5;
+      --text-main: #2d3748;
+      --text-dim: #718096;
     }
 
     body { 
       font-family: 'Inter', sans-serif;
       background-color: var(--bg);
-      color: #fff;
+      color: var(--text-main);
     }
 
     .login-bg {
@@ -49,27 +49,15 @@ if (isLoggedIn()) {
     .login-card {
       background: var(--card-bg);
       border-radius: 2rem;
-      padding: 3rem 2.5rem;
+      padding: 3.5rem 2.5rem;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       box-shadow: 
-        10px 10px 20px var(--shadow-dark),
-        -10px -10px 20px var(--shadow-light);
+        12px 12px 24px var(--shadow-dark),
+        -12px -12px 24px var(--shadow-light);
       position: relative;
       z-index: 10;
-      border: 1px solid rgba(255, 255, 255, 0.03);
-    }
-
-    /* Neon Accent Border */
-    .login-card::before {
-      content: '';
-      position: absolute;
-      top: -2px; left: -2px; right: -2px; bottom: -2px;
-      background: linear-gradient(45deg, var(--neon-cyan), transparent, var(--neon-magenta));
-      border-radius: 2rem;
-      z-index: -1;
-      opacity: 0.15;
-      filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
     .logo-container {
@@ -77,48 +65,16 @@ if (isLoggedIn()) {
       text-align: center;
     }
 
-    .logo-hex {
-      width: 70px;
-      height: 70px;
-      background: var(--bg);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 1.25rem;
-      box-shadow: 
-        6px 6px 12px var(--shadow-dark),
-        -6px -6px 12px var(--shadow-light);
-      margin-bottom: 1rem;
-      position: relative;
-    }
-
-    .logo-hex span {
-      font-weight: 900;
-      font-size: 1.75rem;
-      background: linear-gradient(to bottom right, var(--neon-cyan), #fff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 5px rgba(0, 243, 255, 0.5));
-    }
-
-    .logo-hex::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 1.25rem;
-      box-shadow: inset 2px 2px 5px var(--shadow-light), inset -2px -2px 5px var(--shadow-dark);
-    }
-
     /* Neumorphic Inset Input */
     .input-group {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
     }
 
     .input-group label {
       display: block;
       color: var(--text-dim);
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 0.75rem;
       margin-left: 0.5rem;
       text-transform: uppercase;
@@ -140,7 +96,7 @@ if (isLoggedIn()) {
       background: transparent;
       border: none;
       padding: 1rem 1.25rem;
-      color: #fff;
+      color: var(--text-main);
       font-size: 0.95rem;
       outline: none;
       border-radius: 1rem;
@@ -149,21 +105,20 @@ if (isLoggedIn()) {
     .input-wrapper:focus-within {
       box-shadow: 
         inset 2px 2px 4px var(--shadow-dark),
-        inset -2px -2px 4px var(--shadow-light),
-        0 0 10px rgba(0, 243, 255, 0.2);
-      border: 1px solid rgba(0, 243, 255, 0.3);
+        inset -2px -2px 4px var(--shadow-light);
+      border: 1px solid rgba(79, 70, 229, 0.2);
     }
 
     .input-wrapper input::placeholder {
-      color: rgba(255, 255, 255, 0.2);
+      color: rgba(0, 0, 0, 0.35);
     }
 
-    /* Neon Button */
+    /* Neumorphic Button */
     .btn-login {
       width: 100%;
       background: var(--bg);
-      color: var(--neon-cyan);
-      padding: 1rem;
+      color: var(--accent);
+      padding: 1.1rem;
       border-radius: 1rem;
       font-weight: 700;
       font-size: 1rem;
@@ -173,7 +128,7 @@ if (isLoggedIn()) {
         6px 6px 12px var(--shadow-dark),
         -6px -6px 12px var(--shadow-light);
       transition: all 0.2s ease;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
     }
@@ -181,18 +136,15 @@ if (isLoggedIn()) {
     .btn-login:hover {
       box-shadow: 
         3px 3px 6px var(--shadow-dark),
-        -3px -3px 6px var(--shadow-light),
-        0 0 15px var(--neon-cyan);
-      background: var(--neon-cyan);
-      color: var(--bg);
-      transform: translateY(-1px);
+        -3px -3px 6px var(--shadow-light);
+      color: #312e81;
     }
 
     .btn-login:active {
       box-shadow: 
         inset 3px 3px 6px var(--shadow-dark),
         inset -3px -3px 6px var(--shadow-light);
-      transform: translateY(0);
+      color: var(--accent);
     }
 
     .btn-login:disabled {
@@ -202,7 +154,7 @@ if (isLoggedIn()) {
     }
 
     .error-msg {
-      background: rgba(239, 68, 68, 0.1);
+      background: rgba(239, 68, 68, 0.05);
       border: 1px solid rgba(239, 68, 68, 0.2);
       color: #ef4444;
       border-radius: 0.75rem;
@@ -211,7 +163,7 @@ if (isLoggedIn()) {
       margin-bottom: 1.5rem;
       display: none;
       text-align: center;
-      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.05);
     }
 
     .eye-toggle {
@@ -226,34 +178,19 @@ if (isLoggedIn()) {
       padding: 0.25rem;
     }
 
-    .eye-toggle:hover { color: var(--neon-cyan); }
+    .eye-toggle:hover { color: var(--accent); }
 
-    /* Decorative Orbs */
+    /* Hide Decorative Orbs for Light Neumorphism */
     .orb {
-      position: absolute;
-      width: 400px;
-      height: 400px;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.05;
-      z-index: 1;
+      display: none;
     }
-    .orb-1 { top: -100px; left: -100px; background: var(--neon-cyan); }
-    .orb-2 { bottom: -100px; right: -100px; background: var(--neon-magenta); }
   </style>
 </head>
 <body class="login-bg">
 
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-
   <div class="login-card">
-    <div class="logo-container">
-      <div class="logo-hex">
-        <span>HB</span>
-      </div>
-      <h1 class="text-white text-xl font-bold tracking-tight">HAPPY BANGLADESH</h1>
-      <p class="text-slate-500 text-xs font-medium mt-1">NEXUS ERP ECOSYSTEM</p>
+    <div class="logo-container flex flex-col items-center">
+      <img src="assets/img/logo/logo-black.png" alt="Happy Bangladesh" class="h-14 w-auto object-contain mb-3 mx-auto" />
     </div>
 
     <div id="error-msg" class="error-msg"></div>
