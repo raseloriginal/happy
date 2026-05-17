@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "name": "Karim Egg Traders",
+        "phone": "01711122233",
+        "address": "Kawran Bazar, Dhaka",
+        "created_at": "2026-05-17 18:15:32"
+    },
+    {
+        "id": 2,
+        "name": "Bismillah Egg Store",
+        "phone": "01822233344",
+        "address": "Halishahar, Chittagong",
+        "created_at": "2026-05-17 18:15:32"
+    },
+    {
+        "id": 3,
+        "name": "Jamil & Brothers",
+        "phone": "01933344455",
+        "address": "Zindabazar, Sylhet",
+        "created_at": "2026-05-17 18:15:32"
+    }
+]

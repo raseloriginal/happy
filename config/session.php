@@ -51,7 +51,7 @@ function rootPath(): string {
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $scriptDir = str_replace('\\', '/', dirname($scriptName));
         // Remove known subdirectories to find the root
-        $path = str_replace(['/manager', '/admin', '/api', '/dsr', '/dealer', '/config', '/includes'], '', $scriptDir);
+        $path = str_replace(['/manager', '/admin', '/api', '/dsr', '/dealer', '/config', '/includes', '/eggland'], '', $scriptDir);
         $path = rtrim($path, '/');
     }
     return $path;

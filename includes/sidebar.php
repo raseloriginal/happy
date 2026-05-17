@@ -72,6 +72,9 @@ function navLink(string $href, string $icon, string $label, string $current): st
       <?= navLink(rootPath() . '/manager/expenses.php', 'fa-solid fa-money-bill-wave', 'Expenses', $current) ?>
       <?= navLink(rootPath() . '/manager/cashflow.php', 'fa-solid fa-money-check-dollar', 'Cash Flow', $current) ?>
 
+      <div class="sidebar-section">Eggland</div>
+      <?= navLink(rootPath() . '/eggland/index.php', 'fa-solid fa-egg', 'Eggland Business', $current) ?>
+
     <?php elseif ($role === 'dsr'): ?>
       <div class="sidebar-section">Dashboard</div>
       <?= navLink(rootPath() . '/dsr/index.php', 'fa-solid fa-chart-line', 'Dashboard', $current) ?>

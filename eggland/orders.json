@@ -1,0 +1,84 @@
+[
+    {
+        "id": 1,
+        "agent_id": 1,
+        "order_date": "2026-05-12",
+        "items": [
+            {
+                "product_id": 1,
+                "product_name": "Red Poultry Eggs (Tray of 30)",
+                "quantity": 50,
+                "price": 320,
+                "subtotal": 16000
+            },
+            {
+                "product_id": 2,
+                "product_name": "White Poultry Eggs (Tray of 30)",
+                "quantity": 30,
+                "price": 300,
+                "subtotal": 9000
+            }
+        ],
+        "total_amount": 25000,
+        "notes": "Urgent delivery for Kawran Bazar wholesale shop.",
+        "created_at": "2026-05-12 18:15:32"
+    },
+    {
+        "id": 2,
+        "agent_id": 2,
+        "order_date": "2026-05-14",
+        "items": [
+            {
+                "product_id": 3,
+                "product_name": "Duck Eggs (Tray of 30)",
+                "quantity": 20,
+                "price": 420,
+                "subtotal": 8400
+            }
+        ],
+        "total_amount": 8400,
+        "notes": "Standard weekly supply.",
+        "created_at": "2026-05-14 18:15:32"
+    },
+    {
+        "id": 3,
+        "agent_id": 1,
+        "order_date": "2026-05-16",
+        "items": [
+            {
+                "product_id": 4,
+                "product_name": "Organic Country Chicken Eggs (10 Pcs)",
+                "quantity": 10,
+                "price": 180,
+                "subtotal": 1800
+            }
+        ],
+        "total_amount": 1800,
+        "notes": "Trial pack.",
+        "created_at": "2026-05-16 18:15:32"
+    },
+    {
+        "id": 4,
+        "agent_id": 1,
+        "order_date": "2026-05-17",
+        "items": [
+            {
+                "product_id": 2,
+                "product_name": "White Poultry Eggs (Tray of 30)",
+                "quantity": 30,
+                "price": 300,
+                "subtotal": 9000
+            },
+            {
+                "product_id": 1,
+                "product_name": "Red Poultry Eggs (Tray of 30)",
+                "quantity": 14,
+                "price": 320,
+                "subtotal": 4480
+            }
+        ],
+        "total_amount": 13480,
+        "notes": "Cash",
+        "created_at": "2026-05-17 18:17:26"
+    }
+]
