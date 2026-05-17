@@ -262,7 +262,6 @@
 .sidebar.collapsed .sidebar-text,
 .sidebar.collapsed .sidebar-section { display: none; }
 .sidebar.collapsed .sidebar-link { justify-content: center; padding: 0.75rem; }
-.sidebar.collapsed .sidebar-link span { display: none; }
 
 /* Sidebar Branding States */
 .sidebar-logo-full {
