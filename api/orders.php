@@ -113,9 +113,16 @@ switch ($method) {
         $srRow->execute([$d['sr_id']]); $srRow = $srRow->fetch();
         $company_id = $srRow['company_id'] ?? 0;
 
-        $ord = $pdo->prepare('INSERT INTO orders (sr_id, company_id, order_date, status) VALUES (?,?,?,?)');
+        $ord = $pdo->prepare('INSERT INTO orders (sr_id, company_id, order_date, status, retailer_name, retailer_phone) VALUES (?,?,?,?,?,?)');
         $status = !empty($d['status']) ? $d['status'] : 'pending';
-        $ord->execute([$d['sr_id'], $company_id, $d['order_date'], $status]);
+        $ord->execute([
+            $d['sr_id'], 
+            $company_id, 
+            $d['order_date'], 
+            $status, 
+            $d['retailer_name'] ?? null, 
+            $d['retailer_phone'] ?? null
+        ]);
         $order_id = $pdo->lastInsertId();
 
         foreach ($d['items'] as $item) {

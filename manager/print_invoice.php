@@ -396,12 +396,12 @@ $dueDate = date('M d, Y', strtotime($orderInfo['order_date'])); // Due immediate
                 <tr>
                     <td>
                         <strong>Client/Store:</strong> <?= htmlspecialchars($orderInfo['company_name']) ?><br>
-                        <strong>Proprietor:</strong> <?= htmlspecialchars($orderInfo['dealer_name'] ?: 'N/A') ?><br>
+                        <strong>Proprietor/Retailer:</strong> <?= htmlspecialchars(!empty($orderInfo['retailer_name']) ? $orderInfo['retailer_name'] : ($orderInfo['dealer_name'] ?: 'N/A')) ?><br>
                         <strong>Address:</strong> <?= htmlspecialchars($orderInfo['company_address'] ?: 'Dhaka, Bangladesh') ?>
                     </td>
                     <td>
                         <strong>Delivery Location:</strong> Same as Billing Address<br>
-                        <strong>Contact No:</strong> <?= htmlspecialchars($orderInfo['company_phone'] ?: 'N/A') ?><br>
+                        <strong>Contact No:</strong> <?= htmlspecialchars(!empty($orderInfo['retailer_phone']) ? $orderInfo['retailer_phone'] : ($orderInfo['company_phone'] ?: 'N/A')) ?><br>
                         <strong>Route/Area:</strong> <?= htmlspecialchars($orderInfo['sr_name']) ?> (SR)
                     </td>
                 </tr>
@@ -548,12 +548,12 @@ $dueDate = date('M d, Y', strtotime($orderInfo['order_date'])); // Due immediate
                 <tr>
                     <td>
                         <strong>Client/Store:</strong> <?= htmlspecialchars($orderInfo['company_name']) ?><br>
-                        <strong>Proprietor:</strong> <?= htmlspecialchars($orderInfo['dealer_name'] ?: 'N/A') ?><br>
+                        <strong>Proprietor/Retailer:</strong> <?= htmlspecialchars(!empty($orderInfo['retailer_name']) ? $orderInfo['retailer_name'] : ($orderInfo['dealer_name'] ?: 'N/A')) ?><br>
                         <strong>Address:</strong> <?= htmlspecialchars($orderInfo['company_address'] ?: 'Dhaka, Bangladesh') ?>
                     </td>
                     <td>
                         <strong>Delivery Location:</strong> Same as Billing Address<br>
-                        <strong>Contact No:</strong> <?= htmlspecialchars($orderInfo['company_phone'] ?: 'N/A') ?><br>
+                        <strong>Contact No:</strong> <?= htmlspecialchars(!empty($orderInfo['retailer_phone']) ? $orderInfo['retailer_phone'] : ($orderInfo['company_phone'] ?: 'N/A')) ?><br>
                         <strong>Route/Area:</strong> <?= htmlspecialchars($orderInfo['sr_name']) ?> (SR)
                     </td>
                 </tr>

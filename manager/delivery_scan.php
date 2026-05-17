@@ -153,7 +153,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
 
     /* ── Toast ── */
     #mob-toast {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(60px);
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-60px);
       background: #1E293B; color: #E2E8F0; padding: 12px 20px;
       border-radius: 12px; font-size: 13px; font-weight: 500;
       box-shadow: 0 8px 30px rgba(0,0,0,0.4); z-index: 999;
@@ -184,6 +184,13 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
 <div class="mob-header">
   <a href="<?= rootPath() ?>/manager/delivery.php" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
   <span class="title"><i class="fa-solid fa-truck-fast mr-2"></i> Delivery Scan</span>
+  
+  <div id="complete-section" style="display:none; margin-right: 8px;">
+    <button id="complete-btn" onclick="completeDelivery()" class="mob-btn-success" disabled style="padding: 6px 14px; font-size: 11px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(16,185,129,0.25); cursor: pointer; transition: all 0.2s;">
+      <i class="fa-solid fa-circle-check mr-1"></i> Complete
+    </button>
+  </div>
+  
   <div class="status-dot" id="conn-dot"></div>
 </div>
 
@@ -282,12 +289,7 @@ $dsrs->execute([$wid]); $dsrs = $dsrs->fetchAll();
     </div>
   </div>
 
-  <!-- ── Complete Button ── -->
-  <div id="complete-section" style="display:none; padding-bottom:20px;">
-    <button id="complete-btn" onclick="completeDelivery()" class="mob-btn-success" disabled>
-      <i class="fa-solid fa-circle-check mr-1"></i> Complete — Send to Van
-    </button>
-  </div>
+
 
 </div>
 
@@ -484,7 +486,7 @@ async function completeDelivery() {
   if (!dsrId) { mobToast('Select a DSR first', 'warning'); return; }
 
   const btn = document.getElementById('complete-btn');
-  btn.disabled = true; btn.textContent = '⏳ Processing…';
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving…';
   stopMobileScan();
 
   const data = await api('<?= rootPath() ?>/api/delivery.php?action=complete', 'POST', {
@@ -495,11 +497,11 @@ async function completeDelivery() {
 
   if (data.success) {
     mobToast('Order sent to van!', 'success');
-    btn.textContent = 'Done!';
+    btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Done!';
     setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/delivery.php', 1800);
   } else {
     mobToast(data.message || 'Error', 'error');
-    btn.disabled = false; btn.textContent = 'Complete — Send to Van';
+    btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Complete';
   }
 }
 </script>

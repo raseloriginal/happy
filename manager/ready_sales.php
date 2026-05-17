@@ -7,7 +7,7 @@ $pdo       = getDB();
 
 // Fetch completed ready sales with product details
 $rows = $pdo->query("
-    SELECT o.id as order_id, o.order_date, o.status, o.created_at,
+    SELECT o.id as order_id, o.order_date, o.status, o.created_at, o.retailer_name, o.retailer_phone,
            u.name as sr_name, c.id as company_id, c.name as company_name, c.contact as company_phone,
            p.name as product_name, p.selling_price, p.pieces_per_box,
            oi.qty_pieces, oi.unit_price, oi.product_id
@@ -34,6 +34,8 @@ foreach ($rows as $row) {
             'company_id' => $row['company_id'],
             'company_name' => $row['company_name'],
             'company_phone' => $row['company_phone'],
+            'retailer_name' => $row['retailer_name'],
+            'retailer_phone' => $row['retailer_phone'],
             'total_amount' => 0,
             'product_count' => 0,
             'total_pieces' => 0,
@@ -156,7 +158,7 @@ include __DIR__ . '/../includes/header.php';
           foreach ($sale['items'] as $item) {
               $itemsSearchStr .= ' ' . $item['product_name'];
           }
-          $searchData = "RS-" . str_pad($sale['order_id'], 5, '0', STR_PAD_LEFT) . " " . $sale['company_name'] . " " . ($sale['company_phone'] ?? '') . " " . $sale['sr_name'] . $itemsSearchStr;
+          $searchData = "RS-" . str_pad($sale['order_id'], 5, '0', STR_PAD_LEFT) . " " . $sale['company_name'] . " " . ($sale['retailer_name'] ?? '') . " " . ($sale['retailer_phone'] ?? '') . " " . ($sale['company_phone'] ?? '') . " " . $sale['sr_name'] . $itemsSearchStr;
         ?>
         <div class="ready-sale-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md hover:border-gray-200 transition-all duration-300" 
              data-date="<?= $sale['order_date'] ?>"
@@ -199,9 +201,15 @@ include __DIR__ . '/../includes/header.php';
               <div class="space-y-1">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Customer Outlet</div>
                 <div class="font-semibold text-gray-800 text-base"><?= htmlspecialchars($sale['company_name']) ?></div>
+                <?php if (!empty($sale['retailer_name'])): ?>
+                  <div class="text-xs text-indigo-600 font-bold flex items-center gap-1.5 mt-0.5">
+                    <i class="fa-solid fa-store"></i>
+                    Retailer: <?= htmlspecialchars($sale['retailer_name']) ?>
+                  </div>
+                <?php endif; ?>
                 <div class="text-xs text-gray-500 flex items-center gap-1.5">
                   <i class="fa-solid fa-phone text-gray-400"></i>
-                  <?= htmlspecialchars($sale['company_phone'] ?: 'No Phone Number') ?>
+                  <?= htmlspecialchars(!empty($sale['retailer_phone']) ? $sale['retailer_phone'] : ($sale['company_phone'] ?: 'No Phone Number')) ?>
                 </div>
               </div>
 

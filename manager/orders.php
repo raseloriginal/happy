@@ -14,7 +14,7 @@ $avgDel = $outPcs > 0 ? round((($outPcs - $retPcs) / $outPcs) * 100, 1) : 0;
 
 // Orders with product-level breakdown
 $orders = $pdo->query('
-    SELECT o.id as order_id, o.order_date, o.status,
+    SELECT o.id as order_id, o.order_date, o.status, o.retailer_name, o.retailer_phone,
            u.name as sr_name, c.name as company_name,
            p.name as product_name, p.selling_price,
            oi.qty_pieces, oi.unit_price, oi.product_id,
@@ -114,7 +114,14 @@ include __DIR__ . '/../includes/header.php';
             <tr>
               <td class="font-mono text-xs text-gray-500">#<?= str_pad($o['order_id'], 4, '0', STR_PAD_LEFT) ?></td>
               <td class="font-medium"><?= htmlspecialchars($o['product_name']) ?></td>
-              <td><?= htmlspecialchars($o['sr_name']) ?></td>
+              <td>
+                <?= htmlspecialchars($o['sr_name']) ?>
+                <?php if ($o['status'] === 'ready_sale' && !empty($o['retailer_name'])): ?>
+                  <span class="block text-[10px] text-indigo-600 font-bold mt-0.5" title="<?= htmlspecialchars($o['retailer_phone'] ?? '') ?>">
+                    <i class="fa-solid fa-store text-[8px]"></i> <?= htmlspecialchars($o['retailer_name']) ?>
+                  </span>
+                <?php endif; ?>
+              </td>
               <td class="text-xs text-gray-500"><?= $o['order_date'] ?></td>
               <td class="text-right font-medium"><?= number_format($dispatchQty) ?></td>
               <td class="text-right text-red-600"><?= number_format($backQty) ?></td>

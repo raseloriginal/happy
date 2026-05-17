@@ -40,7 +40,7 @@ $srs = $pdo->query('
       margin: 0; 
       display: flex; 
       flex-direction: column; 
-      height: 100vh; 
+      height: 96vh; 
       overflow: hidden;
     }
     
@@ -136,13 +136,19 @@ $srs = $pdo->query('
         </div>
       </div>
       
-      <!-- Metrics Dashboard Inside Header -->
-      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl p-1 pr-3">
-        <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-mono text-sm font-black" id="stat-unique-products">0</div>
-        <div class="flex flex-col">
-          <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest leading-none">Products</span>
-          <span class="text-[10px] font-black text-slate-300 mt-0.5 leading-none" id="stat-total-pieces">0 pcs</span>
+      <!-- Metrics Dashboard & Complete Button Inside Header -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl p-1 pr-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-mono text-sm font-black" id="stat-unique-products">0</div>
+          <div class="flex flex-col flex-shrink-0">
+            <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest leading-none">Products</span>
+            <span class="text-[10px] font-black text-slate-300 mt-0.5 leading-none" id="stat-total-pieces">0 pcs</span>
+          </div>
         </div>
+        
+        <button onclick="saveReadyOrder()" id="complete-scan-btn" class="px-3.5 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none" disabled>
+          <i class="fa-solid fa-circle-check"></i> Complete
+        </button>
       </div>
     </div>
     
@@ -182,8 +188,26 @@ $srs = $pdo->query('
     <!-- Scrollable Workspace -->
     <div class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
       
-      <!-- Interactive SR Selector Card -->
-      <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-4 shadow-md flex flex-col gap-2.5">
+      <!-- Retailer Details Card -->
+      <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-4 shadow-md flex flex-col gap-3">
+        <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+          <i class="fa-solid fa-store"></i>
+          Retailer Details *
+        </label>
+        <div class="grid grid-cols-1 gap-3">
+          <div class="relative">
+            <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input id="retailer-name" type="text" class="w-full bg-slate-900 border border-slate-800 text-slate-100 py-3.5 pl-10 pr-4 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all duration-300 placeholder-slate-600" placeholder="Retailer / Dokan Name *" required />
+          </div>
+          <div class="relative">
+            <i class="fa-solid fa-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input id="retailer-phone" type="tel" class="w-full bg-slate-900 border border-slate-800 text-slate-100 py-3.5 pl-10 pr-4 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all duration-300 placeholder-slate-600" placeholder="Retailer Phone Number *" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive SR Selector Card (Hidden) -->
+      <div class="hidden bg-slate-950/60 border border-slate-900 rounded-2xl p-4 shadow-md flex-col gap-2.5">
         <div class="flex items-center justify-between">
           <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1">
             <i class="fa-solid fa-user-tag"></i>
@@ -217,17 +241,17 @@ $srs = $pdo->query('
         </span>
       </div>
 
-      <!-- Scanned List Container -->
-      <div class="space-y-3.5 pb-8" id="scanned-items-list">
-        <!-- Empty Message Placeholder -->
-        <div class="text-center py-12 bg-slate-950/30 border border-dashed border-slate-900 rounded-3xl p-6 flex flex-col items-center justify-center opacity-70" id="empty-scan-msg">
-          <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800/80 text-slate-400 flex items-center justify-center text-2xl mb-4 shadow-sm animate-pulse">
-            <i class="fa-solid fa-barcode"></i>
-          </div>
-          <h4 class="text-sm font-bold text-slate-200">No scanned items yet</h4>
-          <p class="text-[11px] text-slate-500 mt-1 max-w-[200px]">Scan a physical QR label or type a valid box code to build the order.</p>
+      <!-- Empty Message Placeholder -->
+      <div class="text-center py-12 bg-slate-950/30 border border-dashed border-slate-900 rounded-3xl p-6 flex flex-col items-center justify-center opacity-70" id="empty-scan-msg">
+        <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800/80 text-slate-400 flex items-center justify-center text-2xl mb-4 shadow-sm animate-pulse">
+          <i class="fa-solid fa-barcode"></i>
         </div>
+        <h4 class="text-sm font-bold text-slate-200">No scanned items yet</h4>
+        <p class="text-[11px] text-slate-500 mt-1 max-w-[200px]">Scan a physical QR label or type a valid box code to build the order.</p>
       </div>
+
+      <!-- Scanned List Container -->
+      <div class="space-y-3.5 pb-8" id="scanned-items-list"></div>
 
     </div>
   </div>
@@ -276,12 +300,7 @@ $srs = $pdo->query('
     </div>
   </div>
 
-  <!-- Persistent Floating Footer Complete Order Area -->
-  <div class="px-4 py-4 border-t border-slate-900 bg-slate-950 flex flex-col gap-3 pb-[calc(12px+env(safe-area-inset-bottom))] shadow-2xl">
-    <button onclick="saveReadyOrder()" id="complete-scan-btn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-black text-sm flex items-center justify-center shadow-lg shadow-emerald-500/20 active:scale-[0.99] transition duration-300" disabled style="height: 54px;">
-      <i class="fa-solid fa-circle-check mr-2"></i> Complete Order
-    </button>
-  </div>
+
 
   <!-- Dynamic JS Core -->
   <script>
@@ -378,6 +397,21 @@ $srs = $pdo->query('
 
   // Main Scan handler
   async function handleReadyScan(uid) {
+    const retailerName = document.getElementById('retailer-name').value.trim();
+    const retailerPhone = document.getElementById('retailer-phone').value.trim();
+    
+    if (!retailerName || !retailerPhone) {
+      triggerShake();
+      playErrorBeep();
+      showToast('Please enter Retailer Name and Phone Number first!', 'warning');
+      if (!retailerName) {
+        document.getElementById('retailer-name').focus();
+      } else {
+        document.getElementById('retailer-phone').focus();
+      }
+      return;
+    }
+
     if (window._scanning) return;
     window._scanning = true;
     setTimeout(() => window._scanning = false, 1200);
@@ -408,12 +442,13 @@ $srs = $pdo->query('
     if (!selectedSrId) {
       selectedSrId = p.sr_id;
       const sel = document.getElementById('sr-select');
-      sel.value = selectedSrId;
-      
-      const opt = sel.options[sel.selectedIndex];
-      selectedCompanyId = opt.dataset.companyId;
-      
-      document.getElementById('sr-lock-badge').classList.remove('hidden');
+      if (sel) {
+        sel.value = selectedSrId;
+        const opt = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+        selectedCompanyId = opt ? opt.dataset.companyId : null;
+      }
+      const badge = document.getElementById('sr-lock-badge');
+      if (badge) badge.classList.remove('hidden');
     }
 
     triggerFlash();
@@ -602,8 +637,8 @@ $srs = $pdo->query('
             selectedSrId = pendingSRChange;
             
             if (selectedSrId) {
-              const opt = sel.options[sel.selectedIndex];
-              selectedCompanyId = opt.dataset.companyId;
+              const opt = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+              selectedCompanyId = opt ? opt.dataset.companyId : null;
               document.getElementById('sr-lock-badge').classList.remove('hidden');
             } else {
               selectedCompanyId = null;
@@ -625,8 +660,8 @@ $srs = $pdo->query('
     } else {
       selectedSrId = nextSrId;
       if (selectedSrId) {
-        const opt = sel.options[sel.selectedIndex];
-        selectedCompanyId = opt.dataset.companyId;
+        const opt = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+        selectedCompanyId = opt ? opt.dataset.companyId : null;
         document.getElementById('sr-lock-badge').classList.remove('hidden');
       } else {
         selectedCompanyId = null;
@@ -889,17 +924,25 @@ $srs = $pdo->query('
     const completeBtn = document.getElementById('complete-scan-btn');
     if (totalPieces > 0) {
       completeBtn.disabled = false;
-      completeBtn.innerHTML = `<i class="fa-solid fa-circle-check mr-2 animate-pulse"></i> Complete Order (৳ ${grandTotal.toLocaleString('en-BD', { maximumFractionDigits: 0 })})`;
+      completeBtn.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5 animate-pulse"></i> Complete (৳${grandTotal.toLocaleString('en-BD', { maximumFractionDigits: 0 })})`;
     } else {
       completeBtn.disabled = true;
-      completeBtn.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Complete Order`;
+      completeBtn.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5"></i> Complete`;
     }
   }
 
   // POST Order to server
   async function saveReadyOrder() {
+    const retailerName = document.getElementById('retailer-name').value.trim();
+    const retailerPhone = document.getElementById('retailer-phone').value.trim();
+    
+    if (!retailerName || !retailerPhone) {
+      showToast('Please enter Retailer Name and Phone Number first!', 'warning');
+      return;
+    }
+
     if (!selectedSrId) {
-      showToast('Please select a Sales Representative first!', 'warning');
+      showToast('Please scan a product first to assign the order!', 'warning');
       return;
     }
     
@@ -936,6 +979,8 @@ $srs = $pdo->query('
       sr_id: selectedSrId,
       order_date: todayDate(),
       status: 'ready_sale',
+      retailer_name: retailerName,
+      retailer_phone: retailerPhone,
       items,
       scanned_qrs
     });
