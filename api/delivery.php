@@ -37,7 +37,7 @@ if ($action === 'scan_box' && $method === 'POST') {
     $qr = $stmt->fetch();
 
     if (!$qr) { echo json_encode(['success' => false, 'type' => 'not_found', 'message' => 'QR code not found']); exit; }
-    if ($qr['status'] !== 'active') { echo json_encode(['success' => false, 'type' => 'not_active', 'message' => 'QR code is ' . $qr['status']]); exit; }
+    if (!in_array($qr['status'], ['active', 'returned'])) { echo json_encode(['success' => false, 'type' => 'not_active', 'message' => 'QR code is ' . $qr['status']]); exit; }
     if (in_array($qr['id'], $scanned)) { echo json_encode(['success' => false, 'type' => 'duplicate', 'message' => 'Already scanned']); exit; }
 
     // Check product belongs to this order

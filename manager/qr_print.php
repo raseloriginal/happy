@@ -11,6 +11,25 @@ $lots->execute([$wid]); $lots = $lots->fetchAll();
 $preselect = intval($_GET['lot_id'] ?? 0);
 include __DIR__ . '/../includes/header.php';
 ?>
+<style>
+  /* On-screen status border styling */
+  .sticker-card.border-dispatched {
+    border: 3px solid #dc2626 !important; /* Bold Red */
+  }
+  .sticker-card.border-not-original {
+    border: 3px solid #eab308 !important; /* Bold Yellow */
+  }
+  .sticker-card.border-active {
+    border: 3px solid #16a34a !important; /* Bold Green */
+  }
+
+  /* Do NOT print any borders */
+  @media print {
+    .sticker-card {
+      border: none !important;
+    }
+  }
+</style>
 <!-- Load jsPDF for PDF generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <div class="page-wrapper">
@@ -25,7 +44,7 @@ include __DIR__ . '/../includes/header.php';
 
       <!-- Controls (hidden on print) -->
       <div id="controls" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 print:hidden">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div>
             <label class="form-label">Select Lot *</label>
             <select id="lot-select" class="form-input" onchange="loadProducts()">
@@ -41,6 +60,15 @@ include __DIR__ . '/../includes/header.php';
             <label class="form-label">Select Product *</label>
             <select id="product-select" class="form-input" disabled>
               <option value="">Select Lot first</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Filter by Status Border</label>
+            <select id="status-filter" class="form-input" onchange="applyStatusFilter()">
+              <option value="all">Show All</option>
+              <option value="green">Active Original (Green)</option>
+              <option value="yellow">Not Original Pcs (Yellow)</option>
+              <option value="red">Out of Delivery (Red)</option>
             </select>
           </div>
         </div>
@@ -100,7 +128,15 @@ async function loadStickers() {
 
   for (const qr of data.data) {
     const div = document.createElement('div');
-    div.className = 'sticker-card flex flex-row items-center';
+    
+    // Determine border status class based on dispatch status and original pieces remaining
+    let borderClass = 'border-active';
+    if (qr.status === 'dispatched' || qr.status === 'depleted' || parseInt(qr.pieces_remaining) === 0) {
+      borderClass = 'border-dispatched';
+    } else if (parseInt(qr.pieces_remaining) < parseInt(qr.pieces_total)) {
+      borderClass = 'border-not-original';
+    }
+    div.className = `sticker-card flex flex-row items-center ${borderClass}`;
 
     const priceText = qr.selling_price ? `${qr.selling_price}taka` : '';
     const expText = expiryDate ? `Exp: ${expiryDate}` : '';
@@ -129,9 +165,46 @@ async function loadStickers() {
     grid.appendChild(div);
   }
 
+  // Reset status filter dropdown to default when new stickers load
+  document.getElementById('status-filter').value = 'all';
+
   document.getElementById('pdf-btn').style.display = 'inline-flex';
   document.getElementById('doc-btn').style.display = 'inline-flex';
   showToast(`Loaded ${data.data.length} stickers`);
+}
+
+function applyStatusFilter() {
+  const filterVal = document.getElementById('status-filter').value;
+  const grid = document.getElementById('stickers-grid');
+  const cards = grid.children;
+  let count = 0;
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    let show = false;
+
+    if (filterVal === 'all') {
+      show = true;
+    } else if (filterVal === 'green' && card.classList.contains('border-active')) {
+      show = true;
+    } else if (filterVal === 'yellow' && card.classList.contains('border-not-original')) {
+      show = true;
+    } else if (filterVal === 'red' && card.classList.contains('border-dispatched')) {
+      show = true;
+    }
+
+    if (show) {
+      card.style.display = 'flex';
+      count++;
+    } else {
+      card.style.display = 'none';
+    }
+  }
+
+  // Update PDF & Word buttons display based on visible sticker count
+  const hasVisible = count > 0;
+  document.getElementById('pdf-btn').style.display = hasVisible ? 'inline-flex' : 'none';
+  document.getElementById('doc-btn').style.display = hasVisible ? 'inline-flex' : 'none';
 }
 
 /**
@@ -195,8 +268,11 @@ async function downloadPDF() {
   });
 
   const cards = grid.children;
+  let pageCount = 0;
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i];
+    if (card.style.display === 'none') continue; // Skip filtered-out stickers!
+
     const canvas = card.querySelector('canvas');
     if (!canvas) continue;
     const qrData      = canvas.toDataURL('image/png');
@@ -204,7 +280,10 @@ async function downloadPDF() {
     const qtyText     = card.querySelector('.sticker-qty').innerText;
     const qrUid       = card.querySelector('.sticker-qr-uid').innerText;
 
-    if (i > 0) pdf.addPage([38, 25], 'l');
+    if (pageCount > 0) pdf.addPage([38, 25], 'l');
+    pageCount++;
+
+
 
     // Draw QR Code (14mm x 14mm)
     pdf.addImage(qrData, 'PNG', 1.5, 3.5, 14, 14);
@@ -294,10 +373,16 @@ function downloadDoc() {
   `;
 
   for (const card of grid.children) {
+    if (card.style.display === 'none') continue; // Skip filtered-out stickers!
+
     const canvas = card.querySelector('canvas');
     if (!canvas) continue;
-    const priceText = card.querySelector('.sticker-price').innerText;
-    const expText = card.querySelector('.sticker-exp').innerText;
+    const qrImage     = canvas.toDataURL('image/png');
+    const productName = card.querySelector('.sticker-product-name').innerText;
+    const qtyText     = card.querySelector('.sticker-qty').innerText;
+    const qrUid       = card.querySelector('.sticker-qr-uid').innerText;
+    const priceText   = card.querySelector('.sticker-price').innerText;
+    const expText     = card.querySelector('.sticker-exp').innerText;
 
     htmlContent += `
       <div class="sticker-card">

@@ -96,20 +96,24 @@ include __DIR__ . '/../includes/header.php';
           <thead>
             <tr>
               <th>Order#</th><th>Product</th><th>SR</th><th>Date</th>
-              <th class="text-right">Total Qty</th><th class="text-right">Back Qty</th>
-              <th class="text-right">Sell Qty</th><th class="text-right">Sale Value</th>
+              <th class="text-right">Ordered Qty</th>
+              <th class="text-right">Out Qty</th>
+              <th class="text-right">Back Qty</th>
+              <th class="text-right">Sell Qty</th>
+              <th class="text-right">Sale Value</th>
               <th>Delivery %</th><th>Status</th><th>Action</th>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($orders as $o):
+              $orderedQty  = (int)$o['qty_pieces'];
               $dispatchQty = (int)$o['dispatch_qty'];
-              $backQty  = (int)$o['back_qty'];
+              $backQty     = (int)$o['back_qty'];
               // Sell Qty is whatever went out minus whatever came back
-              $sellQty  = max($dispatchQty - $backQty, 0);
-              $saleVal  = $sellQty * $o['unit_price'];
-              $ratio    = $dispatchQty > 0 ? round(($sellQty / $dispatchQty) * 100) : 0;
-              $ratioClass = $ratio >= 90 ? 'badge-success' : ($ratio >= 50 ? 'badge-warning' : 'badge-danger');
+              $sellQty     = max($dispatchQty - $backQty, 0);
+              $saleVal     = $sellQty * $o['unit_price'];
+              $ratio       = $dispatchQty > 0 ? round(($sellQty / $dispatchQty) * 100) : 0;
+              $ratioClass  = $ratio >= 90 ? 'badge-success' : ($ratio >= 50 ? 'badge-warning' : 'badge-danger');
             ?>
             <tr>
               <td class="font-mono text-xs text-gray-500">#<?= str_pad($o['order_id'], 4, '0', STR_PAD_LEFT) ?></td>
@@ -123,7 +127,8 @@ include __DIR__ . '/../includes/header.php';
                 <?php endif; ?>
               </td>
               <td class="text-xs text-gray-500"><?= $o['order_date'] ?></td>
-              <td class="text-right font-medium"><?= number_format($dispatchQty) ?></td>
+              <td class="text-right font-medium"><?= number_format($orderedQty) ?></td>
+              <td class="text-right font-medium text-blue-600"><?= number_format($dispatchQty) ?></td>
               <td class="text-right text-red-600"><?= number_format($backQty) ?></td>
               <td class="text-right text-green-600 font-bold"><?= number_format($sellQty) ?></td>
               <td class="text-right font-medium text-indigo-600">৳<?= number_format($saleVal, 0) ?></td>
@@ -139,7 +144,7 @@ include __DIR__ . '/../includes/header.php';
               </td>
             </tr>
             <?php endforeach; ?>
-            <?php if (empty($orders)): ?><tr><td colspan="11" class="text-center py-8 text-gray-400">No orders yet. <a href="<?= rootPath() ?>/manager/order_add.php" class="text-indigo-600">Add one</a></td></tr><?php endif; ?>
+            <?php if (empty($orders)): ?><tr><td colspan="12" class="text-center py-8 text-gray-400">No orders yet. <a href="<?= rootPath() ?>/manager/order_add.php" class="text-indigo-600">Add one</a></td></tr><?php endif; ?>
           </tbody>
         </table>
       </div>

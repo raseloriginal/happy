@@ -629,11 +629,9 @@ $srs = $pdo->query('
         pendingSRChange = nextSrId;
         showCustomConfirm(
           "Change Representative?",
-          "Changing the Sales Representative will completely clear all currently scanned items because order lots are restricted to one company. Continue?",
+          "Are you sure you want to assign a new Sales Representative to this order scan?",
           () => {
-            // Confirm OK
-            scannedData = {};
-            scannedQrIds = [];
+            // Confirm OK - Keep items, just update representative
             selectedSrId = pendingSRChange;
             
             if (selectedSrId) {

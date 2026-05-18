@@ -514,8 +514,8 @@ function undoScannedBox(qrId, productId, uid) {
 
 // ── Check all done ──
 function checkComplete() {
-  const allDone = orderItems.length > 0 && orderItems.every(i => i.scanned >= i.required);
-  document.getElementById('complete-btn').disabled = !allDone;
+  const hasScanned = scannedBoxes.length > 0;
+  document.getElementById('complete-btn').disabled = !hasScanned;
 }
 
 // ── Camera controls ──
@@ -548,6 +548,14 @@ async function completeDelivery() {
   const oid   = document.getElementById('order-select').value;
   const dsrId = document.getElementById('dsr-select').value;
   if (!dsrId) { mobToast('Select a DSR first', 'warning'); return; }
+
+  // Warning check if not all boxes scanned
+  const allDone = orderItems.length > 0 && orderItems.every(i => i.scanned >= i.required);
+  if (!allDone) {
+    if (!confirm('Warning: You have not scanned all the ordered boxes. Are you sure you want to complete this delivery dispatch with ONLY the scanned boxes? Unscanned boxes will not be loaded onto the van.')) {
+      return;
+    }
+  }
 
   const btn = document.getElementById('complete-btn');
   btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving…';

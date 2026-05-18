@@ -53,8 +53,8 @@ include __DIR__ . '/../includes/header.php';
                   <thead>
                     <tr>
                       <th class="w-1/2">Product</th>
-                      <th class="w-24">Qty (pcs) *</th>
-                      <th class="w-32 text-right">Price/Pcs</th>
+                      <th class="w-24">Qty (boxes) *</th>
+                      <th class="w-32 text-right">Price/Box</th>
                       <th class="w-32 text-right">Total</th>
                       <th class="w-10"></th>
                     </tr>
@@ -131,7 +131,7 @@ function addProductRow() {
         ${getProductOptions()}
       </select>
     </td>
-    <td><input type="number" class="form-input qty-inp" min="1" placeholder="qty" required oninput="updateRowTotal(this)" /></td>
+    <td><input type="number" class="form-input qty-inp" min="1" placeholder="boxes" required oninput="updateRowTotal(this)" /></td>
     <td class="text-right text-gray-500 text-sm row-price">—</td>
     <td class="text-right font-medium row-total">৳0.00</td>
     <td><button type="button" onclick="this.closest('tr').remove(); updateUsed(); updateGrandTotal();" class="btn btn-danger btn-sm"><i class="fa-solid fa-xmark"></i></button></td>
@@ -143,7 +143,14 @@ function addProductRow() {
 function rowChanged(sel) {
   const opt = sel.options[sel.selectedIndex];
   const tr  = sel.closest('tr');
-  tr.querySelector('.row-price').textContent = opt.value ? '৳' + parseFloat(opt.dataset.price || 0).toFixed(2) : '—';
+  if (opt.value) {
+    const ppb = parseInt(opt.dataset.ppb || 1);
+    const piecePrice = parseFloat(opt.dataset.price || 0);
+    const boxPrice = piecePrice * ppb;
+    tr.querySelector('.row-price').textContent = '৳' + boxPrice.toFixed(2) + ' (৳' + piecePrice.toFixed(2) + '/pcs)';
+  } else {
+    tr.querySelector('.row-price').textContent = '—';
+  }
   updateRowTotal(tr.querySelector('.qty-inp'));
   updateUsed();
 }
@@ -153,8 +160,10 @@ function updateRowTotal(input) {
   const sel = tr.querySelector('.product-sel');
   const opt = sel.options[sel.selectedIndex];
   const qty = parseFloat(input.value) || 0;
-  const price = opt.value ? parseFloat(opt.dataset.price || 0) : 0;
-  const total = qty * price;
+  const piecePrice = opt.value ? parseFloat(opt.dataset.price || 0) : 0;
+  const ppb = opt.value ? parseInt(opt.dataset.ppb || 1) : 1;
+  const boxPrice = piecePrice * ppb;
+  const total = qty * boxPrice;
   tr.querySelector('.row-total').textContent = '৳' + total.toFixed(2);
   updateGrandTotal();
 }
@@ -183,10 +192,14 @@ document.getElementById('order-form').addEventListener('submit', async function(
   const items = [];
   let valid   = true;
   document.querySelectorAll('#products-body tr').forEach(tr => {
-    const pid = tr.querySelector('.product-sel').value;
-    const qty = parseInt(tr.querySelector('.qty-inp').value);
-    if (!pid || !qty || qty < 1) { valid = false; return; }
-    items.push({ product_id: pid, qty_pieces: qty });
+    const sel = tr.querySelector('.product-sel');
+    const opt = sel.options[sel.selectedIndex];
+    const pid = sel.value;
+    const qtyBoxes = parseInt(tr.querySelector('.qty-inp').value);
+    if (!pid || !qtyBoxes || qtyBoxes < 1) { valid = false; return; }
+    const ppb = parseInt(opt.dataset.ppb || 1);
+    const qtyPieces = qtyBoxes * ppb;
+    items.push({ product_id: pid, qty_pieces: qtyPieces });
   });
   if (!valid || items.length === 0) { showToast('Add at least one product with a valid quantity', 'error'); return; }
   const btn = document.getElementById('save-btn');

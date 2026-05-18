@@ -52,15 +52,8 @@ switch ($method) {
                 if (!$sr_id) {
                     echo json_encode(['success' => false, 'message' => 'No active SR found for this product\'s company']); exit;
                 }
-            } else {
-                // Validate existing SR matches company
-                $sr = $pdo->prepare('SELECT company_id FROM sr WHERE id=?');
-                $sr->execute([$sr_id]);
-                $sr_company = $sr->fetchColumn();
-                if ($qr['company_id'] != $sr_company) {
-                    echo json_encode(['success' => false, 'message' => 'Product does not belong to the same company as previous items']); exit;
-                }
             }
+
 
             if ($qr['status'] !== 'active') {
                 echo json_encode(['success' => false, 'message' => 'QR code is ' . $qr['status']]); exit;
