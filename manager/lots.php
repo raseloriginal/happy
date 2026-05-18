@@ -57,4 +57,4 @@ async function deleteLot(id) {
   if (data.success) { showToast('Lot deleted'); location.reload(); }
   else showToast(data.message || 'Error', 'error');
 }
-</script>
+</script>  

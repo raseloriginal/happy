@@ -1,0 +1,422 @@
+<?php
+// api/dsr_mobile.php — Backend REST API for DSR Mobile App
+header('Content-Type: application/json');
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/session.php';
+
+// Auth Guard — Ensure logged in as DSR
+if (empty($_SESSION['user_id']) || $_SESSION['role'] !== 'dsr') {
+    header('HTTP/1.1 403 Forbidden');
+    echo json_encode(['success' => false, 'message' => 'Forbidden: DSR access only']);
+    exit;
+}
+
+$pdo    = getDB();
+$userId = $_SESSION['user_id'];
+$action = $_GET['action'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'];
+
+// Fetch DSR profile
+$dsrStmt = $pdo->prepare('SELECT d.*, w.name as warehouse_name FROM dsr d JOIN warehouses w ON w.id=d.warehouse_id WHERE d.user_id=? LIMIT 1');
+$dsrStmt->execute([$userId]);
+$dsr = $dsrStmt->fetch();
+
+if (!$dsr) {
+    echo json_encode(['success' => false, 'message' => 'DSR profile not found in database.']);
+    exit;
+}
+
+$dsr_id       = $dsr['id'];
+$warehouse_id = $dsr['warehouse_id'];
+
+switch ($action) {
+    case 'dashboard':
+        if ($method !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        // Today's attendance status
+        $attStmt = $pdo->prepare('SELECT * FROM dsr_attendance WHERE dsr_id=? AND checkin_date=CURDATE() LIMIT 1');
+        $attStmt->execute([$dsr_id]);
+        $attendance = $attStmt->fetch();
+
+        // Active dispatch for this DSR (status loaded or delivered)
+        $dispStmt = $pdo->prepare("
+            SELECT d.*, o.order_date, u.name as sr_name, c.name as company_name 
+            FROM dispatches d 
+            LEFT JOIN orders o ON o.id=d.order_id 
+            LEFT JOIN sr s ON s.id=o.sr_id 
+            LEFT JOIN users u ON u.id=s.user_id 
+            LEFT JOIN companies c ON c.id=o.company_id 
+            WHERE d.dsr_id=? AND d.status IN ('loaded', 'delivered') 
+            ORDER BY d.id DESC LIMIT 1
+        ");
+        $dispStmt->execute([$dsr_id]);
+        $activeDispatch = $dispStmt->fetch();
+
+        $outVal = 0.00;
+        $returnVal = 0.00;
+        $settledRecord = null;
+
+        if ($activeDispatch) {
+            $dispatch_id = $activeDispatch['id'];
+
+            // Total Out Value: sum(qty_out * selling_price)
+            $outStmt = $pdo->prepare('
+                SELECT COALESCE(SUM(di.qty_out * p.selling_price), 0) 
+                FROM dispatch_items di 
+                JOIN products p ON p.id=di.product_id 
+                WHERE di.dispatch_id=?
+            ');
+            $outStmt->execute([$dispatch_id]);
+            $outVal = floatval($outStmt->fetchColumn());
+
+            // Return Value: sum(qty_in * selling_price) from return items
+            $retStmt = $pdo->prepare('
+                SELECT COALESCE(SUM(ri.qty_in * p.selling_price), 0) 
+                FROM return_items ri 
+                JOIN returns r ON r.id=ri.return_id 
+                JOIN products p ON p.id=ri.product_id 
+                WHERE r.dispatch_id=? AND r.status="completed"
+            ');
+            $retStmt->execute([$dispatch_id]);
+            $returnVal = floatval($retStmt->fetchColumn());
+
+            // Check if cash settlement has been submitted
+            $settleStmt = $pdo->prepare('SELECT * FROM cash_settlements WHERE dispatch_id=? LIMIT 1');
+            $settleStmt->execute([$dispatch_id]);
+            $settledRecord = $settleStmt->fetch();
+        }
+
+        // Recent Settled Dispatches
+        $recentStmt = $pdo->prepare("
+            SELECT d.id, d.dispatch_date, d.status, COALESCE(cs.amount_submitted, 0) as submitted 
+            FROM dispatches d 
+            LEFT JOIN cash_settlements cs ON cs.dispatch_id=d.id 
+            WHERE d.dsr_id=? AND d.status='settled' 
+            ORDER BY d.id DESC LIMIT 5
+        ");
+        $recentStmt->execute([$dsr_id]);
+        $recentDispatches = $recentStmt->fetchAll();
+
+        echo json_encode([
+            'success' => true,
+            'profile' => [
+                'name' => $_SESSION['name'],
+                'warehouse_name' => $dsr['warehouse_name'],
+                'phone' => $_SESSION['phone'] ?? ''
+            ],
+            'attendance' => $attendance ? [
+                'checked_in' => true,
+                'time' => date('h:i A', strtotime($attendance['checkin_time'])),
+                'warehouse_name' => $dsr['warehouse_name']
+            ] : [
+                'checked_in' => false
+            ],
+            'active_dispatch' => $activeDispatch ? [
+                'id' => $activeDispatch['id'],
+                'dispatch_date' => $activeDispatch['dispatch_date'],
+                'status' => $activeDispatch['status'],
+                'sr_name' => $activeDispatch['sr_name'] ?? 'Ready Sale',
+                'company_name' => $activeDispatch['company_name'] ?? 'N/A',
+                'out_value' => $outVal,
+                'return_value' => $returnVal,
+                'settlement' => $settledRecord ? [
+                    'id' => $settledRecord['id'],
+                    'status' => $settledRecord['status'],
+                    'amount_expected' => floatval($settledRecord['amount_expected']),
+                    'amount_submitted' => floatval($settledRecord['amount_submitted']),
+                    'difference' => floatval($settledRecord['difference']),
+                    'damage_amount' => floatval($settledRecord['damage_amount']),
+                    'expense_amount' => floatval($settledRecord['expense_amount']),
+                    'notes' => $settledRecord['notes'],
+                    'notes_details' => json_decode($settledRecord['notes_details'], true)
+                ] : null
+            ] : null,
+            'recent_dispatches' => $recentDispatches
+        ]);
+        break;
+
+    case 'mark_attendance':
+        if ($method !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        $d = json_decode(file_get_contents('php://input'), true);
+        $qrCode = trim($d['qr_code'] ?? '');
+
+        if (empty($qrCode)) {
+            echo json_encode(['success' => false, 'message' => 'No QR code provided. Please scan a warehouse QR code.']);
+            exit;
+        }
+
+        $scanned_warehouse_id = null;
+        if (is_numeric($qrCode)) {
+            $scanned_warehouse_id = intval($qrCode);
+        } else if (preg_match('/happy_warehouse_(\d+)/', $qrCode, $matches)) {
+            $scanned_warehouse_id = intval($matches[1]);
+        } else if (preg_match('/warehouse_(\d+)/', $qrCode, $matches)) {
+            $scanned_warehouse_id = intval($matches[1]);
+        } else if (preg_match('/warehouse:(\d+)/', $qrCode, $matches)) {
+            $scanned_warehouse_id = intval($matches[1]);
+        } else {
+            // Attempt to search warehouse by name
+            $nameStmt = $pdo->prepare('SELECT id FROM warehouses WHERE name=? LIMIT 1');
+            $nameStmt->execute([$qrCode]);
+            $scanned_warehouse_id = $nameStmt->fetchColumn();
+        }
+
+        if (!$scanned_warehouse_id) {
+            echo json_encode(['success' => false, 'message' => 'Invalid QR Code. Could not identify warehouse.']);
+            exit;
+        }
+
+        // Verify warehouse exists
+        $whStmt = $pdo->prepare('SELECT name FROM warehouses WHERE id=? LIMIT 1');
+        $whStmt->execute([$scanned_warehouse_id]);
+        $warehouseName = $whStmt->fetchColumn();
+
+        if (!$warehouseName) {
+            echo json_encode(['success' => false, 'message' => 'Warehouse not found.']);
+            exit;
+        }
+
+        try {
+            $stmt = $pdo->prepare('INSERT INTO dsr_attendance (dsr_id, warehouse_id, checkin_date, checkin_time, status) VALUES (?,?,CURDATE(),CURTIME(),"present")');
+            $stmt->execute([$dsr_id, $scanned_warehouse_id]);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Attendance marked successfully!',
+                'warehouse_name' => $warehouseName,
+                'time' => date('h:i A')
+            ]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                echo json_encode(['success' => false, 'message' => 'You have already scanned warehouse QR code and marked attendance today!']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            }
+        }
+        break;
+
+    case 'van_stock':
+        if ($method !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        // Get active dispatch ID
+        $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND status IN ('loaded', 'delivered') ORDER BY id DESC LIMIT 1");
+        $dispStmt->execute([$dsr_id]);
+        $active_dispatch_id = $dispStmt->fetchColumn();
+
+        if (!$active_dispatch_id) {
+            echo json_encode(['success' => true, 'dispatch_id' => null, 'products' => []]);
+            exit;
+        }
+
+        // Fetch products loaded on this dispatch
+        $stockStmt = $pdo->prepare('
+            SELECT 
+                p.id as product_id, 
+                p.name as product_name, 
+                p.selling_price, 
+                p.pieces_per_box,
+                SUM(di.qty_out) as pieces_loaded
+            FROM dispatch_items di
+            JOIN products p ON p.id=di.product_id
+            WHERE di.dispatch_id=?
+            GROUP BY p.id
+        ');
+        $stockStmt->execute([$active_dispatch_id]);
+        $loadedProducts = $stockStmt->fetchAll();
+
+        $products = [];
+        foreach ($loadedProducts as $lp) {
+            // Get returned pieces for this product in this dispatch (manager verified returns)
+            $retStmt = $pdo->prepare('
+                SELECT COALESCE(SUM(ri.qty_in), 0) as pieces_returned
+                FROM return_items ri
+                JOIN returns r ON r.id=ri.return_id
+                WHERE r.dispatch_id=? AND ri.product_id=? AND r.status="completed"
+            ');
+            $retStmt->execute([$active_dispatch_id, $lp['product_id']]);
+            $pieces_returned = intval($retStmt->fetchColumn());
+
+            $pieces_sold = max(intval($lp['pieces_loaded']) - $pieces_returned, 0);
+            $value_sold = $pieces_sold * floatval($lp['selling_price']);
+
+            $ppb = max(intval($lp['pieces_per_box']), 1);
+
+            // Format counts as readable boxes + pieces
+            $loaded_boxes = floor($lp['pieces_loaded'] / $ppb);
+            $loaded_remainder = $lp['pieces_loaded'] % $ppb;
+            $loaded_formatted = $loaded_boxes . ' Box' . ($loaded_boxes != 1 ? 'es':'') . ($loaded_remainder > 0 ? ' & ' . $loaded_remainder . ' Pcs' : '');
+
+            $returned_boxes = floor($pieces_returned / $ppb);
+            $returned_remainder = $pieces_returned % $ppb;
+            $returned_formatted = $returned_boxes . ' Box' . ($returned_boxes != 1 ? 'es':'') . ($returned_remainder > 0 ? ' & ' . $returned_remainder . ' Pcs' : '');
+
+            $sold_boxes = floor($pieces_sold / $ppb);
+            $sold_remainder = $pieces_sold % $ppb;
+            $sold_formatted = $sold_boxes . ' Box' . ($sold_boxes != 1 ? 'es':'') . ($sold_remainder > 0 ? ' & ' . $sold_remainder . ' Pcs' : '');
+
+            $products[] = [
+                'product_id' => $lp['product_id'],
+                'product_name' => $lp['product_name'],
+                'selling_price' => floatval($lp['selling_price']),
+                'pieces_per_box' => $ppb,
+                'loaded' => [
+                    'pieces' => intval($lp['pieces_loaded']),
+                    'formatted' => $loaded_formatted
+                ],
+                'returned' => [
+                    'pieces' => $pieces_returned,
+                    'formatted' => $returned_formatted
+                ],
+                'sold' => [
+                    'pieces' => $pieces_sold,
+                    'value' => $value_sold,
+                    'formatted' => $sold_formatted
+                ]
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'dispatch_id' => $active_dispatch_id,
+            'products' => $products
+        ]);
+        break;
+
+    case 'submit_settlement':
+        if ($method !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        $d = json_decode(file_get_contents('php://input'), true);
+        $dispatch_id = intval($d['dispatch_id'] ?? 0);
+        $damage_amount = floatval($d['damage_amount'] ?? 0);
+        $expense_amount = floatval($d['expense_amount'] ?? 0);
+        $amount_submitted = floatval($d['amount_submitted'] ?? 0);
+        $notes_details = $d['notes_details'] ?? [];
+        $notes_text = trim($d['notes_text'] ?? '');
+
+        // Verify active dispatch belongs to this DSR
+        $checkDisp = $pdo->prepare('SELECT id, status FROM dispatches WHERE id=? AND dsr_id=? LIMIT 1');
+        $checkDisp->execute([$dispatch_id, $dsr_id]);
+        $disp = $checkDisp->fetch();
+
+        if (!$disp) {
+            echo json_encode(['success' => false, 'message' => 'Active dispatch not found for this user.']);
+            exit;
+        }
+
+        // Calculate expected submission based on actual SQL loaded/returned products
+        // Out Value
+        $outStmt = $pdo->prepare('
+            SELECT COALESCE(SUM(di.qty_out * p.selling_price), 0) 
+            FROM dispatch_items di 
+            JOIN products p ON p.id=di.product_id 
+            WHERE di.dispatch_id=?
+        ');
+        $outStmt->execute([$dispatch_id]);
+        $outVal = floatval($outStmt->fetchColumn());
+
+        // Return Value
+        $retStmt = $pdo->prepare('
+            SELECT COALESCE(SUM(ri.qty_in * p.selling_price), 0) 
+            FROM return_items ri 
+            JOIN returns r ON r.id=ri.return_id 
+            JOIN products p ON p.id=ri.product_id 
+            WHERE r.dispatch_id=? AND r.status="completed"
+        ');
+        $retStmt->execute([$dispatch_id]);
+        $returnVal = floatval($retStmt->fetchColumn());
+
+        // expected submitted cash = out_val - return_val - damage - expense
+        $amount_expected = $outVal - $returnVal - $damage_amount - $expense_amount;
+        $difference      = $amount_submitted - $amount_expected;
+
+        $pdo->beginTransaction();
+
+        // Check if settlement already exists
+        $settleCheck = $pdo->prepare('SELECT id FROM cash_settlements WHERE dispatch_id=? LIMIT 1');
+        $settleCheck->execute([$dispatch_id]);
+        $existId = $settleCheck->fetchColumn();
+
+        if ($existId) {
+            $upStmt = $pdo->prepare('
+                UPDATE cash_settlements 
+                SET amount_expected=?, amount_submitted=?, difference=?, return_amount=?, damage_amount=?, expense_amount=?, notes_details=?, notes=?, settlement_date=CURDATE(), status="pending" 
+                WHERE id=?
+            ');
+            $upStmt->execute([
+                $amount_expected, $amount_submitted, $difference, $returnVal, $damage_amount, $expense_amount, 
+                json_encode($notes_details), $notes_text, $existId
+            ]);
+        } else {
+            $insStmt = $pdo->prepare('
+                INSERT INTO cash_settlements (dsr_id, dispatch_id, amount_expected, amount_submitted, difference, return_amount, damage_amount, expense_amount, notes_details, notes, settlement_date, status) 
+                VALUES (?,?,?,?,?,?,?,?,?,?,CURDATE(),"pending")
+            ');
+            $insStmt->execute([
+                $dsr_id, $dispatch_id, $amount_expected, $amount_submitted, $difference, 
+                $returnVal, $damage_amount, $expense_amount, json_encode($notes_details), $notes_text
+            ]);
+        }
+
+        // Update dispatch status to 'delivered' indicating deliveries complete and settlement submitted
+        if ($disp['status'] === 'loaded') {
+            $pdo->prepare('UPDATE dispatches SET status="delivered" WHERE id=?')->execute([$dispatch_id]);
+        }
+
+        $pdo->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Settlement details submitted successfully! Waiting for manager approval.',
+            'data' => [
+                'expected' => $amount_expected,
+                'submitted' => $amount_submitted,
+                'difference' => $difference
+            ]
+        ]);
+        break;
+
+    case 'expenses':
+        if ($method === 'GET') {
+            $expStmt = $pdo->prepare('SELECT * FROM expenses WHERE dsr_id=? ORDER BY id DESC LIMIT 20');
+            $expStmt->execute([$dsr_id]);
+            echo json_encode([
+                'success' => true,
+                'expenses' => $expStmt->fetchAll()
+            ]);
+        } else if ($method === 'POST') {
+            $d = json_decode(file_get_contents('php://input'), true);
+            $amount      = floatval($d['amount'] ?? 0);
+            $description = trim($d['description'] ?? '');
+            $expense_date= $d['expense_date'] ?? date('Y-m-d');
+            $dispatch_id = !empty($d['dispatch_id']) ? intval($d['dispatch_id']) : null;
+
+            if ($amount <= 0 || empty($description)) {
+                echo json_encode(['success' => false, 'message' => 'Amount and description are required.']);
+                exit;
+            }
+
+            $insExp = $pdo->prepare('INSERT INTO expenses (dsr_id, dispatch_id, amount, description, expense_date, status) VALUES (?,?,?,?,?, "pending")');
+            $insExp->execute([$dsr_id, $dispatch_id, $amount, $description, $expense_date]);
+
+            echo json_encode(['success' => true, 'message' => 'Expense submitted successfully for manager approval!']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        }
+        break;
+
+    default:
+        echo json_encode(['success' => false, 'message' => 'Invalid mobile API endpoint action']);
+        break;
+}

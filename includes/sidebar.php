@@ -77,7 +77,7 @@ function navLink(string $href, string $icon, string $label, string $current): st
     <?php elseif ($role === 'dsr'): ?>
       <div class="sidebar-section">Dashboard</div>
       <?= navLink(rootPath() . '/dsr/index.php', 'fa-solid fa-chart-line', 'Dashboard', $current) ?>
-      <?= navLink(rootPath() . '/dsr/expenses.php', 'fa-solid fa-money-bill-wave', 'My Expenses', $current) ?>
+
 
     <?php elseif ($role === 'dealer'): ?>
       <div class="sidebar-section">Dashboard</div>
