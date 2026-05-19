@@ -19,7 +19,8 @@ $orders = $pdo->query('
            p.name as product_name, p.selling_price,
            oi.qty_pieces, oi.unit_price, oi.product_id,
            IF(o.status=\'ready_sale\', oi.qty_pieces, (SELECT COALESCE(SUM(di.qty_out), 0) FROM dispatch_items di WHERE di.order_id=o.id AND di.product_id=oi.product_id)) as dispatch_qty,
-           (SELECT COALESCE(SUM(ri.qty_in), 0) FROM return_items ri JOIN returns r ON r.id=ri.return_id JOIN dispatches d ON d.id=r.dispatch_id WHERE d.order_id=o.id AND ri.product_id=oi.product_id) as back_qty
+           (SELECT COALESCE(SUM(ri.qty_in), 0) FROM return_items ri JOIN returns r ON r.id=ri.return_id JOIN dispatches d ON d.id=r.dispatch_id WHERE d.order_id=o.id AND ri.product_id=oi.product_id) as back_qty,
+           (SELECT du.name FROM dispatches d JOIN dsr ds ON ds.id = d.dsr_id JOIN users du ON du.id = ds.user_id WHERE d.order_id = o.id ORDER BY d.id DESC LIMIT 1) as dsr_name
     FROM orders o
     JOIN sr s ON s.id=o.sr_id
     JOIN users u ON u.id=s.user_id
@@ -77,10 +78,10 @@ include __DIR__ . '/../includes/header.php';
 
       <!-- Filters -->
       <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-4 flex flex-wrap gap-3 items-end">
-        <div><label class="form-label">From</label><input type="date" id="f-from" class="form-input" /></div>
-        <div><label class="form-label">To</label><input type="date" id="f-to" class="form-input" /></div>
+        <div><label class="form-label">From</label><input type="date" id="f-from" class="form-input" onchange="filterTable()" /></div>
+        <div><label class="form-label">To</label><input type="date" id="f-to" class="form-input" onchange="filterTable()" /></div>
         <div><label class="form-label">Status</label>
-          <select id="f-status" class="form-input">
+          <select id="f-status" class="form-input" onchange="filterTable()">
             <option value="">All Status</option>
             <option>pending</option><option value="ready_sale">Ready Sale</option><option>out_for_delivery</option><option>delivered</option><option>cancelled</option>
           </select>
@@ -115,7 +116,7 @@ include __DIR__ . '/../includes/header.php';
               $ratio       = $dispatchQty > 0 ? round(($sellQty / $dispatchQty) * 100) : 0;
               $ratioClass  = $ratio >= 90 ? 'badge-success' : ($ratio >= 50 ? 'badge-warning' : 'badge-danger');
             ?>
-            <tr>
+            <tr data-date="<?= $o['order_date'] ?>" data-status="<?= htmlspecialchars($o['status']) ?>">
               <td class="font-mono text-xs text-gray-500">#<?= str_pad($o['order_id'], 4, '0', STR_PAD_LEFT) ?></td>
               <td class="font-medium"><?= htmlspecialchars($o['product_name']) ?></td>
               <td>
@@ -123,6 +124,10 @@ include __DIR__ . '/../includes/header.php';
                 <?php if ($o['status'] === 'ready_sale' && !empty($o['retailer_name'])): ?>
                   <span class="block text-[10px] text-indigo-600 font-bold mt-0.5" title="<?= htmlspecialchars($o['retailer_phone'] ?? '') ?>">
                     <i class="fa-solid fa-store text-[8px]"></i> <?= htmlspecialchars($o['retailer_name']) ?>
+                  </span>
+                <?php elseif ($o['status'] !== 'ready_sale' && in_array($o['status'], ['out_for_delivery', 'delivered']) && !empty($o['dsr_name'])): ?>
+                  <span class="block text-[10px] text-blue-600 font-bold mt-0.5">
+                    <i class="fa-solid fa-truck text-[8px]"></i> <?= htmlspecialchars($o['dsr_name']) ?>
                   </span>
                 <?php endif; ?>
               </td>
@@ -147,6 +152,13 @@ include __DIR__ . '/../includes/header.php';
             <?php if (empty($orders)): ?><tr><td colspan="12" class="text-center py-8 text-gray-400">No orders yet. <a href="<?= rootPath() ?>/manager/order_add.php" class="text-indigo-600">Add one</a></td></tr><?php endif; ?>
           </tbody>
         </table>
+        <!-- Pagination -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100" id="pagination-container" style="display: none;">
+          <div class="text-sm text-gray-500" id="pagination-info">
+            Showing <span class="font-semibold text-gray-700 text-xs" id="pagination-start">0</span> to <span class="font-semibold text-gray-700 text-xs" id="pagination-end">0</span> of <span class="font-semibold text-gray-700 text-xs" id="pagination-total">0</span> orders
+          </div>
+          <div class="flex items-center gap-1.5" id="pagination-buttons"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -154,12 +166,127 @@ include __DIR__ . '/../includes/header.php';
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
 <script>
+const PAGE_SIZE = 5;
+let currentPage = 1;
+
 function filterTable() {
+  const from = document.getElementById('f-from').value;
+  const to = document.getElementById('f-to').value;
+  const status = document.getElementById('f-status').value;
   const q = (document.getElementById('f-search').value || '').toLowerCase();
+
   document.querySelectorAll('#orders-table tbody tr').forEach(tr => {
-    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    if (tr.cells.length === 1 && tr.cells[0].colSpan === 12) return;
+
+    const rowDate = tr.dataset.date;
+    const rowStatus = tr.dataset.status;
+    const textContent = tr.textContent.toLowerCase();
+
+    const matchSearch = !q || textContent.includes(q);
+    const matchFrom = !from || rowDate >= from;
+    const matchTo = !to || rowDate <= to;
+    const matchStatus = !status || rowStatus === status;
+
+    if (matchSearch && matchFrom && matchTo && matchStatus) {
+      tr.dataset.match = "true";
+    } else {
+      tr.dataset.match = "false";
+    }
   });
+
+  currentPage = 1;
+  updatePagination();
 }
+
+function updatePagination() {
+  const trs = Array.from(document.querySelectorAll('#orders-table tbody tr')).filter(tr => {
+    return tr.cells.length !== 1 || tr.cells[0].colSpan !== 12;
+  });
+
+  const matchingRows = trs.filter(tr => tr.dataset.match !== "false");
+  const totalMatching = matchingRows.length;
+  const totalPages = Math.ceil(totalMatching / PAGE_SIZE) || 1;
+
+  if (currentPage < 1) currentPage = 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const endIdx = startIdx + PAGE_SIZE;
+
+  // Show/hide matching rows based on page
+  matchingRows.forEach((tr, index) => {
+    if (index >= startIdx && index < endIdx) {
+      tr.style.display = '';
+    } else {
+      tr.style.display = 'none';
+    }
+  });
+
+  // Hide non-matching rows
+  trs.forEach(tr => {
+    if (tr.dataset.match === "false") {
+      tr.style.display = 'none';
+    }
+  });
+
+  // Update info
+  const startEl = document.getElementById('pagination-start');
+  const endEl = document.getElementById('pagination-end');
+  const totalEl = document.getElementById('pagination-total');
+  
+  if (totalMatching > 0) {
+    startEl.textContent = startIdx + 1;
+    endEl.textContent = Math.min(endIdx, totalMatching);
+    totalEl.textContent = totalMatching;
+  } else {
+    startEl.textContent = 0;
+    endEl.textContent = 0;
+    totalEl.textContent = 0;
+  }
+
+  // Render buttons
+  const btnContainer = document.getElementById('pagination-buttons');
+  btnContainer.innerHTML = '';
+
+  if (totalPages <= 1) {
+    document.getElementById('pagination-container').style.display = 'none';
+    return;
+  }
+  document.getElementById('pagination-container').style.display = 'flex';
+
+  // Prev Button
+  const prevBtn = document.createElement('button');
+  prevBtn.className = `px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:pointer-events-none transition`;
+  prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left text-[10px]"></i>';
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.onclick = () => { currentPage--; updatePagination(); };
+  btnContainer.appendChild(prevBtn);
+
+  // Page Numbers
+  const maxButtons = 5;
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  if (endPage - startPage + 1 < maxButtons) {
+    startPage = Math.max(1, endPage - maxButtons + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = document.createElement('button');
+    pageBtn.className = `px-3 py-1.5 text-xs font-semibold rounded-lg border ${i === currentPage ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm' : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'} transition`;
+    pageBtn.textContent = i;
+    pageBtn.onclick = () => { currentPage = i; updatePagination(); };
+    btnContainer.appendChild(pageBtn);
+  }
+
+  // Next Button
+  const nextBtn = document.createElement('button');
+  nextBtn.className = `px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 disabled:opacity-40 disabled:pointer-events-none transition`;
+  nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right text-[10px]"></i>';
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.onclick = () => { currentPage++; updatePagination(); };
+  btnContainer.appendChild(nextBtn);
+}
+
 function clearFilters() {
   document.getElementById('f-from').value = '';
   document.getElementById('f-to').value = '';
@@ -167,6 +294,10 @@ function clearFilters() {
   document.getElementById('f-search').value = '';
   filterTable();
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  filterTable();
+});
 async function cancelOrder(id) {
   if (!confirmDelete('Cancel this order?')) return;
   const data = await api('<?= rootPath() ?>/api/orders.php?id=' + id, 'DELETE');

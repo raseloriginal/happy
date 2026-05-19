@@ -80,6 +80,8 @@ include __DIR__ . '/../includes/header.php';
     <form id="edit-form" class="space-y-3">
       <input type="hidden" id="edit-id" /><input type="hidden" id="edit-uid" />
       <div><label class="form-label">Full Name *</label><input id="edit-name" class="form-input" required /></div>
+      <div><label class="form-label">Email *</label><input id="edit-email" type="email" class="form-input" required /></div>
+      <div><label class="form-label">Password (leave blank to keep unchanged)</label><input id="edit-password" type="password" class="form-input" /></div>
       <div><label class="form-label">Phone</label><input id="edit-phone" class="form-input" /></div>
       <div><label class="form-label">Company *</label>
         <select id="edit-company" class="form-input" required>
@@ -117,6 +119,8 @@ function editSR(s) {
   document.getElementById('edit-id').value = s.id;
   document.getElementById('edit-uid').value = s.user_id;
   document.getElementById('edit-name').value = s.name;
+  document.getElementById('edit-email').value = s.email;
+  document.getElementById('edit-password').value = '';
   document.getElementById('edit-phone').value = s.phone;
   document.getElementById('edit-company').value = s.company_id;
   document.getElementById('edit-route').value = s.route_id || '';
@@ -129,6 +133,8 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
     id: document.getElementById('edit-id').value,
     user_id: document.getElementById('edit-uid').value,
     name: document.getElementById('edit-name').value,
+    email: document.getElementById('edit-email').value,
+    password: document.getElementById('edit-password').value,
     phone: document.getElementById('edit-phone').value,
     company_id: document.getElementById('edit-company').value,
     route_id: document.getElementById('edit-route').value || null

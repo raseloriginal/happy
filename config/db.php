@@ -2,7 +2,7 @@
 // config/db.php — PDO MySQL Connection
 
 // Environment Detection
-$is_localhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost','10.59.172.89', '127.0.0.1', '::1']) 
+$is_localhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost','10.146.105.89', '10.254.223.183', '127.0.0.1', '::1']) 
              || (php_sapi_name() === 'cli'); // Assume localhost if run from CLI for now, or refine if needed
 
 if ($is_localhost) {

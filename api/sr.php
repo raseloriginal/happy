@@ -28,9 +28,30 @@ switch ($method) {
 
     case 'PUT':
         $d = json_decode(file_get_contents('php://input'), true);
-        $pdo->prepare('UPDATE sr SET company_id=?, route_id=?, status=? WHERE id=?')->execute([$d['company_id'], $d['route_id'] ?? null, $d['status'] ?? 1, $d['id']]);
-        $pdo->prepare('UPDATE users SET name=?, phone=? WHERE id=?')->execute([$d['name'], $d['phone'] ?? '', $d['user_id']]);
-        echo json_encode(['success' => true, 'message' => 'SR updated']);
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare('UPDATE sr SET company_id=?, route_id=?, status=? WHERE id=?')->execute([$d['company_id'], $d['route_id'] ?? null, $d['status'] ?? 1, $d['id']]);
+            if (!empty($d['password'])) {
+                $hash = password_hash($d['password'], PASSWORD_DEFAULT);
+                $pdo->prepare('UPDATE users SET name=?, email=?, password=?, phone=? WHERE id=?')
+                    ->execute([$d['name'], $d['email'], $hash, $d['phone'] ?? '', $d['user_id']]);
+            } else {
+                $pdo->prepare('UPDATE users SET name=?, email=?, phone=? WHERE id=?')
+                    ->execute([$d['name'], $d['email'], $d['phone'] ?? '', $d['user_id']]);
+            }
+            $pdo->commit();
+            echo json_encode(['success' => true, 'message' => 'SR updated']);
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $msg = $e->getMessage();
+            if (strpos($msg, 'Duplicate entry') !== false) {
+                $msg = 'A user with this email already exists.';
+            }
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => $msg]);
+        }
         break;
 
     case 'DELETE':

@@ -50,9 +50,9 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
     }
 
     :root {
-      --excel-green: #107c41;
-      --excel-green-dark: #0a5c30;
-      --excel-green-light: #e2f0d9;
+      --excel-blue: #2563eb;
+      --excel-blue-dark: #1d4ed8;
+      --excel-blue-light: #dbeafe;
       --excel-border: #cbd5e1;
       --excel-row-num: #f3f2f1;
     }
@@ -127,28 +127,75 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
     /* Excel Active Tab Styling */
     .tab-active {
-      color: var(--excel-green) !important;
+      color: var(--excel-blue) !important;
       background-color: #ffffff;
-      border-top: 3px solid var(--excel-green);
+      border-top: 3px solid var(--excel-blue);
       margin-top: -3px;
       border-bottom: 1px solid transparent !important;
       z-index: 10;
+    }
+
+    /* --- GLOBAL SCALE UP FOR HIGHER READABILITY --- */
+    /* Scale up tiny font sizes */
+    .text-\[7px\] { font-size: 10px !important; }
+    .text-\[8px\] { font-size: 11px !important; }
+    .text-\[9px\] { font-size: 12px !important; }
+    .text-\[10px\] { font-size: 13px !important; }
+    .text-\[11px\] { font-size: 14px !important; }
+    .text-xs { font-size: 14px !important; }
+    .text-sm { font-size: 16px !important; }
+    
+    /* Scale tables cell padding and sizing */
+    .excel-table {
+      font-size: 13px !important;
+    }
+    .excel-table th {
+      padding: 10px 12px !important;
+    }
+    .excel-table td {
+      padding: 10px 12px !important;
+    }
+    .excel-row-num {
+      font-size: 11px !important;
+      width: 38px !important;
+    }
+
+    /* Scale general paddings of containers */
+    .p-2 { padding: 0.75rem !important; }
+    .p-3 { padding: 1rem !important; }
+    .p-4 { padding: 1.25rem !important; }
+    .py-1\.5 { padding-top: 0.6rem !important; padding-bottom: 0.6rem !important; }
+    .py-2 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+    .py-2\.5 { padding-top: 0.9rem !important; padding-bottom: 0.9rem !important; }
+    .py-3 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    .py-3\.5 { padding-top: 1.1rem !important; padding-bottom: 1.1rem !important; }
+    
+    /* Scale input fields */
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      padding-top: 0.6rem !important;
+      padding-bottom: 0.6rem !important;
+      font-size: 13px !important;
+    }
+    
+    /* Scale quick-action buttons and submit buttons */
+    .btn-bounce, button {
+      font-size: 13px !important;
     }
   </style>
 </head>
 <body class="h-full flex flex-col justify-between overflow-hidden">
 
   <!-- ================= EXCEL STYLE HEADER ================= -->
-  <header class="bg-[#107c41] text-white px-4 py-3 flex items-center justify-between z-40 shrink-0 border-b border-[#0a5c30]">
+  <header class="bg-[#2563eb] text-white px-4 py-3 flex items-center justify-between z-40 shrink-0 border-b border-[#1d4ed8]">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 bg-white text-[#107c41] flex items-center justify-center font-black text-base shadow-sm">
-        X
+      <div class=" rounded-lg overflow-hidden w-8 h-8 bg-white flex items-center justify-center shadow-sm p-1">
+        <img src="<?= rootPath() ?>/assets/img/logo/logo-icon-black.png" alt="Happy Bangladesh" class="w-full h-full object-contain" />
       </div>
       <div>
-        <h1 class="text-sm font-extrabold tracking-tight font-mono">DSR_SHEET.XLSX</h1>
+        <h1 class="text-sm font-extrabold tracking-tight font-mono">DSR PANEL</h1>
         <div class="flex items-center gap-1">
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-green-400"></span>
-          <span class="text-[9px] text-green-200 font-bold uppercase tracking-wider" id="header-subtitle">Mobile Grid Mode</span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+          <span class="text-[9px] text-blue-200 font-bold uppercase tracking-wider" id="header-subtitle">Mobile Grid Mode</span>
         </div>
       </div>
     </div>
@@ -156,8 +203,8 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
     <div class="flex items-center gap-2">
       <!-- Digital Clock -->
       <div class="text-right mr-1.5 hidden xs:block">
-        <div class="text-[10px] font-bold font-mono text-green-100" id="live-time">00:00:00 PM</div>
-        <div class="text-[8px] text-green-200 font-bold uppercase tracking-wider" id="live-date">May 18, 2026</div>
+        <div class="text-[10px] font-bold font-mono text-blue-100" id="live-time">00:00:00 PM</div>
+        <div class="text-[8px] text-blue-200 font-bold uppercase tracking-wider" id="live-date">May 18, 2026</div>
       </div>
       
       <button onclick="logout()" class="w-7 h-7 bg-red-800 text-red-100 flex items-center justify-center btn-bounce border border-red-700">
@@ -174,42 +221,41 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
          ========================================== -->
     <div id="tab-home" class="tab-pane space-y-4">
       
-      <!-- Formula Bar UI -->
-      <div class="bg-white border border-[#cbd5e1] flex items-center text-xs font-mono select-none">
-        <div class="bg-gray-100 px-3 py-1.5 border-r border-[#cbd5e1] text-gray-500 font-bold">fx</div>
-        <input type="text" readonly id="excel-formula-bar" value="=WELCOME_DSR_REPRESENTATIVE()" class="flex-1 bg-transparent px-3 py-1.5 focus:outline-none text-gray-700" />
-      </div>
-      
-      <!-- Greeting Sheet Block -->
-      <div class="bg-white border border-[#cbd5e1] p-4 space-y-2">
-        <div class="flex justify-between items-start border-b border-gray-200 pb-2">
-          <div>
-            <span class="text-[9px] text-[#107c41] font-mono font-bold">CELL_A1: GREETINGS</span>
-            <h2 class="text-lg font-black text-gray-800" id="user-greeting">Assalamu Alaikum!</h2>
-          </div>
-          <span class="bg-[#e2f0d9] text-[#107c41] text-[9px] font-bold px-2 py-0.5" id="user-subtext">Loading...</span>
+      <!-- Summary Cards Grid -->
+      <div class="grid grid-cols-3 gap-2">
+        <!-- Card 1: Delivery Ratio -->
+        <div class="bg-white border border-[#cbd5e1] p-2 text-center">
+          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">DELIVERY_RATIO</div>
+          <div class="text-[11px] xs:text-xs font-black text-blue-600 mt-1 font-mono" id="card-delivery-ratio">0.0%</div>
         </div>
-        <p class="text-xs text-gray-500 leading-relaxed">
-          Welcome to the **DSR Operations Ledger**. All numbers, attendance logs, and cash counts are processed dynamically as a live mobile-responsive Excel sheet.
-        </p>
+        <!-- Card 2: Current Van Value -->
+        <div class="bg-white border border-[#cbd5e1] p-2 text-center">
+          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">VAN_CARGO_VAL</div>
+          <div class="text-[11px] xs:text-xs font-black text-[#2563eb] mt-1 font-mono" id="card-van-value">৳0.00</div>
+        </div>
+        <!-- Card 3: Total Delivered -->
+        <div class="bg-white border border-[#cbd5e1] p-2 text-center">
+          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">TOTAL_DELIVERED</div>
+          <div class="text-[11px] xs:text-xs font-black text-emerald-600 mt-1 font-mono" id="card-total-delivered">৳0.00</div>
+        </div>
       </div>
 
       <!-- Attendance status sheet card -->
       <div class="bg-white border border-[#cbd5e1] p-4 space-y-3" id="attendance-card">
         <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
-          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calendar-check text-[#107c41] mr-1.5"></i>Attendance Verification</h3>
+          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calendar-check text-[#2563eb] mr-1.5"></i>Attendance Verification</h3>
           <span class="text-[9px] bg-red-100 text-red-700 font-bold px-2 py-0.5" id="att-badge">Absent</span>
         </div>
 
         <p class="text-xs text-gray-500" id="att-status-text">Checking attendance logs...</p>
 
         <!-- Attendance Checked In view -->
-        <div id="att-checked-in-view" class="hidden bg-[#e2f0d9] border border-[#a9d18e] p-3 flex items-center gap-3">
-          <div class="w-6 h-6 rounded-full bg-[#107c41] text-white flex items-center justify-center shrink-0 text-xs">
+        <div id="att-checked-in-view" class="hidden bg-[#dbeafe] border border-[#bfdbfe] p-3 flex items-center gap-3">
+          <div class="w-6 h-6 rounded-full bg-[#2563eb] text-white flex items-center justify-center shrink-0 text-xs">
             <i class="fa-solid fa-check"></i>
           </div>
           <div>
-            <div class="text-xs font-bold text-[#107c41]">Checked In Present</div>
+            <div class="text-xs font-bold text-[#2563eb]">Checked In Present</div>
             <div class="text-[10px] text-gray-600" id="att-checked-time">Checked-in at 10:30 AM</div>
           </div>
         </div>
@@ -228,7 +274,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
           <div class="flex gap-2">
             <!-- Camera QR scan trigger -->
-            <button onclick="openAttendanceScanner()" class="flex-1 bg-[#107c41] hover:bg-[#0a5c30] text-white font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 btn-bounce">
+            <button onclick="openAttendanceScanner()" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 btn-bounce">
               <i class="fa-solid fa-camera"></i> Scan Warehouse QR
             </button>
           </div>
@@ -240,13 +286,13 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
               <span class="text-[8px] bg-gray-100 text-gray-500 font-bold px-1.5 py-0.5 border border-gray-200">DEV MODE</span>
             </div>
             <div class="flex gap-2">
-              <select id="sim-warehouse-select" class="flex-1 bg-white border border-[#cbd5e1] text-xs text-gray-700 px-2 py-1.5 focus:outline-none focus:border-[#107c41]">
+              <select id="sim-warehouse-select" class="flex-1 bg-white border border-[#cbd5e1] text-xs text-gray-700 px-2 py-1.5 focus:outline-none focus:border-[#2563eb]">
                 <option value="">Choose Warehouse to Mock</option>
                 <?php foreach ($warehouses as $wh): ?>
                   <option value="<?= $wh['id'] ?>"><?= htmlspecialchars($wh['name']) ?></option>
                 <?php endforeach; ?>
               </select>
-              <button onclick="simulateCheckIn()" class="bg-white hover:bg-gray-50 border border-[#cbd5e1] text-[#107c41] font-bold text-xs px-3 btn-bounce">
+              <button onclick="simulateCheckIn()" class="bg-white hover:bg-gray-50 border border-[#cbd5e1] text-[#2563eb] font-bold text-xs px-3 btn-bounce">
                 Check-in
               </button>
             </div>
@@ -258,7 +304,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <div id="attendance-scanner-card" class="hidden bg-white border border-[#cbd5e1] p-4 space-y-3 shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-100 pb-2">
           <h4 class="font-bold text-xs text-gray-700 flex items-center gap-1.5 uppercase tracking-wide">
-            <i class="fa-solid fa-camera text-[#107c41] animate-pulse"></i> Camera Scanner
+            <i class="fa-solid fa-camera text-[#2563eb] animate-pulse"></i> Camera Scanner
           </h4>
           <button onclick="closeAttendanceScanner()" class="text-xs text-red-600 font-bold hover:underline"><i class="fa-solid fa-times"></i> Close</button>
         </div>
@@ -269,7 +315,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Active Dispatch Card -->
       <div class="bg-white border border-[#cbd5e1] p-4 space-y-3" id="dispatch-card">
         <div class="flex items-center justify-between pb-2 border-b border-gray-200">
-          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-truck text-[#107c41] mr-1.5"></i>Active Deliveries Load</h3>
+          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-truck text-[#2563eb] mr-1.5"></i>Active Deliveries Load</h3>
           <span class="bg-gray-100 text-gray-600 text-[9px] font-bold px-2 py-0.5" id="disp-badge">No Dispatch</span>
         </div>
 
@@ -326,60 +372,132 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           <!-- Quick Action Buttons -->
           <div class="flex gap-2">
             <button onclick="switchTab('van')" class="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2 px-3 flex items-center justify-center gap-1 border border-[#cbd5e1] btn-bounce">
-              <i class="fa-solid fa-list-check text-[#107c41]"></i> View Cargo Stock
+              <i class="fa-solid fa-list-check text-[#2563eb]"></i> View Cargo Stock
             </button>
-            <button onclick="switchTab('settlement')" class="flex-1 bg-[#107c41] hover:bg-[#0a5c30] text-white font-bold text-xs py-2 px-3 flex items-center justify-center gap-1 btn-bounce">
+            <button onclick="switchTab('settlement')" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs py-2 px-3 flex items-center justify-center gap-1 btn-bounce">
               <i class="fa-solid fa-money-bill-transfer"></i> Cash Settlement
             </button>
           </div>
         </div>
       </div>
+
+      <!-- Loaded Cargo Inventory Summary Table -->
+      <div class="bg-white border border-[#cbd5e1] overflow-hidden hidden" id="home-van-cargo-card">
+        <div class="px-4 py-2 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
+          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider"><i class="fa-solid fa-boxes-stacked text-[#2563eb] mr-1.5"></i>Current Van Cargo</span>
+          <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="home-van-cargo-count">0 items loaded</span>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="excel-table w-full">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="text-left pl-4">Loaded Product</th>
+                <th class="text-right">Qty Loaded</th>
+                <th class="text-right pr-4">Total Value</th>
+              </tr>
+            </thead>
+            <tbody id="home-van-cargo-list">
+              <!-- Grid rows rendered dynamically in JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
     <!-- ==========================================
          TAB 2: VAN STOCK (CARGO SPREADSHEET LEDGER)
          ========================================== -->
     <div id="tab-van" class="tab-pane hidden space-y-4">
-      
-      <!-- Formula Bar UI -->
-      <div class="bg-white border border-[#cbd5e1] flex items-center text-xs font-mono select-none">
-        <div class="bg-gray-100 px-3 py-1.5 border-r border-[#cbd5e1] text-gray-500 font-bold">fx</div>
-        <input type="text" readonly value="=ACTIVE_VAN_STOCKS_LEDGER()" class="flex-1 bg-transparent px-3 py-1.5 focus:outline-none text-gray-700" />
-      </div>
 
-      <!-- Search Input -->
-      <div class="relative">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-        <input type="text" id="van-search" placeholder="Search loaded products in sheet..." oninput="filterVanStock()" class="w-full bg-white border border-[#cbd5e1] py-2 pl-8 pr-4 text-xs focus:outline-none focus:border-[#107c41] text-gray-800" />
+      <!-- Controls: Date selector and Search -->
+      <div class="grid grid-cols-2 gap-2 bg-white border border-[#cbd5e1] p-3 shadow-sm rounded">
+        <div>
+          <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">A: Target Dispatch Date</label>
+          <div class="relative">
+            <i class="fa-solid fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#2563eb] text-xs"></i>
+            <input type="date" id="van-date-select" onchange="loadVanStock()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 font-bold font-mono rounded" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">B: Search Ledger Name</label>
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+            <input type="text" id="van-search" placeholder="Search product..." oninput="filterVanStock()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 rounded" />
+          </div>
+        </div>
       </div>
 
       <!-- Van Products Spreadsheet table -->
       <div class="bg-white border border-[#cbd5e1] overflow-hidden">
         <div class="px-4 py-2.5 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
           <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Sheet: Van Cargo Inventory</span>
-          <span class="text-[10px] font-mono text-[#107c41] font-bold" id="van-products-count">0 items loaded</span>
+          <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="van-products-count">0 items loaded</span>
         </div>
 
         <div class="overflow-x-auto w-full">
           <table class="excel-table w-full" id="van-stock-table">
             <thead>
               <tr class="bg-gray-100">
-                <th class="excel-row-num">Row</th>
-                <th>A: Loaded Product</th>
-                <th class="text-right">B: Out Qty</th>
-                <th class="text-right">C: Returns</th>
-                <th class="text-right">D: Net Sold</th>
-                <th class="text-right">E: Net Value</th>
+                <th class="text-left pl-4">Loaded Product</th>
+                <th class="text-right">Out Qty</th>
+                <th class="text-right">Returns</th>
+                <th class="text-right">Net Sold</th>
+                <th class="text-right pr-4">Net Value</th>
               </tr>
             </thead>
             <tbody id="van-products-list">
               <!-- Grid rows rendered dynamically in JS -->
               <tr>
-                <td class="excel-row-num">1</td>
-                <td colspan="5" class="text-center py-6 text-gray-400 italic">No products are currently loaded on your van.</td>
+                <td colspan="5" class="text-center py-6 text-gray-400 italic px-4">No products loaded on this date.</td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Dispatch Summary Report Card -->
+      <div class="bg-white border border-[#cbd5e1] overflow-hidden hidden" id="van-summary-card">
+        <div class="px-4 py-2.5 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
+          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Summary: Settlement & Expenses Ledger</span>
+          <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="summary-dispatch-id">#DISP-N/A</span>
+        </div>
+        <div class="p-4 grid grid-cols-2 gap-4">
+          <!-- Left Column Metrics -->
+          <div class="space-y-3">
+            <div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Gross Sales Value</div>
+              <div class="text-lg font-extrabold font-mono text-gray-700 mt-0.5" id="summary-gross-sales">৳0.00</div>
+            </div>
+            <div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Damage Amount</div>
+              <div class="text-lg font-extrabold font-mono text-red-500 mt-0.5" id="summary-damage">৳0.00</div>
+            </div>
+            <div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Approved Expenses</div>
+              <div class="text-lg font-extrabold font-mono text-orange-500 mt-0.5" id="summary-expenses">৳0.00</div>
+            </div>
+          </div>
+          <!-- Right Column Metrics -->
+          <div class="space-y-3">
+            <div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Expected Settlement</div>
+              <div class="text-lg font-extrabold font-mono text-blue-600 mt-0.5" id="summary-expected">৳0.00</div>
+            </div>
+            <div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Submitted Settlement</div>
+              <div class="text-lg font-extrabold font-mono text-green-600 mt-0.5" id="summary-submitted">৳0.00</div>
+            </div>
+            <div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Difference (Shortage/Surplus)</div>
+              <div class="text-lg font-extrabold font-mono mt-0.5" id="summary-difference">৳0.00</div>
+            </div>
+          </div>
+        </div>
+        <!-- Remarks Section -->
+        <div class="px-4 py-3 bg-gray-50 border-t border-[#cbd5e1]">
+          <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Settlement Notes / Remarks</div>
+          <div class="text-xs text-gray-600 italic font-mono" id="summary-remarks">No remarks provided.</div>
         </div>
       </div>
     </div>
@@ -388,18 +506,21 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
          TAB 3: CASH SETTLEMENT (SPREADSHEET SETTLEMENT CALCULATOR)
          ========================================== -->
     <div id="tab-settlement" class="tab-pane hidden space-y-4">
-      
-      <!-- Formula Bar UI -->
-      <div class="bg-white border border-[#cbd5e1] flex items-center text-xs font-mono select-none">
-        <div class="bg-gray-100 px-3 py-1.5 border-r border-[#cbd5e1] text-gray-500 font-bold">fx</div>
-        <input type="text" readonly value="=SUM(OUT_LOAD) - SUM(RETURNS) - SUM(DAMAGES)" class="flex-1 bg-transparent px-3 py-1.5 focus:outline-none text-gray-700" />
+
+      <!-- Settlement Date Selector -->
+      <div class="bg-white border border-[#cbd5e1] p-3 shadow-sm rounded">
+        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Target Settlement Date</label>
+        <div class="relative">
+          <i class="fa-solid fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#2563eb] text-xs"></i>
+          <input type="date" id="settlement-date-select" onchange="loadSettlementForDate()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 font-bold font-mono rounded" />
+        </div>
       </div>
 
       <!-- Settlement Spreadsheet Table -->
       <div class="bg-white border border-[#cbd5e1] p-4 space-y-3">
         <div class="pb-2 border-b border-gray-200 flex justify-between items-center mb-3">
-          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calculator text-[#107c41] mr-1.5"></i>Settlement Ledger Sheet</h3>
-          <span class="text-[9px] bg-[#e2f0d9] text-[#107c41] px-2 py-0.5 font-bold uppercase">Dispatch audit</span>
+          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calculator text-[#2563eb] mr-1.5"></i>Settlement Ledger Sheet</h3>
+          <span class="text-[9px] bg-[#dbeafe] text-[#2563eb] px-2 py-0.5 font-bold uppercase">Dispatch audit</span>
         </div>
 
         <!-- Excel Formula Table -->
@@ -407,35 +528,46 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           <table class="excel-table">
             <thead>
               <tr class="bg-gray-100">
-                <th class="excel-row-num">Row</th>
-                <th>Cell Formula Variable</th>
-                <th class="text-right">Audit Value</th>
+                <th class="text-left pl-4">Cell Formula Variable</th>
+                <th class="text-right pr-4">Audit Value</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="excel-row-num">1</td>
-                <td>A: Van Out Load Value</td>
-                <td class="text-right font-mono font-bold text-blue-600" id="formula-out">৳0.00</td>
+                <td class="pl-4">Van Out Load Value</td>
+                <td class="text-right font-mono font-bold text-blue-600 pr-4" id="formula-out">৳0.00</td>
               </tr>
               <tr>
-                <td class="excel-row-num">2</td>
-                <td>B: Less Returns Value</td>
-                <td class="text-right font-mono font-bold text-red-500" id="formula-return">- ৳0.00</td>
+                <td class="pl-4">Less Returns Value</td>
+                <td class="text-right font-mono font-bold text-red-500 pr-4" id="formula-return">- ৳0.00</td>
               </tr>
               <tr>
-                <td class="excel-row-num">3</td>
-                <td class="flex items-center gap-1.5">
-                  C: Deduct Damage Amount (৳)
+                <td class="pl-4 flex items-center gap-1.5">
+                  Deduct Damage Amount (৳)
                 </td>
-                <td class="text-right p-1.5">
-                  <input type="number" id="input-damage" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#107c41] text-red-600 font-bold font-mono" placeholder="0.00" />
+                <td class="text-right p-1.5 pr-4">
+                  <input type="number" id="input-damage" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-red-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="0.00" />
                 </td>
               </tr>
-              <tr class="bg-emerald-50">
-                <td class="excel-row-num">4</td>
-                <td class="font-bold text-emerald-800">D: expected Net Payable submit (=A-B-C)</td>
-                <td class="text-right font-mono font-bold text-[#107c41] text-xs" id="formula-expected">৳0.00</td>
+              <tr>
+                <td class="pl-4 flex items-center gap-1.5">
+                  Deduct Expense Amount (৳)
+                </td>
+                <td class="text-right p-1.5 pr-4">
+                  <input type="number" id="input-expense" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-orange-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="0.00" />
+                </td>
+              </tr>
+              <tr>
+                <td class="pl-4 flex items-center gap-1.5">
+                  Add Commission Amount (৳)
+                </td>
+                <td class="text-right p-1.5 pr-4">
+                  <input type="number" id="input-commission" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-emerald-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="0.00" />
+                </td>
+              </tr>
+              <tr class="bg-blue-50">
+                <td class="font-bold text-blue-800 pl-4">Expected Net Payable Submit</td>
+                <td class="text-right font-mono font-bold text-[#2563eb] text-xs pr-4" id="formula-expected">৳0.00</td>
               </tr>
             </tbody>
           </table>
@@ -446,7 +578,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <div class="bg-white border border-[#cbd5e1] overflow-hidden">
         <div class="px-4 py-2 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
           <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Sheet: Bangladeshi Banknote Counter</span>
-          <span class="text-[9px] text-[#107c41] font-mono font-bold uppercase tracking-widest">BDT Counting</span>
+          <span class="text-[9px] text-[#2563eb] font-mono font-bold uppercase tracking-widest">BDT Counting</span>
         </div>
 
         <div class="overflow-x-auto w-full">
@@ -454,9 +586,9 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
             <thead>
               <tr class="bg-gray-100">
                 <th class="excel-row-num">Row</th>
-                <th>A: Banknote Denomination</th>
-                <th class="text-center" style="width: 140px;">B: Quantities Counted (টি)</th>
-                <th class="text-right" style="width: 110px;">C: Subtotal (৳)</th>
+                <th class="text-left pl-4">Banknote Denomination</th>
+                <th class="text-center" style="width: 140px;">Quantities Counted (টি)</th>
+                <th class="text-right pr-4" style="width: 110px;">Subtotal (৳)</th>
               </tr>
             </thead>
             <tbody id="banknotes-grid-table">
@@ -474,26 +606,22 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           <table class="excel-table">
             <thead>
               <tr class="bg-gray-100">
-                <th class="excel-row-num">Row</th>
-                <th>Audit Check Matrix</th>
-                <th class="text-right">Value (৳)</th>
+                <th class="text-left pl-4">Audit Check Matrix</th>
+                <th class="text-right pr-4">Value (৳)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="excel-row-num">1</td>
-                <td>Total Expected Submission Amount (৳)</td>
-                <td class="text-right font-mono font-bold text-gray-600" id="summary-expected">৳0.00</td>
+                <td class="pl-4">Total Expected Submission Amount (৳)</td>
+                <td class="text-right font-mono font-bold text-gray-600 pr-4" id="audit-summary-expected">৳0.00</td>
               </tr>
               <tr>
-                <td class="excel-row-num">2</td>
-                <td class="font-bold text-gray-700">Total Cash Counted (৳)</td>
-                <td class="text-right font-mono font-bold text-[#107c41] text-xs" id="counted-total">৳0.00</td>
+                <td class="font-bold text-gray-700 pl-4">Total Cash Counted (৳)</td>
+                <td class="text-right font-mono font-bold text-[#2563eb] text-xs pr-4" id="counted-total">৳0.00</td>
               </tr>
               <tr class="bg-gray-50">
-                <td class="excel-row-num">3</td>
-                <td class="font-bold text-gray-700">Discrepancy Status</td>
-                <td class="text-right p-1" id="discrepancy-badge-container">
+                <td class="font-bold text-gray-700 pl-4">Discrepancy Status</td>
+                <td class="text-right p-1 pr-4" id="discrepancy-badge-container">
                   <span class="bg-gray-200 text-gray-700 text-[10px] font-black px-2 py-0.5">Empty Counter</span>
                 </td>
               </tr>
@@ -504,11 +632,11 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         <!-- Remarks -->
         <div>
           <label class="block text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Remarks / Settlement Notes</label>
-          <textarea id="settlement-remarks" placeholder="Enter remarks about discrepancies or notes for the manager..." rows="2" class="w-full bg-white border border-[#cbd5e1] p-2 text-xs focus:outline-none focus:border-[#107c41] text-gray-700"></textarea>
+          <textarea id="settlement-remarks" placeholder="Enter remarks about discrepancies or notes for the manager..." rows="2" class="w-full bg-white border border-[#cbd5e1] p-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"></textarea>
         </div>
 
         <!-- Submit Button -->
-        <button onclick="submitCashSettlement()" id="submit-settle-btn" class="w-full bg-[#107c41] hover:bg-[#0a5c30] text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 btn-bounce">
+        <button onclick="submitCashSettlement()" id="submit-settle-btn" class="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 btn-bounce">
           <i class="fa-solid fa-circle-check"></i> Submit Cash Settlement Report
         </button>
       </div>
@@ -545,26 +673,35 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
     // Currency Notes Data Matrix
     const currencyNotes = [
-      { key: '1000', label: '১০০০ ৳ নোট', val: 1000 },
-      { key: '500', label: '৫০০ ৳ নোট', val: 500 },
-      { key: '200', label: '২০০ ৳ নোট', val: 200 },
-      { key: '100', label: '১০০ ৳ নোট', val: 100 },
-      { key: '50', label: '৫০ ৳ নোট', val: 50 },
-      { key: '20', label: '২০ ৳ নোট', val: 20 },
-      { key: '10', label: '১০ ৳ নোট', val: 10 },
-      { key: '5', label: '৫ ৳ নোট', val: 5 },
-      { key: '2', label: '২ ৳ নোট', val: 2 },
-      { key: '1', label: '১ ৳ নোট', val: 1 }
+      { key: '1000', label: '১০০০ ৳ নোট', val: 1000, img: '1000tk.jpg' },
+      { key: '500', label: '৫০০ ৳ নোট', val: 500, img: '500tk.jpg' },
+      { key: '200', label: '২০০ ৳ নোট', val: 200, img: '200tk.png' },
+      { key: '100', label: '১০০ ৳ নোট', val: 100, img: '100tk.jpg' },
+      { key: '50', label: '৫০ ৳ নোট', val: 50, img: '50tk.jpg' },
+      { key: '20', label: '২০ ৳ নোট', val: 20, img: '20tk.jpg' },
+      { key: '10', label: '১০ ৳ নোট', val: 10, img: '10tk.jpg' }
     ];
 
     // Banknote quantity state holder
-    let noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0, '5':0, '2':0, '1':0 };
+    let noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
 
     // Initialize SPA
     window.addEventListener('DOMContentLoaded', () => {
       // Setup Real-time Clock
       setInterval(updateClock, 1000);
       updateClock();
+
+      // Setup default date picker to local ISO date (today)
+      const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
+      const dateSelect = document.getElementById('van-date-select');
+      if (dateSelect) {
+        dateSelect.value = localISOTime;
+      }
+      const settleDateSelect = document.getElementById('settlement-date-select');
+      if (settleDateSelect) {
+        settleDateSelect.value = localISOTime;
+      }
 
       // Check URL parameters for tab redirects (support legacy queries)
       const urlParams = new URLSearchParams(window.location.search);
@@ -576,8 +713,23 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       // Generate visual Banknote Grid
       renderBanknotes();
 
-      // Fetch dashboard data
-      loadDashboard();
+      // Fetch initial data based on active tab
+      if (currentTab === 'van') {
+        document.getElementById('nav-home').classList.remove('tab-active');
+        document.getElementById('tab-home').classList.add('hidden');
+        document.getElementById('nav-van').classList.add('tab-active');
+        document.getElementById('tab-van').classList.remove('hidden');
+        loadVanStock();
+      } else if (currentTab === 'settlement') {
+        document.getElementById('nav-home').classList.remove('tab-active');
+        document.getElementById('tab-home').classList.add('hidden');
+        document.getElementById('nav-settlement').classList.add('tab-active');
+        document.getElementById('tab-settlement').classList.remove('hidden');
+        const dVal = document.getElementById('settlement-date-select').value;
+        loadDashboard(dVal).then(() => calcSettlementExpected());
+      } else {
+        loadDashboard();
+      }
     });
 
     // Clock and Date Formatter
@@ -614,7 +766,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       const toast = document.createElement('div');
       
       const theme = {
-        success: 'bg-[#e2f0d9] border-[#107c41] text-[#107c41]',
+        success: 'bg-[#dbeafe] border-[#2563eb] text-[#2563eb]',
         error: 'bg-red-50 border-red-500 text-red-800',
         warning: 'bg-amber-50 border-amber-500 text-amber-800',
         info: 'bg-blue-50 border-blue-500 text-blue-800'
@@ -660,17 +812,13 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
       currentTab = tabId;
 
-      // Update Formula Bar text
-      const formulaBar = document.getElementById('excel-formula-bar');
       if (tabId === 'home') {
-        formulaBar.value = "=WELCOME_DSR_REPRESENTATIVE()";
         loadDashboard();
       } else if (tabId === 'van') {
-        formulaBar.value = "=ACTIVE_VAN_STOCKS_LEDGER()";
         loadVanStock();
       } else if (tabId === 'settlement') {
-        formulaBar.value = "=SUM(OUT_LOAD) - SUM(RETURNS) - SUM(DAMAGES)";
-        loadDashboard().then(() => calcSettlementExpected());
+        const dateVal = document.getElementById('settlement-date-select').value;
+        loadDashboard(dateVal).then(() => calcSettlementExpected());
       }
     }
 
@@ -679,21 +827,49 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
     // ==========================================
 
     // Fetch Dashboard Data
-    async function loadDashboard() {
-      const data = await apiCall(API_URL + '?action=dashboard');
+    async function loadDashboard(dateVal = '') {
+      const url = API_URL + '?action=dashboard' + (dateVal ? '&date=' + dateVal : '');
+      const data = await apiCall(url);
       if (data.success) {
         dashboardData = data;
-        
-        // Write profile details
-        document.getElementById('user-greeting').textContent = `Assalamu Alaikum, ${data.profile.name}!`;
-        document.getElementById('user-subtext').textContent = `Warehouse: ${data.profile.warehouse_name}`;
+
+        // Write Summary Cards
+        if (data.stats) {
+          document.getElementById('card-delivery-ratio').textContent = `${data.stats.delivery_ratio.toFixed(1)}%`;
+          document.getElementById('card-van-value').textContent = `৳${data.stats.current_van_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+          document.getElementById('card-total-delivered').textContent = `৳${data.stats.total_delivered_all_time.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        }
+
+        // Render Home Van Cargo Table
+        const homeCargoCard = document.getElementById('home-van-cargo-card');
+        const homeCargoList = document.getElementById('home-van-cargo-list');
+        const homeCargoCount = document.getElementById('home-van-cargo-count');
+
+        if (data.loaded_products && data.loaded_products.length > 0) {
+          homeCargoCard.classList.remove('hidden');
+          homeCargoCount.textContent = `${data.loaded_products.length} item${data.loaded_products.length !== 1 ? 's' : ''} loaded`;
+          
+          homeCargoList.innerHTML = '';
+          data.loaded_products.forEach(p => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            row.innerHTML = `
+              <td class="font-bold text-gray-700 pl-4">${p.product_name}</td>
+              <td class="text-right font-mono">${p.qty_formatted} <span class="text-[9px] text-gray-400 font-normal">(${p.qty_pieces} pcs)</span></td>
+              <td class="text-right font-mono font-bold text-[#2563eb] pr-4">৳${p.total_value.toFixed(2)}</td>
+            `;
+            homeCargoList.appendChild(row);
+          });
+        } else {
+          homeCargoCard.classList.add('hidden');
+        }
 
         // Write attendance card state
         const attBadge = document.getElementById('att-badge');
         const attStatusText = document.getElementById('att-status-text');
 
         if (data.attendance.checked_in) {
-          attBadge.className = 'bg-[#e2f0d9] text-[#107c41] text-[9px] font-bold px-2 py-0.5';
+          attBadge.className = 'bg-[#dbeafe] text-[#2563eb] text-[9px] font-bold px-2 py-0.5';
           attBadge.textContent = 'Present';
           attStatusText.textContent = `Attendance checked-in at ${data.attendance.time} today.`;
           
@@ -718,7 +894,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         if (data.active_dispatch) {
           const ad = data.active_dispatch;
           
-          dispBadge.className = 'bg-green-100 text-green-800 text-[9px] font-bold px-2 py-0.5';
+          dispBadge.className = 'bg-blue-100 text-blue-800 text-[9px] font-bold px-2 py-0.5';
           
           if (ad.status === 'loaded') {
             dispBadge.textContent = 'ON DELIVERIES';
@@ -744,14 +920,43 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
           // Pre-populate damages if they already submitted settlement
           if (ad.settlement) {
-            document.getElementById('input-damage').value = ad.settlement.damage_amount;
-            document.getElementById('settlement-remarks').value = ad.settlement.notes;
+            document.getElementById('input-damage').value = ad.settlement.damage_amount || 0;
+            document.getElementById('input-expense').value = ad.settlement.expense_amount || 0;
+            document.getElementById('input-commission').value = ad.settlement.commission_amount || 0;
+            document.getElementById('settlement-remarks').value = ad.settlement.notes || '';
 
             // Load quantities from database notes counter
             if (ad.settlement.notes_details) {
               noteQuantities = { ...noteQuantities, ...ad.settlement.notes_details };
               // Rerender banknote counters to match updated quantities
               renderBanknotes();
+            }
+          } else {
+            document.getElementById('input-damage').value = 0;
+            document.getElementById('input-expense').value = 0;
+            document.getElementById('input-commission').value = 0;
+            document.getElementById('settlement-remarks').value = '';
+            noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
+            renderBanknotes();
+          }
+
+          // Disable/Enable fields based on whether the settlement is approved
+          const isApproved = ad.status === 'settled' || (ad.settlement && ad.settlement.status === 'approved');
+          document.getElementById('input-damage').disabled = isApproved;
+          document.getElementById('input-expense').disabled = isApproved;
+          document.getElementById('input-commission').disabled = isApproved;
+          document.getElementById('settlement-remarks').disabled = isApproved;
+
+          const submitBtn = document.getElementById('submit-settle-btn');
+          if (submitBtn) {
+            if (isApproved) {
+              submitBtn.disabled = true;
+              submitBtn.innerHTML = '<i class="fa-solid fa-lock text-sm"></i> Settlement Approved & Closed';
+              submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
+            } else {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submit Cash Settlement Report';
+              submitBtn.className = 'w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 btn-bounce';
             }
           }
 
@@ -766,22 +971,44 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           // Clear formula
           document.getElementById('formula-out').textContent = '৳0.00';
           document.getElementById('formula-return').textContent = '- ৳0.00';
+          document.getElementById('input-damage').value = 0;
+          document.getElementById('input-expense').value = 0;
+          document.getElementById('input-commission').value = 0;
+          document.getElementById('settlement-remarks').value = '';
+          noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
+          renderBanknotes();
+
+          // Disable inputs and submit button as there is no active dispatch
+          document.getElementById('input-damage').disabled = true;
+          document.getElementById('input-expense').disabled = true;
+          document.getElementById('input-commission').disabled = true;
+          document.getElementById('settlement-remarks').disabled = true;
+
+          const submitBtn = document.getElementById('submit-settle-btn');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> No Active Dispatch to Settle';
+            submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
+          }
         }
       }
     }
 
     // Fetch and Render Van Stock List
+    // Fetch and Render Van Stock List
     async function loadVanStock() {
-      const data = await apiCall(API_URL + '?action=van_stock');
+      const dateVal = document.getElementById('van-date-select').value;
+      const url = API_URL + '?action=van_stock' + (dateVal ? '&date=' + dateVal : '');
+      const data = await apiCall(url);
       const container = document.getElementById('van-products-list');
       
       if (!data.success) {
         container.innerHTML = `
           <tr>
-            <td class="excel-row-num">1</td>
-            <td colspan="5" class="text-center py-6 text-red-500 italic">Failed to load cargo inventory ledger</td>
+            <td colspan="5" class="text-center py-6 text-red-500 italic px-4">Failed to load cargo inventory ledger</td>
           </tr>
         `;
+        document.getElementById('van-summary-card').classList.add('hidden');
         return;
       }
 
@@ -792,14 +1019,65 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       if (!data.products || data.products.length === 0) {
         container.innerHTML = `
           <tr>
-            <td class="excel-row-num">1</td>
-            <td colspan="5" class="text-center py-6 text-gray-400 italic">No products are currently loaded on your van.</td>
+            <td colspan="5" class="text-center py-6 text-gray-400 italic px-4">No products loaded on this date.</td>
           </tr>
         `;
-        return;
+      } else {
+        renderVanStockRows(data.products);
       }
 
-      renderVanStockRows(data.products);
+      // Render Summary Report
+      const summaryCard = document.getElementById('van-summary-card');
+      if (data.dispatch_id) {
+        summaryCard.classList.remove('hidden');
+        document.getElementById('summary-dispatch-id').textContent = `#DISP-${String(data.dispatch_id).padStart(4, '0')}`;
+        
+        let grossSales = 0;
+        if (data.products) {
+          data.products.forEach(p => {
+            grossSales += p.sold.value;
+          });
+        }
+        
+        document.getElementById('summary-gross-sales').textContent = `৳${grossSales.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        
+        if (data.settlement) {
+          const dmg = parseFloat(data.settlement.damage_amount) || 0;
+          const exp = parseFloat(data.settlement.expense_amount) || 0;
+          const expected = parseFloat(data.settlement.amount_expected) || 0;
+          const submitted = parseFloat(data.settlement.amount_submitted) || 0;
+          const diff = parseFloat(data.settlement.difference) || 0;
+          const remarks = data.settlement.notes || 'No remarks provided.';
+
+          document.getElementById('summary-damage').textContent = `৳${dmg.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+          document.getElementById('summary-expenses').textContent = `৳${exp.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+          document.getElementById('summary-expected').textContent = `৳${expected.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+          document.getElementById('summary-submitted').textContent = `৳${submitted.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+          
+          const diffEl = document.getElementById('summary-difference');
+          diffEl.textContent = `৳${diff.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+          if (diff < 0) {
+            diffEl.className = 'text-lg font-extrabold font-mono text-red-500 mt-0.5';
+          } else if (diff > 0) {
+            diffEl.className = 'text-lg font-extrabold font-mono text-blue-600 mt-0.5';
+          } else {
+            diffEl.className = 'text-lg font-extrabold font-mono text-green-600 mt-0.5';
+          }
+          
+          document.getElementById('summary-remarks').textContent = remarks;
+        } else {
+          // No settlement submitted yet
+          document.getElementById('summary-damage').textContent = '৳0.00';
+          document.getElementById('summary-expenses').textContent = '৳0.00';
+          document.getElementById('summary-expected').textContent = '৳0.00';
+          document.getElementById('summary-submitted').textContent = '৳0.00';
+          document.getElementById('summary-difference').textContent = '৳0.00';
+          document.getElementById('summary-difference').className = 'text-lg font-extrabold font-mono text-gray-500 mt-0.5';
+          document.getElementById('summary-remarks').textContent = 'Settlement has not been submitted/generated for this dispatch yet.';
+        }
+      } else {
+        summaryCard.classList.add('hidden');
+      }
     }
 
     // Render Van Stock Rows DOM as Excel Spreadsheet Table rows
@@ -807,22 +1085,20 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       const container = document.getElementById('van-products-list');
       container.innerHTML = '';
 
-      let idx = 1;
       products.forEach(p => {
         const row = document.createElement('tr');
         row.className = 'van-product-row hover:bg-gray-50';
         row.dataset.name = p.product_name.toLowerCase();
         
         row.innerHTML = `
-          <td class="excel-row-num">${idx++}</td>
-          <td class="font-bold text-gray-700">
+          <td class="font-bold text-gray-700 pl-4">
             ${p.product_name}
             <span class="block text-[9px] text-gray-400 font-normal mt-0.5">৳${p.selling_price.toFixed(0)}/pc (${p.pieces_per_box} pcs/box)</span>
           </td>
           <td class="text-right font-mono">${p.loaded.formatted} <span class="text-[9px] text-gray-400 font-normal">(${p.loaded.pieces} pcs)</span></td>
           <td class="text-right font-mono text-red-500">${p.returned.formatted} <span class="text-[9px] text-red-400 font-normal">(${p.returned.pieces} pcs)</span></td>
-          <td class="text-right font-mono text-green-700 font-bold">${p.sold.formatted} <span class="text-[9px] text-green-600 font-normal">(${p.sold.pieces} pcs)</span></td>
-          <td class="text-right font-mono font-bold text-[#107c41] bg-emerald-50/20">৳${p.sold.value.toFixed(2)}</td>
+          <td class="text-right font-mono text-blue-700 font-bold">${p.sold.formatted} <span class="text-[9px] text-blue-600 font-normal">(${p.sold.pieces} pcs)</span></td>
+          <td class="text-right font-mono font-bold text-[#2563eb] bg-blue-50/20 pr-4">৳${p.sold.value.toFixed(2)}</td>
         `;
         container.appendChild(row);
       });
@@ -842,9 +1118,66 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       });
     }
 
+    // Load Settlement data dynamically for a selected date
+    async function loadSettlementForDate() {
+      const dateVal = document.getElementById('settlement-date-select').value;
+      await loadDashboard(dateVal);
+      calcSettlementExpected();
+    }
+
     // ==========================================
     // ATTENDANCE QR CODE SCANNING FLOW
     // ==========================================
+
+    // Helper to get current location coordinates (lat, lng) with IP fallback
+    function getCurrentLocation() {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          console.warn("Geolocation not supported. Trying IP fallback...");
+          fetchIPLocation().then(resolve);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          (error) => {
+            console.warn("Geolocation error:", error.message, ". Trying IP fallback...");
+            fetchIPLocation().then(resolve);
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      });
+    }
+
+    async function fetchIPLocation() {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.latitude && data.longitude) {
+            return { latitude: data.latitude, longitude: data.longitude };
+          }
+        }
+      } catch (e) {
+        console.warn("IP geolocation fallback 1 failed:", e);
+      }
+      try {
+        const res = await fetch('https://ip-api.com/json/');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.lat && data.lon) {
+            return { latitude: data.lat, longitude: data.lon };
+          }
+        }
+      } catch (e) {
+        console.warn("IP geolocation fallback 2 failed:", e);
+      }
+      return { latitude: null, longitude: null };
+    }
 
     // Open Attendance Scanner
     function openAttendanceScanner() {
@@ -858,11 +1191,17 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 220, height: 220 } },
         async (decodedText) => {
-          showToast('QR Code Read Successful.', 'info');
+          showToast('QR Code Read Successful. Fetching location...', 'info');
           closeAttendanceScanner();
 
+          const coords = await getCurrentLocation();
+
           // Submit check-in
-          const res = await apiCall(API_URL + '?action=mark_attendance', 'POST', { qr_code: decodedText });
+          const res = await apiCall(API_URL + '?action=mark_attendance', 'POST', { 
+            qr_code: decodedText,
+            latitude: coords.latitude,
+            longitude: coords.longitude
+          });
           if (res.success) {
             showToast(res.message, 'success');
             loadDashboard();
@@ -897,8 +1236,15 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         showToast('Select a warehouse to mock check-in', 'warning');
         return;
       }
+
+      showToast('Fetching location...', 'info');
+      const coords = await getCurrentLocation();
       
-      const res = await apiCall(API_URL + '?action=mark_attendance', 'POST', { qr_code: `happy_warehouse_${val}` });
+      const res = await apiCall(API_URL + '?action=mark_attendance', 'POST', { 
+        qr_code: `happy_warehouse_${val}`,
+        latitude: coords.latitude,
+        longitude: coords.longitude
+      });
       if (res.success) {
         showToast(res.message, 'success');
         loadDashboard();
@@ -916,6 +1262,10 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       const container = document.getElementById('banknotes-grid-table');
       container.innerHTML = '';
 
+      const isEditable = dashboardData && dashboardData.active_dispatch && 
+                         dashboardData.active_dispatch.status !== 'settled' && 
+                         !(dashboardData.active_dispatch.settlement && dashboardData.active_dispatch.settlement.status === 'approved');
+
       let idx = 1;
       currencyNotes.forEach(n => {
         const row = document.createElement('tr');
@@ -924,19 +1274,32 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         row.innerHTML = `
           <td class="excel-row-num">${idx++}</td>
           <td class="font-bold text-gray-700">
-            ${n.label}
-            <span class="block text-[9px] text-gray-400 font-mono mt-0.5">Denomination: ৳${n.val}</span>
+            <div class="flex items-center gap-3 py-1.5">
+              ${n.img ? `
+                <div class="w-20 h-12 bg-gray-100 border border-gray-300 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                  <img src="<?= rootPath() ?>/assets/img/extra/${n.img}" alt="${n.label}" class="w-full h-full object-cover" />
+                </div>
+              ` : `
+                <div class="w-20 h-12 bg-gray-50 border border-dashed border-gray-200 overflow-hidden shrink-0 flex items-center justify-center text-[10px] text-gray-400 font-mono font-bold">
+                  NO_IMG
+                </div>
+              `}
+              <div>
+                <div class="text-[13px] text-gray-800 font-extrabold leading-tight">${n.label}</div>
+                <div class="text-[10px] text-gray-400 font-mono mt-0.5">Denomination: ৳${n.val}</div>
+              </div>
+            </div>
           </td>
           
           <td class="text-center p-1">
             <div class="inline-flex items-center border border-[#cbd5e1] bg-white">
-              <button type="button" onclick="adjustNote('${n.key}', -1)" class="w-7 h-7 hover:bg-gray-100 text-gray-600 font-bold text-xs flex items-center justify-center shrink-0 border-r border-[#cbd5e1] btn-bounce">-</button>
-              <input type="number" id="note-input-${n.key}" value="${noteQuantities[n.key] || 0}" min="0" oninput="setNoteDirect('${n.key}', this.value)" class="w-12 bg-transparent text-center font-bold font-mono text-xs text-gray-800 outline-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-              <button type="button" onclick="adjustNote('${n.key}', 1)" class="w-7 h-7 hover:bg-gray-100 text-gray-600 font-bold text-xs flex items-center justify-center shrink-0 border-l border-[#cbd5e1] btn-bounce">+</button>
+              <button type="button" onclick="adjustNote('${n.key}', -1)" ${isEditable ? '' : 'disabled'} class="w-9 h-9 hover:bg-gray-100 text-gray-600 font-bold text-sm flex items-center justify-center shrink-0 border-r border-[#cbd5e1] btn-bounce disabled:text-gray-300 disabled:cursor-not-allowed disabled:bg-gray-50">-</button>
+              <input type="number" id="note-input-${n.key}" value="${noteQuantities[n.key] || 0}" min="0" oninput="setNoteDirect('${n.key}', this.value)" ${isEditable ? '' : 'disabled'} class="w-14 bg-transparent text-center font-bold font-mono text-sm text-gray-800 outline-none focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-50" />
+              <button type="button" onclick="adjustNote('${n.key}', 1)" ${isEditable ? '' : 'disabled'} class="w-9 h-9 hover:bg-gray-100 text-gray-600 font-bold text-sm flex items-center justify-center shrink-0 border-l border-[#cbd5e1] btn-bounce disabled:text-gray-300 disabled:cursor-not-allowed disabled:bg-gray-50">+</button>
             </div>
           </td>
           
-          <td class="text-right font-mono font-bold text-indigo-600 text-xs bg-indigo-50/10" id="note-sub-${n.key}">৳0.00</td>
+          <td class="text-right font-mono font-bold text-indigo-600 text-sm bg-indigo-50/10" id="note-sub-${n.key}">৳0.00</td>
         `;
         container.appendChild(row);
         
@@ -978,17 +1341,18 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
       const ad = dashboardData.active_dispatch;
       const damage = parseFloat(document.getElementById('input-damage').value) || 0;
-      const expense = 0.00; // DSR Expenses "spand area" fully removed!
+      const expense = parseFloat(document.getElementById('input-expense').value) || 0;
+      const commission = parseFloat(document.getElementById('input-commission').value) || 0;
 
-      // Expected Submissions Formula: Out - Return - Damage
+      // Expected Submissions Formula: Out - Return - Damage - Expense + Commission
       const out_val = parseFloat(ad.out_value) || 0;
       const return_val = parseFloat(ad.return_value) || 0;
       
-      const expectedSubmit = out_val - return_val - damage - expense;
+      const expectedSubmit = out_val - return_val - damage - expense + commission;
       
       // Render expected submit
       document.getElementById('formula-expected').textContent = `৳${expectedSubmit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-      document.getElementById('summary-expected').textContent = `৳${expectedSubmit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+      document.getElementById('audit-summary-expected').textContent = `৳${expectedSubmit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
       // Calculate total notes counted cash sum
       let totalCounted = 0;
@@ -1010,7 +1374,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         `;
       } else if (Math.abs(diff) < 0.01) {
         badgeContainer.innerHTML = `
-          <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5">Balanced</span>
+          <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5">Balanced</span>
         `;
       } else if (diff < 0) {
         badgeContainer.innerHTML = `
@@ -1032,7 +1396,8 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
       const active_dispatch_id = dashboardData.active_dispatch.id;
       const damage = parseFloat(document.getElementById('input-damage').value) || 0;
-      const expense = 0.00; // DSR Expenses "spand area" fully removed!
+      const expense = parseFloat(document.getElementById('input-expense').value) || 0;
+      const commission = parseFloat(document.getElementById('input-commission').value) || 0;
 
       // Calculate total notes counted sum
       let totalCounted = 0;
@@ -1056,6 +1421,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         dispatch_id: active_dispatch_id,
         damage_amount: damage,
         expense_amount: expense,
+        commission_amount: commission,
         amount_submitted: totalCounted,
         notes_details: noteQuantities,
         notes_text: remarks

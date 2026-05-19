@@ -67,6 +67,8 @@ include __DIR__ . '/../includes/header.php';
     <form id="edit-form" class="space-y-3">
       <input type="hidden" id="edit-id" /><input type="hidden" id="edit-uid" />
       <div><label class="form-label">Full Name *</label><input id="edit-name" class="form-input" required /></div>
+      <div><label class="form-label">Email *</label><input id="edit-email" type="email" class="form-input" required /></div>
+      <div><label class="form-label">Password (leave blank to keep unchanged)</label><input id="edit-password" type="password" class="form-input" /></div>
       <div><label class="form-label">Phone</label><input id="edit-phone" class="form-input" /></div>
       <div><label class="form-label">Warehouse *</label>
         <select id="edit-warehouse" class="form-input" required>
@@ -92,14 +94,18 @@ document.getElementById('add-form').addEventListener('submit', async function(e)
 });
 function editDSR(d) {
   document.getElementById('edit-id').value = d.id; document.getElementById('edit-uid').value = d.user_id;
-  document.getElementById('edit-name').value = d.name; document.getElementById('edit-phone').value = d.phone;
+  document.getElementById('edit-name').value = d.name;
+  document.getElementById('edit-email').value = d.email;
+  document.getElementById('edit-password').value = '';
+  document.getElementById('edit-phone').value = d.phone;
   document.getElementById('edit-warehouse').value = d.warehouse_id; openModal('edit-modal');
 }
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const data = await api('<?= rootPath() ?>/api/dsr.php', 'PUT', {
     id: document.getElementById('edit-id').value, user_id: document.getElementById('edit-uid').value,
-    name: document.getElementById('edit-name').value, phone: document.getElementById('edit-phone').value,
+    name: document.getElementById('edit-name').value, email: document.getElementById('edit-email').value,
+    password: document.getElementById('edit-password').value, phone: document.getElementById('edit-phone').value,
     warehouse_id: document.getElementById('edit-warehouse').value
   });
   if (data.success) { showToast('DSR updated!'); closeModal('edit-modal'); location.reload(); }

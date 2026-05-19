@@ -20,3 +20,5 @@ ALTER TABLE cash_settlements ADD COLUMN IF NOT EXISTS damage_amount DECIMAL(12,2
 ALTER TABLE cash_settlements ADD COLUMN IF NOT EXISTS expense_amount DECIMAL(12,2) DEFAULT 0.00;
 ALTER TABLE cash_settlements ADD COLUMN IF NOT EXISTS notes_details TEXT DEFAULT NULL;
 ALTER TABLE cash_settlements ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending';
+ALTER TABLE cash_settlements ADD COLUMN IF NOT EXISTS commission_amount DECIMAL(12,2) DEFAULT 0.00;
+

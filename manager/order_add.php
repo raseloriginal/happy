@@ -22,6 +22,10 @@ include __DIR__ . '/../includes/header.php';
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <label class="form-label">Order Date *</label>
+              <input type="date" id="order-date" class="form-input" value="<?= date('Y-m-d') ?>" required onchange="checkSRAvailability()" />
+            </div>
+            <div>
               <label class="form-label">Select SR *</label>
               <select id="sr-select" class="form-input" required onchange="loadSRProducts()">
                 <option value="">Select Sales Representative</option>
@@ -29,10 +33,6 @@ include __DIR__ . '/../includes/header.php';
                   <option value="<?= $s['id'] ?>"><?= htmlspecialchars($s['name']) ?> — <?= htmlspecialchars($s['company_name']) ?></option>
                 <?php endforeach; ?>
               </select>
-            </div>
-            <div>
-              <label class="form-label">Order Date *</label>
-              <input type="date" id="order-date" class="form-input" value="<?= date('Y-m-d') ?>" required />
             </div>
           </div>
 
@@ -83,6 +83,47 @@ include __DIR__ . '/../includes/header.php';
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 <script>
 let srProducts = [];
+
+async function checkSRAvailability() {
+  const dateVal = document.getElementById('order-date').value;
+  if (!dateVal) return;
+
+  const res = await api('<?= rootPath() ?>/api/orders.php?action=check_sr_availability&date=' + dateVal);
+  if (!res || !res.success) return;
+
+  const blockedIds = res.blocked_sr_ids || [];
+  const srSelect = document.getElementById('sr-select');
+  const currentVal = srSelect.value;
+  let currentValBlocked = false;
+
+  Array.from(srSelect.options).forEach(opt => {
+    if (!opt.value) return;
+    
+    if (!opt.dataset.originalText) {
+      opt.dataset.originalText = opt.textContent;
+    }
+
+    const srId = parseInt(opt.value);
+    if (blockedIds.includes(srId)) {
+      opt.disabled = true;
+      opt.textContent = opt.dataset.originalText + " (Already has order on this date)";
+      if (currentVal == opt.value) {
+        currentValBlocked = true;
+      }
+    } else {
+      opt.disabled = false;
+      opt.textContent = opt.dataset.originalText;
+    }
+  });
+
+  if (currentValBlocked) {
+    srSelect.value = "";
+    loadSRProducts();
+    showToast("The selected SR already has an order on this date and has been deselected.", "warning");
+  }
+}
+
+window.addEventListener('DOMContentLoaded', checkSRAvailability);
 
 async function loadSRProducts() {
   const srId = document.getElementById('sr-select').value;

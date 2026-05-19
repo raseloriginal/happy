@@ -72,6 +72,8 @@ include __DIR__ . '/../includes/header.php';
     <form id="edit-form" class="space-y-3">
       <input type="hidden" id="edit-id" /><input type="hidden" id="edit-uid" />
       <div><label class="form-label">Full Name *</label><input id="edit-name" class="form-input" required /></div>
+      <div><label class="form-label">Email *</label><input id="edit-email" type="email" class="form-input" required /></div>
+      <div><label class="form-label">Password (leave blank to keep unchanged)</label><input id="edit-password" type="password" class="form-input" /></div>
       <div><label class="form-label">Phone</label><input id="edit-phone" class="form-input" /></div>
       <div><label class="form-label">Warehouse *</label>
         <select id="edit-warehouse" class="form-input" required>
@@ -102,6 +104,8 @@ function editManager(m) {
   document.getElementById('edit-id').value = m.id;
   document.getElementById('edit-uid').value = m.user_id;
   document.getElementById('edit-name').value = m.name;
+  document.getElementById('edit-email').value = m.email;
+  document.getElementById('edit-password').value = '';
   document.getElementById('edit-phone').value = m.phone;
   document.getElementById('edit-warehouse').value = m.warehouse_id;
   openModal('edit-modal');
@@ -113,6 +117,8 @@ document.getElementById('edit-form').addEventListener('submit', async function(e
     id: document.getElementById('edit-id').value,
     user_id: document.getElementById('edit-uid').value,
     name: document.getElementById('edit-name').value,
+    email: document.getElementById('edit-email').value,
+    password: document.getElementById('edit-password').value,
     phone: document.getElementById('edit-phone').value,
     warehouse_id: document.getElementById('edit-warehouse').value
   });

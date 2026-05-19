@@ -11,7 +11,17 @@ $action = $_GET['action'] ?? '';
 
 switch ($method) {
     case 'GET':
-        if ($action === 'sr_products') {
+        if ($action === 'check_sr_availability') {
+            $date = $_GET['date'] ?? '';
+            if (!$date) {
+                echo json_encode(['success' => false, 'message' => 'Date is required']); exit;
+            }
+            $stmt = $pdo->prepare("SELECT DISTINCT sr_id FROM orders WHERE order_date = ? AND status != 'cancelled'");
+            $stmt->execute([$date]);
+            $sr_ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+            echo json_encode(['success' => true, 'blocked_sr_ids' => $sr_ids]);
+            exit;
+        } elseif ($action === 'sr_products') {
             $sr_id = intval($_GET['sr_id'] ?? 0);
             $stmt  = $pdo->prepare('SELECT p.id, p.name, p.pieces_per_box, p.selling_price FROM sr s JOIN products p ON p.company_id=s.company_id WHERE s.id=? AND p.status=1 ORDER BY p.name');
             $stmt->execute([$sr_id]);
@@ -106,13 +116,19 @@ switch ($method) {
         $srRow->execute([$d['sr_id']]); $srRow = $srRow->fetch();
         $company_id = $srRow['company_id'] ?? 0;
 
-        $ord = $pdo->prepare('INSERT INTO orders (sr_id, company_id, order_date, status, retailer_name, retailer_phone) VALUES (?,?,?,?,?,?)');
         $status = !empty($d['status']) ? $d['status'] : 'pending';
+        $scanned_qrs_json = null;
+        if ($status === 'ready_sale' && !empty($d['scanned_qrs'])) {
+            $scanned_qrs_json = json_encode($d['scanned_qrs']);
+        }
+
+        $ord = $pdo->prepare('INSERT INTO orders (sr_id, company_id, order_date, status, scanned_qrs, retailer_name, retailer_phone) VALUES (?,?,?,?,?,?,?)');
         $ord->execute([
             $d['sr_id'], 
             $company_id, 
             $d['order_date'], 
             $status, 
+            $scanned_qrs_json,
             $d['retailer_name'] ?? null, 
             $d['retailer_phone'] ?? null
         ]);
@@ -180,8 +196,168 @@ switch ($method) {
         break;
 
     case 'DELETE':
-        $id = $_GET['id'] ?? 0;
+        $id = intval($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid Order ID']);
+            exit;
+        }
+
+        $pdo->beginTransaction();
+
+        // 1. Fetch order details
+        $stmt = $pdo->prepare('SELECT * FROM orders WHERE id=?');
+        $stmt->execute([$id]);
+        $order = $stmt->fetch();
+
+        if (!$order) {
+            echo json_encode(['success' => false, 'message' => 'Order not found']);
+            $pdo->rollBack();
+            exit;
+        }
+
+        if ($order['status'] === 'cancelled') {
+            echo json_encode(['success' => true, 'message' => 'Order is already cancelled']);
+            $pdo->rollBack();
+            exit;
+        }
+
+        // 2. Prevent cancelling if already settled and approved
+        $settledCheck = $pdo->prepare("
+            SELECT cs.id 
+            FROM cash_settlements cs
+            JOIN dispatches d ON d.id = cs.dispatch_id
+            WHERE d.order_id = ? AND cs.status = 'approved'
+        ");
+        $settledCheck->execute([$id]);
+        if ($settledCheck->fetchColumn()) {
+            echo json_encode(['success' => false, 'message' => 'Cannot cancel an order that has already been settled and approved.']);
+            $pdo->rollBack();
+            exit;
+        }
+
+        // 3. Resolve warehouse ID
+        $wid = $_SESSION['warehouse_id'] ?? 0;
+        if ($wid == 0) {
+            $whStmt = $pdo->prepare('
+                SELECT r.warehouse_id 
+                FROM sr s 
+                JOIN routes r ON r.id=s.route_id 
+                WHERE s.id=?
+            ');
+            $whStmt->execute([$order['sr_id']]);
+            $wid = intval($whStmt->fetchColumn() ?: 0);
+        }
+
+        // 4. RESTOCK LOGIC
+        if ($order['status'] === 'ready_sale') {
+            // Restock ready sale items
+            $scanned_qrs = json_decode($order['scanned_qrs'] ?? '', true) ?: [];
+            foreach ($scanned_qrs as $sqr) {
+                $qr_id = is_array($sqr) ? intval($sqr['qr_id']) : intval($sqr);
+                
+                // Fetch QR
+                $qrStmt = $pdo->prepare('SELECT product_id, pieces_total, pieces_remaining FROM qr_codes WHERE id=?');
+                $qrStmt->execute([$qr_id]);
+                $qr = $qrStmt->fetch();
+                if (!$qr) continue;
+
+                $original_remaining = intval($qr['pieces_remaining']);
+                $pieces_sold = is_array($sqr) ? intval($sqr['pieces_sold']) : intval($qr['pieces_total']);
+                
+                $new_qr_remaining = min($original_remaining + $pieces_sold, intval($qr['pieces_total']));
+                
+                // Set status back to active
+                $pdo->prepare("UPDATE qr_codes SET status='active', pieces_remaining=? WHERE id=?")
+                    ->execute([$new_qr_remaining, $qr_id]);
+
+                // Update inventory
+                $ppbStmt = $pdo->prepare('SELECT pieces_per_box FROM products WHERE id=?');
+                $ppbStmt->execute([$qr['product_id']]);
+                $pieces_per_box = max((int)$ppbStmt->fetchColumn(), 1);
+
+                $inv = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
+                $inv->execute([$qr['product_id'], $wid]);
+                $row = $inv->fetch();
+                if ($row) {
+                    $total_pieces_now = ($row['qty_boxes'] * $pieces_per_box) + $row['qty_pieces'];
+                    $new_total = $total_pieces_now + $pieces_sold;
+                    
+                    $new_boxes = floor($new_total / $pieces_per_box);
+                    $new_pieces = $new_total % $pieces_per_box;
+
+                    $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
+                        ->execute([$new_boxes, $new_pieces, $qr['product_id'], $wid]);
+                }
+            }
+        } elseif ($order['status'] === 'out_for_delivery' || $order['status'] === 'delivered') {
+            // Restock standard dispatched items
+            $itemsStmt = $pdo->prepare('SELECT qr_code_id, product_id, qty_out FROM dispatch_items WHERE order_id=?');
+            $itemsStmt->execute([$id]);
+            $items = $itemsStmt->fetchAll();
+
+            foreach ($items as $item) {
+                $qr_id = intval($item['qr_code_id']);
+                $qty_out = intval($item['qty_out']);
+
+                // Fetch QR
+                $qrStmt = $pdo->prepare('SELECT product_id, pieces_total, pieces_remaining FROM qr_codes WHERE id=?');
+                $qrStmt->execute([$qr_id]);
+                $qr = $qrStmt->fetch();
+                if (!$qr) continue;
+
+                $original_remaining = intval($qr['pieces_remaining']);
+                $new_qr_remaining = min($original_remaining + $qty_out, intval($qr['pieces_total']));
+
+                // Set status back to active
+                $pdo->prepare("UPDATE qr_codes SET status='active', pieces_remaining=? WHERE id=?")
+                    ->execute([$new_qr_remaining, $qr_id]);
+
+                // Update inventory
+                $ppbStmt = $pdo->prepare('SELECT pieces_per_box FROM products WHERE id=?');
+                $ppbStmt->execute([$item['product_id']]);
+                $pieces_per_box = max((int)$ppbStmt->fetchColumn(), 1);
+
+                $inv = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
+                $inv->execute([$item['product_id'], $wid]);
+                $row = $inv->fetch();
+                if ($row) {
+                    $total_pieces_now = ($row['qty_boxes'] * $pieces_per_box) + $row['qty_pieces'];
+                    $new_total = $total_pieces_now + $qty_out;
+                    
+                    $new_boxes = floor($new_total / $pieces_per_box);
+                    $new_pieces = $new_total % $pieces_per_box;
+
+                    $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
+                        ->execute([$new_boxes, $new_pieces, $item['product_id'], $wid]);
+                }
+            }
+
+            // 5. Clean up returns and cash flow records associated with this dispatch
+            // Delete return items and returns
+            $pdo->prepare('
+                DELETE FROM return_items 
+                WHERE return_id IN (SELECT id FROM returns WHERE dispatch_id IN (SELECT id FROM dispatches WHERE order_id = ?))
+            ')->execute([$id]);
+            $pdo->prepare('
+                DELETE FROM returns 
+                WHERE dispatch_id IN (SELECT id FROM dispatches WHERE order_id = ?)
+            ')->execute([$id]);
+            
+            // Delete cash settlements
+            $pdo->prepare('
+                DELETE FROM cash_settlements 
+                WHERE dispatch_id IN (SELECT id FROM dispatches WHERE order_id = ?)
+            ')->execute([$id]);
+
+            // Delete dispatch items and dispatches
+            $pdo->prepare('DELETE FROM dispatch_items WHERE order_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM dispatches WHERE order_id = ?')->execute([$id]);
+        }
+
+        // 6. Update order status to cancelled
         $pdo->prepare('UPDATE orders SET status="cancelled" WHERE id=?')->execute([$id]);
+        
+        $pdo->commit();
         echo json_encode(['success' => true]);
         break;
 }

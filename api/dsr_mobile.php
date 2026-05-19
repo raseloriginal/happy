@@ -41,18 +41,34 @@ switch ($action) {
         $attStmt->execute([$dsr_id]);
         $attendance = $attStmt->fetch();
 
-        // Active dispatch for this DSR (status loaded or delivered)
-        $dispStmt = $pdo->prepare("
-            SELECT d.*, o.order_date, u.name as sr_name, c.name as company_name 
-            FROM dispatches d 
-            LEFT JOIN orders o ON o.id=d.order_id 
-            LEFT JOIN sr s ON s.id=o.sr_id 
-            LEFT JOIN users u ON u.id=s.user_id 
-            LEFT JOIN companies c ON c.id=o.company_id 
-            WHERE d.dsr_id=? AND d.status IN ('loaded', 'delivered') 
-            ORDER BY d.id DESC LIMIT 1
-        ");
-        $dispStmt->execute([$dsr_id]);
+        // Query by specific date if supplied
+        $selected_date = isset($_GET['date']) ? trim($_GET['date']) : '';
+        if (!empty($selected_date)) {
+            $dispStmt = $pdo->prepare("
+                SELECT d.*, o.order_date, u.name as sr_name, c.name as company_name 
+                FROM dispatches d 
+                LEFT JOIN orders o ON o.id=d.order_id 
+                LEFT JOIN sr s ON s.id=o.sr_id 
+                LEFT JOIN users u ON u.id=s.user_id 
+                LEFT JOIN companies c ON c.id=o.company_id 
+                WHERE d.dsr_id=? AND d.dispatch_date=? 
+                ORDER BY d.id DESC LIMIT 1
+            ");
+            $dispStmt->execute([$dsr_id, $selected_date]);
+        } else {
+            // Active dispatch for this DSR (status loaded or delivered)
+            $dispStmt = $pdo->prepare("
+                SELECT d.*, o.order_date, u.name as sr_name, c.name as company_name 
+                FROM dispatches d 
+                LEFT JOIN orders o ON o.id=d.order_id 
+                LEFT JOIN sr s ON s.id=o.sr_id 
+                LEFT JOIN users u ON u.id=s.user_id 
+                LEFT JOIN companies c ON c.id=o.company_id 
+                WHERE d.dsr_id=? AND d.status IN ('loaded', 'delivered') 
+                ORDER BY d.id DESC LIMIT 1
+            ");
+            $dispStmt->execute([$dsr_id]);
+        }
         $activeDispatch = $dispStmt->fetch();
 
         $outVal = 0.00;
@@ -100,6 +116,66 @@ switch ($action) {
         $recentStmt->execute([$dsr_id]);
         $recentDispatches = $recentStmt->fetchAll();
 
+        // All time stats for average delivery ratio and total delivered all-time
+        $allLoadedStmt = $pdo->prepare('
+            SELECT COALESCE(SUM(di.qty_out * p.selling_price), 0) 
+            FROM dispatches d
+            JOIN dispatch_items di ON di.dispatch_id = d.id
+            JOIN products p ON p.id = di.product_id
+            WHERE d.dsr_id = ?
+        ');
+        $allLoadedStmt->execute([$dsr_id]);
+        $allLoadedVal = floatval($allLoadedStmt->fetchColumn());
+
+        $allReturnedStmt = $pdo->prepare('
+            SELECT COALESCE(SUM(ri.qty_in * p.selling_price), 0) 
+            FROM dispatches d
+            JOIN returns r ON r.dispatch_id = d.id AND r.status = "completed"
+            JOIN return_items ri ON ri.return_id = r.id
+            JOIN products p ON p.id = ri.product_id
+            WHERE d.dsr_id = ?
+        ');
+        $allReturnedStmt->execute([$dsr_id]);
+        $allReturnedVal = floatval($allReturnedStmt->fetchColumn());
+
+        $allDeliveredVal = max($allLoadedVal - $allReturnedVal, 0);
+        $avgDeliveryRatio = $allLoadedVal > 0 ? ($allDeliveredVal / $allLoadedVal) * 100 : 0;
+
+        $loadedProductsList = [];
+        if ($activeDispatch) {
+            $dispatch_id = $activeDispatch['id'];
+            $prodStmt = $pdo->prepare('
+                SELECT 
+                    p.name as product_name, 
+                    SUM(di.qty_out) as qty_loaded,
+                    p.selling_price,
+                    p.pieces_per_box
+                FROM dispatch_items di
+                JOIN products p ON p.id=di.product_id
+                WHERE di.dispatch_id=?
+                GROUP BY p.id
+            ');
+            $prodStmt->execute([$dispatch_id]);
+            $rawProds = $prodStmt->fetchAll();
+
+            foreach ($rawProds as $rp) {
+                $ppb = max(intval($rp['pieces_per_box']), 1);
+                $qty = intval($rp['qty_loaded']);
+                $val = $qty * floatval($rp['selling_price']);
+                
+                $boxes = floor($qty / $ppb);
+                $remainder = $qty % $ppb;
+                $formatted_qty = $boxes . ' Box' . ($boxes != 1 ? 'es':'') . ($remainder > 0 ? ' & ' . $remainder . ' Pcs' : '');
+
+                $loadedProductsList[] = [
+                    'product_name' => $rp['product_name'],
+                    'qty_pieces' => $qty,
+                    'qty_formatted' => $formatted_qty,
+                    'total_value' => $val
+                ];
+            }
+        }
+
         echo json_encode([
             'success' => true,
             'profile' => [
@@ -130,11 +206,18 @@ switch ($action) {
                     'difference' => floatval($settledRecord['difference']),
                     'damage_amount' => floatval($settledRecord['damage_amount']),
                     'expense_amount' => floatval($settledRecord['expense_amount']),
+                    'commission_amount' => floatval($settledRecord['commission_amount'] ?? 0.00),
                     'notes' => $settledRecord['notes'],
                     'notes_details' => json_decode($settledRecord['notes_details'], true)
                 ] : null
             ] : null,
-            'recent_dispatches' => $recentDispatches
+            'recent_dispatches' => $recentDispatches,
+            'stats' => [
+                'delivery_ratio' => $avgDeliveryRatio,
+                'current_van_value' => $activeDispatch ? $outVal : 0.00,
+                'total_delivered_all_time' => $allDeliveredVal
+            ],
+            'loaded_products' => $loadedProductsList
         ]);
         break;
 
@@ -146,6 +229,20 @@ switch ($action) {
 
         $d = json_decode(file_get_contents('php://input'), true);
         $qrCode = trim($d['qr_code'] ?? '');
+        $latitude = isset($d['latitude']) ? floatval($d['latitude']) : null;
+        $longitude = isset($d['longitude']) ? floatval($d['longitude']) : null;
+
+        // Backend IP lookup fallback if frontend fails to send coordinates
+        if (empty($latitude) || empty($longitude)) {
+            $userIp = $_SERVER['REMOTE_ADDR'] ?? '';
+            if (!empty($userIp) && $userIp !== '127.0.0.1' && $userIp !== '::1' && !str_starts_with($userIp, '192.168.') && !str_starts_with($userIp, '10.') && !str_starts_with($userIp, '172.16.')) {
+                $ipData = @json_decode(@file_get_contents("http://ip-api.com/json/{$userIp}"), true);
+                if (!empty($ipData) && isset($ipData['lat'], $ipData['lon'])) {
+                    $latitude = floatval($ipData['lat']);
+                    $longitude = floatval($ipData['lon']);
+                }
+            }
+        }
 
         if (empty($qrCode)) {
             echo json_encode(['success' => false, 'message' => 'No QR code provided. Please scan a warehouse QR code.']);
@@ -184,8 +281,8 @@ switch ($action) {
         }
 
         try {
-            $stmt = $pdo->prepare('INSERT INTO dsr_attendance (dsr_id, warehouse_id, checkin_date, checkin_time, status) VALUES (?,?,CURDATE(),CURTIME(),"present")');
-            $stmt->execute([$dsr_id, $scanned_warehouse_id]);
+            $stmt = $pdo->prepare('INSERT INTO dsr_attendance (dsr_id, warehouse_id, checkin_date, checkin_time, status, latitude, longitude) VALUES (?,?,CURDATE(),CURTIME(),"present",?,?)');
+            $stmt->execute([$dsr_id, $scanned_warehouse_id, $latitude, $longitude]);
             echo json_encode([
                 'success' => true,
                 'message' => 'Attendance marked successfully!',
@@ -207,13 +304,21 @@ switch ($action) {
             exit;
         }
 
-        // Get active dispatch ID
-        $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND status IN ('loaded', 'delivered') ORDER BY id DESC LIMIT 1");
-        $dispStmt->execute([$dsr_id]);
+        $selected_date = isset($_GET['date']) ? trim($_GET['date']) : '';
+
+        if (!empty($selected_date)) {
+            // Find dispatch on that specific date
+            $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND dispatch_date=? ORDER BY id DESC LIMIT 1");
+            $dispStmt->execute([$dsr_id, $selected_date]);
+        } else {
+            // Get active dispatch ID
+            $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND status IN ('loaded', 'delivered') ORDER BY id DESC LIMIT 1");
+            $dispStmt->execute([$dsr_id]);
+        }
         $active_dispatch_id = $dispStmt->fetchColumn();
 
         if (!$active_dispatch_id) {
-            echo json_encode(['success' => true, 'dispatch_id' => null, 'products' => []]);
+            echo json_encode(['success' => true, 'dispatch_id' => null, 'products' => [], 'settlement' => null]);
             exit;
         }
 
@@ -284,10 +389,28 @@ switch ($action) {
             ];
         }
 
+        // Fetch settlement summary
+        $settlement = null;
+        $settleStmt = $pdo->prepare("SELECT * FROM cash_settlements WHERE dispatch_id=? LIMIT 1");
+        $settleStmt->execute([$active_dispatch_id]);
+        $settleRow = $settleStmt->fetch(PDO::FETCH_ASSOC);
+        if ($settleRow) {
+            $settlement = [
+                'id' => $settleRow['id'],
+                'amount_expected' => floatval($settleRow['amount_expected']),
+                'amount_submitted' => floatval($settleRow['amount_submitted']),
+                'difference' => floatval($settleRow['difference']),
+                'damage_amount' => floatval($settleRow['damage_amount']),
+                'expense_amount' => floatval($settleRow['expense_amount']),
+                'notes' => $settleRow['notes']
+            ];
+        }
+
         echo json_encode([
             'success' => true,
-            'dispatch_id' => $active_dispatch_id,
-            'products' => $products
+            'dispatch_id' => $active_dispatch_id ? intval($active_dispatch_id) : null,
+            'products' => $products,
+            'settlement' => $settlement
         ]);
         break;
 
@@ -301,6 +424,7 @@ switch ($action) {
         $dispatch_id = intval($d['dispatch_id'] ?? 0);
         $damage_amount = floatval($d['damage_amount'] ?? 0);
         $expense_amount = floatval($d['expense_amount'] ?? 0);
+        $commission_amount = floatval($d['commission_amount'] ?? 0);
         $amount_submitted = floatval($d['amount_submitted'] ?? 0);
         $notes_details = $d['notes_details'] ?? [];
         $notes_text = trim($d['notes_text'] ?? '');
@@ -337,8 +461,8 @@ switch ($action) {
         $retStmt->execute([$dispatch_id]);
         $returnVal = floatval($retStmt->fetchColumn());
 
-        // expected submitted cash = out_val - return_val - damage - expense
-        $amount_expected = $outVal - $returnVal - $damage_amount - $expense_amount;
+        // expected submitted cash = out_val - return_val - damage - expense + commission
+        $amount_expected = $outVal - $returnVal - $damage_amount - $expense_amount + $commission_amount;
         $difference      = $amount_submitted - $amount_expected;
 
         $pdo->beginTransaction();
@@ -351,21 +475,21 @@ switch ($action) {
         if ($existId) {
             $upStmt = $pdo->prepare('
                 UPDATE cash_settlements 
-                SET amount_expected=?, amount_submitted=?, difference=?, return_amount=?, damage_amount=?, expense_amount=?, notes_details=?, notes=?, settlement_date=CURDATE(), status="pending" 
+                SET amount_expected=?, amount_submitted=?, difference=?, return_amount=?, damage_amount=?, expense_amount=?, commission_amount=?, notes_details=?, notes=?, settlement_date=CURDATE(), status="pending" 
                 WHERE id=?
             ');
             $upStmt->execute([
-                $amount_expected, $amount_submitted, $difference, $returnVal, $damage_amount, $expense_amount, 
+                $amount_expected, $amount_submitted, $difference, $returnVal, $damage_amount, $expense_amount, $commission_amount,
                 json_encode($notes_details), $notes_text, $existId
             ]);
         } else {
             $insStmt = $pdo->prepare('
-                INSERT INTO cash_settlements (dsr_id, dispatch_id, amount_expected, amount_submitted, difference, return_amount, damage_amount, expense_amount, notes_details, notes, settlement_date, status) 
-                VALUES (?,?,?,?,?,?,?,?,?,?,CURDATE(),"pending")
+                INSERT INTO cash_settlements (dsr_id, dispatch_id, amount_expected, amount_submitted, difference, return_amount, damage_amount, expense_amount, commission_amount, notes_details, notes, settlement_date, status) 
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,CURDATE(),"pending")
             ');
             $insStmt->execute([
                 $dsr_id, $dispatch_id, $amount_expected, $amount_submitted, $difference, 
-                $returnVal, $damage_amount, $expense_amount, json_encode($notes_details), $notes_text
+                $returnVal, $damage_amount, $expense_amount, $commission_amount, json_encode($notes_details), $notes_text
             ]);
         }
 
