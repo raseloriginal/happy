@@ -43,6 +43,29 @@ function getDB(): PDO {
                     // Ignore failure if the table itself doesn't exist yet
                 }
             }
+
+            // Auto-migration: Check if scanned_qrs column exists in orders table, add it if missing
+            try {
+                $pdo->query("SELECT scanned_qrs FROM orders LIMIT 0");
+            } catch (PDOException $e) {
+                try {
+                    $pdo->exec("ALTER TABLE `orders` ADD COLUMN `scanned_qrs` TEXT NULL DEFAULT NULL AFTER `status`");
+                    // Insert into migrations table if it exists to keep migrations in sync
+                    $pdo->exec("INSERT IGNORE INTO migrations (migration_name) VALUES ('005_add_scanned_qrs_and_ready_sale.sql')");
+                } catch (PDOException $ex) {
+                    // Ignore failure
+                }
+            }
+
+            // Auto-migration: Check if status column contains ready_sale
+            try {
+                $col = $pdo->query("SHOW COLUMNS FROM `orders` LIKE 'status'")->fetch();
+                if ($col && strpos($col['Type'], 'ready_sale') === false) {
+                    $pdo->exec("ALTER TABLE `orders` MODIFY COLUMN `status` ENUM('pending','ready_sale','out_for_delivery','delivered','cancelled') DEFAULT 'pending'");
+                }
+            } catch (PDOException $e) {
+                // Ignore
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));

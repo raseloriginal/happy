@@ -170,7 +170,10 @@ CREATE TABLE IF NOT EXISTS orders (
   sr_id INT NOT NULL,
   company_id INT NOT NULL,
   order_date DATE NOT NULL,
-  status ENUM('pending','out_for_delivery','delivered','cancelled') DEFAULT 'pending',
+  status ENUM('pending','ready_sale','out_for_delivery','delivered','cancelled') DEFAULT 'pending',
+  scanned_qrs TEXT NULL DEFAULT NULL,
+  retailer_name VARCHAR(255) NULL DEFAULT NULL,
+  retailer_phone VARCHAR(50) NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sr_id) REFERENCES sr(id),
   FOREIGN KEY (company_id) REFERENCES companies(id)
