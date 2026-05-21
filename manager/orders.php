@@ -197,10 +197,12 @@ function filterTable() {
 
 function updatePagination() {
   const trs = Array.from(document.querySelectorAll('#orders-table tbody tr')).filter(tr => {
-    return tr.cells.length !== 1 || tr.cells[0].colSpan !== 12;
+    // Exclude the empty-state row
+    return !(tr.cells.length === 1 && tr.cells[0].colSpan >= 10);
   });
 
-  const matchingRows = trs.filter(tr => tr.dataset.match !== "false");
+  const matchingRows = trs.filter(tr => tr.dataset.match === "true");
+  const nonMatchingRows = trs.filter(tr => tr.dataset.match === "false");
   const totalMatching = matchingRows.length;
   const totalPages = Math.ceil(totalMatching / PAGE_SIZE) || 1;
 
@@ -210,46 +212,29 @@ function updatePagination() {
   const startIdx = (currentPage - 1) * PAGE_SIZE;
   const endIdx = startIdx + PAGE_SIZE;
 
-  // Show/hide matching rows based on page
+  // Always explicitly show/hide every row — no early returns before this
   matchingRows.forEach((tr, index) => {
-    if (index >= startIdx && index < endIdx) {
-      tr.style.display = '';
-    } else {
-      tr.style.display = 'none';
-    }
+    tr.style.display = (index >= startIdx && index < endIdx) ? '' : 'none';
   });
 
-  // Hide non-matching rows
-  trs.forEach(tr => {
-    if (tr.dataset.match === "false") {
-      tr.style.display = 'none';
-    }
-  });
+  // Always hide non-matching rows
+  nonMatchingRows.forEach(tr => { tr.style.display = 'none'; });
 
-  // Update info
-  const startEl = document.getElementById('pagination-start');
-  const endEl = document.getElementById('pagination-end');
-  const totalEl = document.getElementById('pagination-total');
-  
-  if (totalMatching > 0) {
-    startEl.textContent = startIdx + 1;
-    endEl.textContent = Math.min(endIdx, totalMatching);
-    totalEl.textContent = totalMatching;
-  } else {
-    startEl.textContent = 0;
-    endEl.textContent = 0;
-    totalEl.textContent = 0;
-  }
+  // Update pagination info
+  document.getElementById('pagination-start').textContent = totalMatching > 0 ? startIdx + 1 : 0;
+  document.getElementById('pagination-end').textContent   = totalMatching > 0 ? Math.min(endIdx, totalMatching) : 0;
+  document.getElementById('pagination-total').textContent = totalMatching;
 
-  // Render buttons
+  // Show/hide pagination bar
+  const paginationContainer = document.getElementById('pagination-container');
   const btnContainer = document.getElementById('pagination-buttons');
   btnContainer.innerHTML = '';
 
   if (totalPages <= 1) {
-    document.getElementById('pagination-container').style.display = 'none';
+    paginationContainer.style.display = 'none';
     return;
   }
-  document.getElementById('pagination-container').style.display = 'flex';
+  paginationContainer.style.display = 'flex';
 
   // Prev Button
   const prevBtn = document.createElement('button');
@@ -293,7 +278,12 @@ function clearFilters() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  filterTable();
+  // Explicitly mark all data rows as matching on first load — no filters active
+  document.querySelectorAll('#orders-table tbody tr').forEach(tr => {
+    if (tr.cells.length === 1 && tr.cells[0].colSpan >= 10) return; // skip empty-state row
+    tr.dataset.match = 'true';
+  });
+  updatePagination();
 });
 async function cancelOrder(id) {
   if (!confirmDelete('Cancel this order?')) return;
