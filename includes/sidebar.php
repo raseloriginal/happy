@@ -66,6 +66,7 @@ function navLink(string $href, string $icon, string $label, string $current): st
       <?= navLink(rootPath() . '/manager/delivery.php', 'fa-solid fa-truck-fast', 'Out for Delivery', $current) ?>
 
       <div class="sidebar-section">Operations</div>
+      <?= navLink(rootPath() . '/manager/attendance.php', 'fa-solid fa-user-clock', 'Attendance', $current) ?>
       <?= navLink(rootPath() . '/manager/returns.php', 'fa-solid fa-undo', 'Returns', $current) ?>
       <?= navLink(rootPath() . '/manager/inventory.php', 'fa-solid fa-store', 'Inventory', $current) ?>
       <?= navLink(rootPath() . '/manager/expenses.php', 'fa-solid fa-money-bill-wave', 'Expenses', $current) ?>

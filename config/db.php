@@ -66,6 +66,34 @@ function getDB(): PDO {
             } catch (PDOException $e) {
                 // Ignore
             }
+            // Auto-migration: attendance_settings table
+            try {
+                $pdo->query("SELECT id FROM attendance_settings LIMIT 0");
+            } catch (PDOException $e) {
+                try {
+                    $pdo->exec("CREATE TABLE IF NOT EXISTS `attendance_settings` (
+                        `id` INT(11) NOT NULL AUTO_INCREMENT,
+                        `warehouse_id` INT(11) NOT NULL,
+                        `attend_time` TIME NOT NULL DEFAULT '09:00:00',
+                        `qr_token` VARCHAR(64) NOT NULL DEFAULT '',
+                        `token_date` DATE NOT NULL,
+                        `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (`id`),
+                        UNIQUE KEY `unique_wh` (`warehouse_id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                } catch (PDOException $ex) { }
+            }
+            // Auto-migration: add latitude/longitude/note to dsr_attendance
+            try {
+                $pdo->query("SELECT latitude FROM dsr_attendance LIMIT 0");
+            } catch (PDOException $e) {
+                try {
+                    $pdo->exec("ALTER TABLE `dsr_attendance`
+                        ADD COLUMN `latitude`  DECIMAL(10,7) NULL DEFAULT NULL,
+                        ADD COLUMN `longitude` DECIMAL(10,7) NULL DEFAULT NULL,
+                        ADD COLUMN `note`      VARCHAR(255)  NULL DEFAULT NULL");
+                } catch (PDOException $ex) { }
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));
