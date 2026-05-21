@@ -11,7 +11,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($action === 'dispatches' && $method === 'GET') {
     $wid  = $_SESSION['warehouse_id'] ?? 0;
-    $stmt = $pdo->prepare("SELECT d.id, d.dispatch_date, u.name as dsr_name, o.order_date FROM dispatches d JOIN dsr ds ON ds.id=d.dsr_id JOIN users u ON u.id=ds.user_id LEFT JOIN orders o ON o.id=d.order_id WHERE d.warehouse_id=? AND d.status IN ('loaded','delivered') ORDER BY d.id DESC");
+    $stmt = $pdo->prepare("SELECT d.id, d.dispatch_date, u.name as dsr_name, o.order_date FROM dispatches d JOIN dsr ds ON ds.id=d.dsr_id JOIN users u ON u.id=ds.user_id LEFT JOIN orders o ON o.id=d.order_id LEFT JOIN returns r ON r.dispatch_id=d.id WHERE d.warehouse_id=? AND d.status IN ('loaded','delivered') AND r.id IS NULL ORDER BY d.id DESC");
     $stmt->execute([$wid]);
     echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
     exit;
@@ -83,7 +83,9 @@ if ($action === 'complete' && $method === 'POST') {
     }
 
     // Update dispatch status
-    $pdo->prepare("UPDATE dispatches SET status='settled' WHERE id=?")->execute([$did]);
+    // Note: Do NOT set status='settled' here. The dispatch is only fully settled
+    // after the cash settlement is submitted by DSR and approved by the manager.
+    // $pdo->prepare("UPDATE dispatches SET status='settled' WHERE id=?")->execute([$did]);
     
     // Mark order as delivered
     $dispStmt = $pdo->prepare('SELECT order_id FROM dispatches WHERE id=?');

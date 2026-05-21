@@ -94,6 +94,18 @@ function getDB(): PDO {
                         ADD COLUMN `note`      VARCHAR(255)  NULL DEFAULT NULL");
                 } catch (PDOException $ex) { }
             }
+
+            // Auto-migration: Fix dispatches with 'settled' status but no approved cash settlement
+            try {
+                $pdo->exec("
+                    UPDATE dispatches d
+                    LEFT JOIN cash_settlements cs ON cs.dispatch_id = d.id AND cs.status = 'approved'
+                    SET d.status = 'loaded'
+                    WHERE d.status = 'settled' AND cs.id IS NULL
+                ");
+            } catch (PDOException $e) {
+                // Ignore failure if tables don't exist yet
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));
