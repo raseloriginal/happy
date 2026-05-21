@@ -35,7 +35,7 @@ include __DIR__ . '/../includes/header.php';
               <button onclick="startReturnScan()" class="btn btn-primary btn-sm flex-1"><i class="fa-solid fa-camera mr-1"></i> Camera</button>
               <button onclick="stopCameraScanner()" class="btn btn-ghost btn-sm flex-1">Stop</button>
             </div>
-            <input id="manual-return" type="text" class="form-input scanner-input" placeholder="Scan QR UID…" onkeydown="if(event.key==='Enter'){scanReturn(this.value);this.value=''}" />
+            <input id="manual-return" type="text" class="form-input scanner-input" placeholder="Scan QR UID…" onkeydown="if(event.key==='Enter'){scanReturn(this.value.trim());this.value=''}" />
           </div>
         </div>
 
@@ -113,8 +113,8 @@ function renderBoxTable() {
     tr.innerHTML = `
       <td class="font-mono text-xs">${box.qr_uid}</td>
       <td>${box.product_name}</td>
-      <td class="text-right">${box.pieces_total}</td>
-      <td class="text-right">${box.pieces_remaining}</td>
+      <td class="text-right">${box.qty_out}</td>
+      <td class="text-right">${box.qty_out}</td>
       <td class="text-right font-semibold text-green-700">${returned}</td>
       <td><span class="badge ${box.qr_status === 'dispatched' ? 'badge-warning' : 'badge-success'}">${box.qr_status}</span></td>
     `;
@@ -123,10 +123,12 @@ function renderBoxTable() {
 }
 
 async function scanReturn(uid) {
-  const qr = dispatchBoxes.find(b => b.qr_uid === uid);
+  if (!uid) return;
+  uid = uid.trim().toUpperCase();
+  const qr = dispatchBoxes.find(b => b.qr_uid.trim().toUpperCase() === uid);
   if (!qr) { showToast('QR not in this dispatch', 'error'); return; }
   if (qr.returnQty > 0) return;
-  qr.returnQty = qr.pieces_remaining;
+  qr.returnQty = parseInt(qr.qty_out) || 0;
   qr.type = 'scan';
   renderBoxTable();
   showToast('Marked: ' + uid);
@@ -138,13 +140,14 @@ function openCustomModal() {
   const container = document.getElementById('custom-boxes');
   container.innerHTML = '';
   dispatchBoxes.forEach(box => {
+    const qtyOut = parseInt(box.qty_out) || 0;
     container.innerHTML += `
       <div class="flex items-center gap-3 p-2 border border-gray-100 rounded-lg">
         <div class="flex-1">
           <div class="font-mono text-xs text-gray-600">${box.qr_uid}</div>
-          <div class="text-sm">${box.product_name} — ${box.pieces_remaining} remaining</div>
+          <div class="text-sm">${box.product_name} — ${qtyOut} remaining</div>
         </div>
-        <input type="number" id="custom-qty-${box.qr_code_id}" class="form-input w-24" min="0" max="${box.pieces_remaining}" value="${box.returnQty || 0}" />
+        <input type="number" id="custom-qty-${box.qr_code_id}" class="form-input w-24" min="0" max="${qtyOut}" value="${box.returnQty || 0}" />
       </div>`;
   });
 }
