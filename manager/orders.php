@@ -153,7 +153,7 @@ include __DIR__ . '/../includes/header.php';
           </tbody>
         </table>
         <!-- Pagination -->
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100" id="pagination-container" style="display: none;">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-gray-100" id="pagination-container" style="display:none">
           <div class="text-sm text-gray-500" id="pagination-info">
             Showing <span class="font-semibold text-gray-700 text-xs" id="pagination-start">0</span> to <span class="font-semibold text-gray-700 text-xs" id="pagination-end">0</span> of <span class="font-semibold text-gray-700 text-xs" id="pagination-total">0</span> orders
           </div>
@@ -166,7 +166,7 @@ include __DIR__ . '/../includes/header.php';
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 
 <script>
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 25;
 let currentPage = 1;
 
 function filterTable() {
@@ -176,7 +176,8 @@ function filterTable() {
   const q = (document.getElementById('f-search').value || '').toLowerCase();
 
   document.querySelectorAll('#orders-table tbody tr').forEach(tr => {
-    if (tr.cells.length === 1 && tr.cells[0].colSpan === 12) return;
+    // Skip the "no orders" empty row
+    if (tr.cells.length === 1 && tr.cells[0].colSpan >= 10) return;
 
     const rowDate = tr.dataset.date;
     const rowStatus = tr.dataset.status;
@@ -187,11 +188,7 @@ function filterTable() {
     const matchTo = !to || rowDate <= to;
     const matchStatus = !status || rowStatus === status;
 
-    if (matchSearch && matchFrom && matchTo && matchStatus) {
-      tr.dataset.match = "true";
-    } else {
-      tr.dataset.match = "false";
-    }
+    tr.dataset.match = (matchSearch && matchFrom && matchTo && matchStatus) ? "true" : "false";
   });
 
   currentPage = 1;
