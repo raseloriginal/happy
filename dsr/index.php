@@ -11,11 +11,11 @@ $user_id = $_SESSION['user_id'];
 $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER BY name')->fetchAll();
 ?>
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="bn" class="h-full">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>DSR Sheet Ledger — Happy Bangladesh</title>
+  <title>ডিএসআর শিট লেজার — হ্যাপি বাংলাদেশ</title>
   
   <!-- Premium Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -192,10 +192,10 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         <img src="<?= rootPath() ?>/assets/img/logo/logo-icon-black.png" alt="Happy Bangladesh" class="w-full h-full object-contain" />
       </div>
       <div>
-        <h1 class="text-sm font-extrabold tracking-tight font-mono">DSR PANEL</h1>
+        <h1 class="text-sm font-extrabold tracking-tight font-mono">ডিএসআর প্যানেল</h1>
         <div class="flex items-center gap-1">
           <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-          <span class="text-[9px] text-blue-200 font-bold uppercase tracking-wider" id="header-subtitle">Mobile Grid Mode</span>
+          <span class="text-[9px] text-blue-200 font-bold uppercase tracking-wider" id="header-subtitle">মোবাইল গ্রিড মোড</span>
         </div>
       </div>
     </div>
@@ -225,17 +225,17 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <div class="grid grid-cols-3 gap-2">
         <!-- Card 1: Delivery Ratio -->
         <div class="bg-white border border-[#cbd5e1] p-2 text-center">
-          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">DELIVERY_RATIO</div>
+          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">ডেলিভারি_অনুপাত</div>
           <div class="text-[11px] xs:text-xs font-black text-blue-600 mt-1 font-mono" id="card-delivery-ratio">0.0%</div>
         </div>
-        <!-- Card 2: Current Van Value -->
+        <!-- কার্ড ২: বর্তমান ভ্যান মূল্য -->
         <div class="bg-white border border-[#cbd5e1] p-2 text-center">
-          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">VAN_CARGO_VAL</div>
+          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">ভ্যান_মাল_মূল্য</div>
           <div class="text-[11px] xs:text-xs font-black text-[#2563eb] mt-1 font-mono" id="card-van-value">৳0.00</div>
         </div>
-        <!-- Card 3: Total Delivered -->
+        <!-- কার্ড ৩: মোট ডেলিভারি -->
         <div class="bg-white border border-[#cbd5e1] p-2 text-center">
-          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">TOTAL_DELIVERED</div>
+          <div class="text-[7px] xs:text-[9px] text-gray-500 font-bold uppercase tracking-wider font-mono">মোট_ডেলিভারি</div>
           <div class="text-[11px] xs:text-xs font-black text-emerald-600 mt-1 font-mono" id="card-total-delivered">৳0.00</div>
         </div>
       </div>
@@ -243,11 +243,11 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Attendance status sheet card -->
       <div class="bg-white border border-[#cbd5e1] p-4 space-y-3" id="attendance-card">
         <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
-          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calendar-check text-[#2563eb] mr-1.5"></i>Attendance Verification</h3>
-          <span class="text-[9px] bg-red-100 text-red-700 font-bold px-2 py-0.5" id="att-badge">Absent</span>
+          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calendar-check text-[#2563eb] mr-1.5"></i>হাজিরা যাচাই</h3>
+          <span class="text-[9px] bg-red-100 text-red-700 font-bold px-2 py-0.5" id="att-badge">অনুপস্থিত</span>
         </div>
 
-        <p class="text-xs text-gray-500" id="att-status-text">Checking attendance logs...</p>
+        <p class="text-xs text-gray-500" id="att-status-text">হাজিরার তথ্য যাচাই করা হচ্ছে...</p>
 
         <!-- Attendance Checked In view -->
         <div id="att-checked-in-view" class="hidden bg-[#dbeafe] border border-[#bfdbfe] p-3 flex items-center gap-3">
@@ -255,8 +255,8 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
             <i class="fa-solid fa-check"></i>
           </div>
           <div>
-            <div class="text-xs font-bold text-[#2563eb]">Checked In Present</div>
-            <div class="text-[10px] text-gray-600" id="att-checked-time">Checked-in at 10:30 AM</div>
+            <div class="text-xs font-bold text-[#2563eb]">হাজিরা নিশ্চিত হয়েছে</div>
+             <div class="text-[10px] text-gray-600" id="att-checked-time">সকাল ১০:৩০ এ চেক-ইন হয়েছে</div>
           </div>
         </div>
 
@@ -267,33 +267,33 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
               <i class="fa-solid fa-exclamation"></i>
             </div>
             <div>
-              <div class="text-xs font-bold text-red-700">Check-in Required</div>
-              <div class="text-[10px] text-gray-600">Scan warehouse QR to verify field presence today.</div>
+              <div class="text-xs font-bold text-red-700">চেক-ইন প্রয়োজন</div>
+              <div class="text-[10px] text-gray-600">আজকের উপস্থিতি নিশ্চিত করতে গুদামের QR স্ক্যান করুন।</div>
             </div>
           </div>
 
           <div class="flex gap-2">
             <!-- Camera QR scan trigger -->
             <button onclick="openAttendanceScanner()" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 btn-bounce">
-              <i class="fa-solid fa-camera"></i> Scan Warehouse QR
+              <i class="fa-solid fa-camera"></i> গুদাম QR স্ক্যান করুন
             </button>
           </div>
 
           <!-- Dev Mode / Simulation Dropdown -->
           <div class="border-t border-gray-200 pt-3">
             <div class="flex items-center justify-between mb-2">
-              <label class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Simulation Sandbox</label>
-              <span class="text-[8px] bg-gray-100 text-gray-500 font-bold px-1.5 py-0.5 border border-gray-200">DEV MODE</span>
+              <label class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">সিমুলেশন স্যান্ডবক্স</label>
+              <span class="text-[8px] bg-gray-100 text-gray-500 font-bold px-1.5 py-0.5 border border-gray-200">ডেভ মোড</span>
             </div>
             <div class="flex gap-2">
               <select id="sim-warehouse-select" class="flex-1 bg-white border border-[#cbd5e1] text-xs text-gray-700 px-2 py-1.5 focus:outline-none focus:border-[#2563eb]">
-                <option value="">Choose Warehouse to Mock</option>
+                <option value="">গুদাম নির্বাচন করুন</option>
                 <?php foreach ($warehouses as $wh): ?>
                   <option value="<?= $wh['id'] ?>"><?= htmlspecialchars($wh['name']) ?></option>
                 <?php endforeach; ?>
               </select>
               <button onclick="simulateCheckIn()" class="bg-white hover:bg-gray-50 border border-[#cbd5e1] text-[#2563eb] font-bold text-xs px-3 btn-bounce">
-                Check-in
+                চেক-ইন
               </button>
             </div>
           </div>
@@ -304,26 +304,26 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <div id="attendance-scanner-card" class="hidden bg-white border border-[#cbd5e1] p-4 space-y-3 shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-100 pb-2">
           <h4 class="font-bold text-xs text-gray-700 flex items-center gap-1.5 uppercase tracking-wide">
-            <i class="fa-solid fa-camera text-[#2563eb] animate-pulse"></i> Camera Scanner
+            <i class="fa-solid fa-camera text-[#2563eb] animate-pulse"></i> ক্যামেরা স্ক্যানার
           </h4>
-          <button onclick="closeAttendanceScanner()" class="text-xs text-red-600 font-bold hover:underline"><i class="fa-solid fa-times"></i> Close</button>
+          <button onclick="closeAttendanceScanner()" class="text-xs text-red-600 font-bold hover:underline"><i class="fa-solid fa-times"></i> বন্ধ করুন</button>
         </div>
         <div id="att-qr-reader" class="overflow-hidden bg-black aspect-square max-w-[280px] mx-auto border border-[#cbd5e1]"></div>
-        <p class="text-[9px] text-center text-gray-500">Hold QR code in front of the lens</p>
+        <p class="text-[9px] text-center text-gray-500">QR কোড ক্যামেরার সামনে ধরুন</p>
       </div>
 
       <!-- Active Dispatch Card -->
       <div class="bg-white border border-[#cbd5e1] p-4 space-y-3" id="dispatch-card">
         <div class="flex items-center justify-between pb-2 border-b border-gray-200">
-          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-truck text-[#2563eb] mr-1.5"></i>Active Deliveries Load</h3>
-          <span class="bg-gray-100 text-gray-600 text-[9px] font-bold px-2 py-0.5" id="disp-badge">No Dispatch</span>
+          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-truck text-[#2563eb] mr-1.5"></i>সক্রিয় ডেলিভারি লোড</h3>
+          <span class="bg-gray-100 text-gray-600 text-[9px] font-bold px-2 py-0.5" id="disp-badge">কোনো ডিসপ্যাচ নেই</span>
         </div>
 
         <!-- No active dispatch placeholder -->
         <div id="disp-empty-view" class="text-center py-6 space-y-1">
           <i class="fa-solid fa-box-open text-2xl text-gray-300 block"></i>
-          <p class="text-xs text-gray-500 font-bold">No active dispatches on your van today.</p>
-          <p class="text-[9px] text-gray-400">Ask your manager to load orders to your driver profile.</p>
+          <p class="text-xs text-gray-500 font-bold">আজ আপনার ভ্যানে কোনো সক্রিয় ডিসপ্যাচ নেই।</p>
+          <p class="text-[9px] text-gray-400">আপনার ম্যানেজারকে আপনার প্রোফাইলে অর্ডার লোড করতে বলুন।</p>
         </div>
 
         <!-- Active dispatch content -->
@@ -334,35 +334,35 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
             <table class="excel-table">
               <thead>
                 <tr>
-                  <th class="excel-row-num">Row</th>
-                  <th>Cell: Key</th>
-                  <th>Value</th>
+                  <th class="excel-row-num">ক্রম</th>
+                  <th>ঘর: চাবিকাঠি</th>
+                  <th>মান</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td class="excel-row-num">1</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">A: Dispatch ID</td>
+                  <td class="excel-row-num">১</td>
+                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">ক: ডিসপ্যাচ আইডি</td>
                   <td class="font-mono text-gray-800 font-bold" id="disp-id-label">#DISP-0000</td>
                 </tr>
                 <tr>
-                  <td class="excel-row-num">2</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">B: Company Name</td>
+                  <td class="excel-row-num">২</td>
+                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">খ: কোম্পানির নাম</td>
                   <td class="font-bold text-gray-700" id="disp-company">Eggland Co.</td>
                 </tr>
                 <tr>
-                  <td class="excel-row-num">3</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">C: Sales Rep (SR)</td>
+                  <td class="excel-row-num">৩</td>
+                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">গ: সেলস রিপ্রেজেন্টেটিভ (SR)</td>
                   <td class="text-gray-700" id="disp-sr">Anwar Hossain</td>
                 </tr>
                 <tr>
-                  <td class="excel-row-num">4</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">D: Loaded Load Value</td>
+                  <td class="excel-row-num">৪</td>
+                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">ঘ: লোড করা মালের মূল্য</td>
                   <td class="font-mono font-bold text-blue-600" id="disp-out-value">৳0.00</td>
                 </tr>
                 <tr>
-                  <td class="excel-row-num">5</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">E: Returned Value</td>
+                  <td class="excel-row-num">৫</td>
+                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">ঙ: ফেরত মূল্য</td>
                   <td class="font-mono font-bold text-red-600" id="disp-return-value">৳0.00</td>
                 </tr>
               </tbody>
@@ -372,10 +372,10 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           <!-- Quick Action Buttons -->
           <div class="flex gap-2">
             <button onclick="switchTab('van')" class="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2 px-3 flex items-center justify-center gap-1 border border-[#cbd5e1] btn-bounce">
-              <i class="fa-solid fa-list-check text-[#2563eb]"></i> View Cargo Stock
+              <i class="fa-solid fa-list-check text-[#2563eb]"></i> মালের স্টক দেখুন
             </button>
             <button onclick="switchTab('settlement')" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs py-2 px-3 flex items-center justify-center gap-1 btn-bounce">
-              <i class="fa-solid fa-money-bill-transfer"></i> Cash Settlement
+              <i class="fa-solid fa-money-bill-transfer"></i> নগদ সেটেলমেন্ট
             </button>
           </div>
         </div>
@@ -384,16 +384,16 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Loaded Cargo Inventory Summary Table -->
       <div class="bg-white border border-[#cbd5e1] overflow-hidden hidden" id="home-van-cargo-card">
         <div class="px-4 py-2 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
-          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider"><i class="fa-solid fa-boxes-stacked text-[#2563eb] mr-1.5"></i>Current Van Cargo</span>
-          <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="home-van-cargo-count">0 items loaded</span>
+          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider"><i class="fa-solid fa-boxes-stacked text-[#2563eb] mr-1.5"></i>বর্তমান ভ্যান মাল</span>
+          <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="home-van-cargo-count">০টি পণ্য লোড হয়েছে</span>
         </div>
         <div class="overflow-x-auto w-full">
           <table class="excel-table w-full">
             <thead>
               <tr class="bg-gray-100">
-                <th class="text-left pl-4">Loaded Product</th>
-                <th class="text-right">Qty Loaded</th>
-                <th class="text-right pr-4">Total Value</th>
+                <th class="text-left pl-4">লোড করা পণ্য</th>
+                <th class="text-right">লোড পরিমাণ</th>
+                <th class="text-right pr-4">মোট মূল্য</th>
               </tr>
             </thead>
             <tbody id="home-van-cargo-list">
@@ -413,17 +413,17 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Controls: Date selector and Search -->
       <div class="grid grid-cols-2 gap-2 bg-white border border-[#cbd5e1] p-3 shadow-sm rounded">
         <div>
-          <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">A: Target Dispatch Date</label>
+          <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">ক: ডিসপ্যাচের তারিখ</label>
           <div class="relative">
             <i class="fa-solid fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#2563eb] text-xs"></i>
             <input type="date" id="van-date-select" onchange="loadVanStock()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 font-bold font-mono rounded" />
           </div>
         </div>
         <div>
-          <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">B: Search Ledger Name</label>
+          <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">খ: পণ্য খুঁজুন</label>
           <div class="relative">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-            <input type="text" id="van-search" placeholder="Search product..." oninput="filterVanStock()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 rounded" />
+            <input type="text" id="van-search" placeholder="পণ্য খুঁজুন..." oninput="filterVanStock()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 rounded" />
           </div>
         </div>
       </div>
@@ -431,25 +431,25 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Van Products Spreadsheet table -->
       <div class="bg-white border border-[#cbd5e1] overflow-hidden">
         <div class="px-4 py-2.5 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
-          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Sheet: Van Cargo Inventory</span>
-          <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="van-products-count">0 items loaded</span>
+          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">শিট: ভ্যান মাল তালিকা</span>
+          <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="van-products-count">০টি পণ্য লোড হয়েছে</span>
         </div>
 
         <div class="overflow-x-auto w-full">
           <table class="excel-table w-full" id="van-stock-table">
             <thead>
               <tr class="bg-gray-100">
-                <th class="text-left pl-4">Loaded Product</th>
-                <th class="text-right">Out Qty</th>
-                <th class="text-right">Returns</th>
-                <th class="text-right">Net Sold</th>
-                <th class="text-right pr-4">Net Value</th>
+                <th class="text-left pl-4">লোড করা পণ্য</th>
+                <th class="text-right">বের হওয়া</th>
+                <th class="text-right">ফেরত</th>
+                <th class="text-right">নেট বিক্রয়</th>
+                <th class="text-right pr-4">নেট মূল্য</th>
               </tr>
             </thead>
             <tbody id="van-products-list">
               <!-- Grid rows rendered dynamically in JS -->
               <tr>
-                <td colspan="5" class="text-center py-6 text-gray-400 italic px-4">No products loaded on this date.</td>
+                <td colspan="5" class="text-center py-6 text-gray-400 italic px-4">এই তারিখে কোনো পণ্য লোড হয়নি।</td>
               </tr>
             </tbody>
           </table>
@@ -459,45 +459,45 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Dispatch Summary Report Card -->
       <div class="bg-white border border-[#cbd5e1] overflow-hidden hidden" id="van-summary-card">
         <div class="px-4 py-2.5 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
-          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Summary: Settlement & Expenses Ledger</span>
+          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">সারসংক্ষেপ: সেটেলমেন্ট ও খরচ লেজার</span>
           <span class="text-[10px] font-mono text-[#2563eb] font-bold" id="summary-dispatch-id">#DISP-N/A</span>
         </div>
         <div class="p-4 grid grid-cols-2 gap-4">
           <!-- Left Column Metrics -->
           <div class="space-y-3">
             <div>
-              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Gross Sales Value</div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">মোট বিক্রয় মূল্য</div>
               <div class="text-lg font-extrabold font-mono text-gray-700 mt-0.5" id="summary-gross-sales">৳0.00</div>
             </div>
             <div>
-              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Damage Amount</div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">ক্ষতির পরিমাণ</div>
               <div class="text-lg font-extrabold font-mono text-red-500 mt-0.5" id="summary-damage">৳0.00</div>
             </div>
             <div>
-              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Approved Expenses</div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">অনুমোদিত খরচ</div>
               <div class="text-lg font-extrabold font-mono text-orange-500 mt-0.5" id="summary-expenses">৳0.00</div>
             </div>
           </div>
-          <!-- Right Column Metrics -->
+          <!-- ডান কলামের তথ্য -->
           <div class="space-y-3">
             <div>
-              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Expected Settlement</div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">প্রত্যাশিত সেটেলমেন্ট</div>
               <div class="text-lg font-extrabold font-mono text-blue-600 mt-0.5" id="summary-expected">৳0.00</div>
             </div>
             <div>
-              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Submitted Settlement</div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">জমা দেওয়া সেটেলমেন্ট</div>
               <div class="text-lg font-extrabold font-mono text-green-600 mt-0.5" id="summary-submitted">৳0.00</div>
             </div>
             <div>
-              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Difference (Shortage/Surplus)</div>
+              <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">পার্থক্য (ঘাটতি/উদ্বৃত্ত)</div>
               <div class="text-lg font-extrabold font-mono mt-0.5" id="summary-difference">৳0.00</div>
             </div>
           </div>
         </div>
         <!-- Remarks Section -->
         <div class="px-4 py-3 bg-gray-50 border-t border-[#cbd5e1]">
-          <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Settlement Notes / Remarks</div>
-          <div class="text-xs text-gray-600 italic font-mono" id="summary-remarks">No remarks provided.</div>
+          <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">সেটেলমেন্ট মন্তব্য / নোট</div>
+          <div class="text-xs text-gray-600 italic font-mono" id="summary-remarks">কোনো মন্তব্য নেই।</div>
         </div>
       </div>
     </div>
@@ -509,7 +509,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
       <!-- Settlement Date Selector -->
       <div class="bg-white border border-[#cbd5e1] p-3 shadow-sm rounded">
-        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Target Settlement Date</label>
+        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">সেটেলমেন্টের তারিখ</label>
         <div class="relative">
           <i class="fa-solid fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#2563eb] text-xs"></i>
           <input type="date" id="settlement-date-select" onchange="loadSettlementForDate()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 font-bold font-mono rounded" />
@@ -519,8 +519,8 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Settlement Spreadsheet Table -->
       <div class="bg-white border border-[#cbd5e1] p-4 space-y-3">
         <div class="pb-2 border-b border-gray-200 flex justify-between items-center mb-3">
-          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calculator text-[#2563eb] mr-1.5"></i>Settlement Ledger Sheet</h3>
-          <span class="text-[9px] bg-[#dbeafe] text-[#2563eb] px-2 py-0.5 font-bold uppercase">Dispatch audit</span>
+          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-calculator text-[#2563eb] mr-1.5"></i>সেটেলমেন্ট লেজার শিট</h3>
+          <span class="text-[9px] bg-[#dbeafe] text-[#2563eb] px-2 py-0.5 font-bold uppercase">ডিসপ্যাচ অডিট</span>
         </div>
 
         <!-- Excel Formula Table -->
@@ -528,45 +528,45 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           <table class="excel-table">
             <thead>
               <tr class="bg-gray-100">
-                <th class="text-left pl-4">Cell Formula Variable</th>
-                <th class="text-right pr-4">Audit Value</th>
+                <th class="text-left pl-4">ঘর সূত্র চলক</th>
+                <th class="text-right pr-4">অডিট মান</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="pl-4">Van Out Load Value</td>
+                <td class="pl-4">ভ্যান থেকে বের হওয়া মালের মূল্য</td>
                 <td class="text-right font-mono font-bold text-blue-600 pr-4" id="formula-out">৳0.00</td>
               </tr>
               <tr>
-                <td class="pl-4">Less Returns Value</td>
+                <td class="pl-4">বাদ ফেরত মূল্য</td>
                 <td class="text-right font-mono font-bold text-red-500 pr-4" id="formula-return">- ৳0.00</td>
               </tr>
               <tr>
                 <td class="pl-4 flex items-center gap-1.5">
-                  Deduct Damage Amount (৳)
+                  বাদ ক্ষতির পরিমাণ (৳)
                 </td>
                 <td class="text-right p-1.5 pr-4">
-                  <input type="number" id="input-damage" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-red-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="0.00" />
+                  <input type="number" id="input-damage" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-red-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="০.০০" />
                 </td>
               </tr>
               <tr>
                 <td class="pl-4 flex items-center gap-1.5">
-                  Deduct Expense Amount (৳)
+                  বাদ খরচের পরিমাণ (৳)
                 </td>
                 <td class="text-right p-1.5 pr-4">
-                  <input type="number" id="input-expense" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-orange-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="0.00" />
+                  <input type="number" id="input-expense" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-orange-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="০.০০" />
                 </td>
               </tr>
               <tr>
                 <td class="pl-4 flex items-center gap-1.5">
-                  Add Commission Amount (৳)
+                  যোগ কমিশনের পরিমাণ (৳)
                 </td>
                 <td class="text-right p-1.5 pr-4">
-                  <input type="number" id="input-commission" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-emerald-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="0.00" />
+                  <input type="number" id="input-commission" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-emerald-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="০.০০" />
                 </td>
               </tr>
               <tr class="bg-blue-50">
-                <td class="font-bold text-blue-800 pl-4">Expected Net Payable Submit</td>
+                <td class="font-bold text-blue-800 pl-4">প্রত্যাশিত নেট পরিশোধযোগ্য</td>
                 <td class="text-right font-mono font-bold text-[#2563eb] text-xs pr-4" id="formula-expected">৳0.00</td>
               </tr>
             </tbody>
@@ -577,18 +577,18 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Banknote Counter Sheet Table -->
       <div class="bg-white border border-[#cbd5e1] overflow-hidden">
         <div class="px-4 py-2 bg-gray-100 border-b border-[#cbd5e1] flex justify-between items-center">
-          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Sheet: Bangladeshi Banknote Counter</span>
-          <span class="text-[9px] text-[#2563eb] font-mono font-bold uppercase tracking-widest">BDT Counting</span>
+          <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">শিট: বাংলাদেশি নোট গণনা</span>
+          <span class="text-[9px] text-[#2563eb] font-mono font-bold uppercase tracking-widest">টাকা গণনা</span>
         </div>
 
         <div class="overflow-x-auto w-full">
           <table class="excel-table w-full">
             <thead>
               <tr class="bg-gray-100">
-                <th class="excel-row-num">Row</th>
-                <th class="text-left pl-4">Banknote Denomination</th>
-                <th class="text-center" style="width: 140px;">Quantities Counted (টি)</th>
-                <th class="text-right pr-4" style="width: 110px;">Subtotal (৳)</th>
+                <th class="excel-row-num">ক্রম</th>
+                <th class="text-left pl-4">নোটের মান</th>
+                <th class="text-center" style="width: 140px;">গণনা করা পরিমাণ (টি)</th>
+                <th class="text-right pr-4" style="width: 110px;">উপমোট (৳)</th>
               </tr>
             </thead>
             <tbody id="banknotes-grid-table">
@@ -606,23 +606,23 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           <table class="excel-table">
             <thead>
               <tr class="bg-gray-100">
-                <th class="text-left pl-4">Audit Check Matrix</th>
-                <th class="text-right pr-4">Value (৳)</th>
+                <th class="text-left pl-4">অডিট যাচাই ম্যাট্রিক্স</th>
+                <th class="text-right pr-4">মান (৳)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="pl-4">Total Expected Submission Amount (৳)</td>
+                <td class="pl-4">মোট প্রত্যাশিত জমার পরিমাণ (৳)</td>
                 <td class="text-right font-mono font-bold text-gray-600 pr-4" id="audit-summary-expected">৳0.00</td>
               </tr>
               <tr>
-                <td class="font-bold text-gray-700 pl-4">Total Cash Counted (৳)</td>
+                <td class="font-bold text-gray-700 pl-4">মোট গণনা করা নগদ (৳)</td>
                 <td class="text-right font-mono font-bold text-[#2563eb] text-xs pr-4" id="counted-total">৳0.00</td>
               </tr>
               <tr class="bg-gray-50">
-                <td class="font-bold text-gray-700 pl-4">Discrepancy Status</td>
+                <td class="font-bold text-gray-700 pl-4">পার্থক্যের অবস্থা</td>
                 <td class="text-right p-1 pr-4" id="discrepancy-badge-container">
-                  <span class="bg-gray-200 text-gray-700 text-[10px] font-black px-2 py-0.5">Empty Counter</span>
+                  <span class="bg-gray-200 text-gray-700 text-[10px] font-black px-2 py-0.5">খালি গণনা</span>
                 </td>
               </tr>
             </tbody>
@@ -631,13 +631,13 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
         <!-- Remarks -->
         <div>
-          <label class="block text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Remarks / Settlement Notes</label>
-          <textarea id="settlement-remarks" placeholder="Enter remarks about discrepancies or notes for the manager..." rows="2" class="w-full bg-white border border-[#cbd5e1] p-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"></textarea>
+          <label class="block text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">মন্তব্য / সেটেলমেন্ট নোট</label>
+          <textarea id="settlement-remarks" placeholder="পার্থক্য বা ম্যানেজারের জন্য মন্তব্য লিখুন..." rows="2" class="w-full bg-white border border-[#cbd5e1] p-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"></textarea>
         </div>
 
-        <!-- Submit Button -->
+        <!-- জমা বোতাম -->
         <button onclick="submitCashSettlement()" id="submit-settle-btn" class="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 btn-bounce">
-          <i class="fa-solid fa-circle-check"></i> Submit Cash Settlement Report
+          <i class="fa-solid fa-circle-check"></i> নগদ সেটেলমেন্ট রিপোর্ট জমা দিন
         </button>
       </div>
     </div>
@@ -647,15 +647,15 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
   <nav class="bg-gray-100 shrink-0 flex items-center justify-around border-t border-[#cbd5e1] z-40 select-none">
     <button onclick="switchTab('home')" id="nav-home" class="flex items-center justify-center gap-2 text-gray-600 py-3.5 flex-1 font-mono text-[11px] font-bold border-r border-[#cbd5e1] border-b border-gray-100 btn-bounce tab-active">
       <i class="fa-solid fa-house-chimney text-xs"></i>
-      <span>Home_Sheet</span>
+      <span>হোম_শিট</span>
     </button>
     <button onclick="switchTab('van')" id="nav-van" class="flex items-center justify-center gap-2 text-gray-600 py-3.5 flex-1 font-mono text-[11px] font-bold border-r border-[#cbd5e1] border-b border-gray-100 btn-bounce">
       <i class="fa-solid fa-table-cells text-xs"></i>
-      <span>Cargo_Sheet</span>
+      <span>মাল_শিট</span>
     </button>
     <button onclick="switchTab('settlement')" id="nav-settlement" class="flex items-center justify-center gap-2 text-gray-600 py-3.5 flex-1 font-mono text-[11px] font-bold border-b border-gray-100 btn-bounce">
       <i class="fa-solid fa-calculator text-xs"></i>
-      <span>Cash_Settlement</span>
+      <span>নগদ_সেটেলমেন্ট</span>
     </button>
   </nav>
 
@@ -754,9 +754,9 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         const res = await fetch(endpoint, options);
         return await res.json();
       } catch (err) {
-        showToast('Internet connection problem. Please try again.', 'error');
+        showToast('ইন্টারনেট সংযোগ সমস্যা। আবার চেষ্টা করুন।', 'error');
         console.error('API Err:', err);
-        return { success: false, message: 'API connection failed' };
+        return { success: false, message: 'API সংযোগ ব্যর্থ হয়েছে' };
       }
     }
 
@@ -847,7 +847,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
         if (data.loaded_products && data.loaded_products.length > 0) {
           homeCargoCard.classList.remove('hidden');
-          homeCargoCount.textContent = `${data.loaded_products.length} item${data.loaded_products.length !== 1 ? 's' : ''} loaded`;
+          homeCargoCount.textContent = `${data.loaded_products.length}টি পণ্য লোড হয়েছে`;
           
           homeCargoList.innerHTML = '';
           data.loaded_products.forEach(p => {
@@ -870,16 +870,16 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
         if (data.attendance.checked_in) {
           attBadge.className = 'bg-[#dbeafe] text-[#2563eb] text-[9px] font-bold px-2 py-0.5';
-          attBadge.textContent = 'Present';
-          attStatusText.textContent = `Attendance checked-in at ${data.attendance.time} today.`;
+          attBadge.textContent = 'উপস্থিত';
+          attStatusText.textContent = `আজ ${data.attendance.time} এ হাজিরা নিশ্চিত হয়েছে।`;
           
           document.getElementById('att-checked-in-view').classList.remove('hidden');
-          document.getElementById('att-checked-time').textContent = `Checked-in today at ${data.attendance.time} (${data.attendance.warehouse_name})`;
+          document.getElementById('att-checked-time').textContent = `আজ ${data.attendance.time} এ চেক-ইন হয়েছে (${data.attendance.warehouse_name})`;
           document.getElementById('att-checked-out-view').classList.add('hidden');
         } else {
           attBadge.className = 'bg-red-100 text-red-700 text-[9px] font-bold px-2 py-0.5';
-          attBadge.textContent = 'Absent';
-          attStatusText.textContent = "You have not completed daily warehouse attendance registration today!";
+          attBadge.textContent = 'অনুপস্থিত';
+          attStatusText.textContent = "আপনি আজ গুদামে হাজিরা নিশ্চিত করেননি!";
 
           document.getElementById('att-checked-in-view').classList.add('hidden');
           document.getElementById('att-checked-out-view').classList.remove('hidden');
@@ -897,9 +897,9 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           dispBadge.className = 'bg-blue-100 text-blue-800 text-[9px] font-bold px-2 py-0.5';
           
           if (ad.status === 'loaded') {
-            dispBadge.textContent = 'ON DELIVERIES';
+            dispBadge.textContent = 'ডেলিভারিতে আছে';
           } else if (ad.status === 'delivered') {
-            dispBadge.textContent = 'SETTLED_PENDING';
+            dispBadge.textContent = 'সেটেলমেন্ট_মুলতুবি';
           } else {
             dispBadge.textContent = ad.status.toUpperCase();
           }
@@ -951,19 +951,19 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           if (submitBtn) {
             if (isApproved) {
               submitBtn.disabled = true;
-              submitBtn.innerHTML = '<i class="fa-solid fa-lock text-sm"></i> Settlement Approved & Closed';
+              submitBtn.innerHTML = '<i class="fa-solid fa-lock text-sm"></i> সেটেলমেন্ট অনুমোদিত ও বন্ধ';
               submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
             } else {
               submitBtn.disabled = false;
-              submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submit Cash Settlement Report';
+              submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> নগদ সেটেলমেন্ট রিপোর্ট জমা দিন';
               submitBtn.className = 'w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 btn-bounce';
             }
           }
 
         } else {
           dispBadge.className = 'bg-gray-150 text-gray-500 text-[9px] font-bold px-2 py-0.5';
-          dispBadge.textContent = 'No Dispatch';
-          dispIdLabel.textContent = 'N/A';
+          dispBadge.textContent = 'কোনো ডিসপ্যাচ নেই';
+          dispIdLabel.textContent = 'প্রযোজ্য নয়';
           
           emptyView.classList.remove('hidden');
           activeView.classList.add('hidden');
@@ -987,7 +987,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           const submitBtn = document.getElementById('submit-settle-btn');
           if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> No Active Dispatch to Settle';
+            submitBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> সেটেলমেন্টের জন্য কোনো সক্রিয় ডিসপ্যাচ নেই';
             submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
           }
         }
@@ -1005,7 +1005,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       if (!data.success) {
         container.innerHTML = `
           <tr>
-            <td colspan="5" class="text-center py-6 text-red-500 italic px-4">Failed to load cargo inventory ledger</td>
+            <td colspan="5" class="text-center py-6 text-red-500 italic px-4">মালের তালিকা লোড করা ব্যর্থ হয়েছে</td>
           </tr>
         `;
         document.getElementById('van-summary-card').classList.add('hidden');
@@ -1014,12 +1014,12 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
       vanStockData = data;
       const countEl = document.getElementById('van-products-count');
-      countEl.textContent = `${data.products ? data.products.length : 0} items loaded`;
+      countEl.textContent = `${data.products ? data.products.length : 0}টি পণ্য লোড হয়েছে`;
 
       if (!data.products || data.products.length === 0) {
         container.innerHTML = `
           <tr>
-            <td colspan="5" class="text-center py-6 text-gray-400 italic px-4">No products loaded on this date.</td>
+            <td colspan="5" class="text-center py-6 text-gray-400 italic px-4">এই তারিখে কোনো পণ্য লোড হয়নি।</td>
           </tr>
         `;
       } else {
@@ -1073,7 +1073,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           document.getElementById('summary-submitted').textContent = '৳0.00';
           document.getElementById('summary-difference').textContent = '৳0.00';
           document.getElementById('summary-difference').className = 'text-lg font-extrabold font-mono text-gray-500 mt-0.5';
-          document.getElementById('summary-remarks').textContent = 'Settlement has not been submitted/generated for this dispatch yet.';
+          document.getElementById('summary-remarks').textContent = 'এই ডিসপ্যাচের সেটেলমেন্ট এখনো জমা/তৈরি হয়নি।';
         }
       } else {
         summaryCard.classList.add('hidden');
@@ -1191,7 +1191,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         { facingMode: 'environment' },
         { fps: 10, qrbox: { width: 220, height: 220 } },
         async (decodedText) => {
-          showToast('QR Code Read Successful. Fetching location...', 'info');
+          showToast('QR কোড সফলভাবে পড়া হয়েছে। অবস্থান নির্ধারণ করা হচ্ছে...', 'info');
           closeAttendanceScanner();
 
           const coords = await getCurrentLocation();
@@ -1206,13 +1206,13 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
             showToast(res.message, 'success');
             loadDashboard();
           } else {
-            showToast(res.message || 'Check-in failed.', 'error');
+            showToast(res.message || 'চেক-ইন ব্যর্থ হয়েছে।', 'error');
           }
         },
         (errorMessage) => { /* ignore */ }
       ).catch(err => {
         console.warn('Camera start error:', err);
-        showToast('Camera failed to start. Mock check-in using dropdown.', 'warning');
+        showToast('ক্যামেরা চালু করা যায়নি। ড্রপডাউন থেকে মক চেক-ইন ব্যবহার করুন।', 'warning');
         closeAttendanceScanner();
       });
     }
@@ -1233,11 +1233,11 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
     async function simulateCheckIn() {
       const val = document.getElementById('sim-warehouse-select').value;
       if (!val) {
-        showToast('Select a warehouse to mock check-in', 'warning');
+        showToast('মক চেক-ইনের জন্য একটি গুদাম নির্বাচন করুন', 'warning');
         return;
       }
 
-      showToast('Fetching location...', 'info');
+      showToast('অবস্থান নির্ধারণ করা হচ্ছে...', 'info');
       const coords = await getCurrentLocation();
       
       const res = await apiCall(API_URL + '?action=mark_attendance', 'POST', { 
@@ -1370,19 +1370,19 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
       if (totalCounted === 0) {
         badgeContainer.innerHTML = `
-          <span class="bg-gray-100 text-gray-500 text-[10px] font-black px-2 py-0.5">Empty Counter</span>
+          <span class="bg-gray-100 text-gray-500 text-[10px] font-black px-2 py-0.5">খালি গণনা</span>
         `;
       } else if (Math.abs(diff) < 0.01) {
         badgeContainer.innerHTML = `
-          <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5">Balanced</span>
+          <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5">সঠিক মিল</span>
         `;
       } else if (diff < 0) {
         badgeContainer.innerHTML = `
-          <span class="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5">Short: ৳${Math.abs(diff).toFixed(0)}</span>
+          <span class="bg-red-100 text-red-800 text-[10px] font-black px-2 py-0.5">ঘাটতি: ৳${Math.abs(diff).toFixed(0)}</span>
         `;
       } else {
         badgeContainer.innerHTML = `
-          <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5">Surplus: ৳${diff.toFixed(0)}</span>
+          <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2 py-0.5">উদ্বৃত্ত: ৳${diff.toFixed(0)}</span>
         `;
       }
     }
@@ -1390,7 +1390,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
     // Submit Settlement Report to Backend
     async function submitCashSettlement() {
       if (!dashboardData || !dashboardData.active_dispatch) {
-        showToast('No active dispatch loaded to settle.', 'warning');
+        showToast('সেটেলমেন্টের জন্য কোনো সক্রিয় ডিসপ্যাচ লোড নেই।', 'warning');
         return;
       }
 
@@ -1407,7 +1407,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       }
 
       if (totalCounted <= 0) {
-        showToast('Count cash note quantities before submitting.', 'warning');
+        showToast('জমা দেওয়ার আগে নগদ নোটের পরিমাণ গণনা করুন।', 'warning');
         return;
       }
 
@@ -1415,7 +1415,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
       const btn = document.getElementById('submit-settle-btn');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> জমা হচ্ছে...';
 
       const res = await apiCall(API_URL + '?action=submit_settlement', 'POST', {
         dispatch_id: active_dispatch_id,
@@ -1428,7 +1428,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       });
 
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Submit Cash Settlement Report';
+      btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> নগদ সেটেলমেন্ট রিপোর্ট জমা দিন';
 
       if (res.success) {
         showToast(res.message, 'success');
@@ -1436,13 +1436,13 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           window.location.reload();
         }, 1500);
       } else {
-        showToast(res.message || 'Error submitting cash settlement', 'error');
+        showToast(res.message || 'নগদ সেটেলমেন্ট জমা দিতে ত্রুটি হয়েছে', 'error');
       }
     }
 
     // Global Logout Routine
     function logout() {
-      if (confirm('Are you sure you want to logout of DSR Sheet App?')) {
+      if (confirm('আপনি কি ডিএসআর শিট অ্যাপ থেকে লগআউট করতে চান?')) {
         window.location.href = '<?= rootPath() ?>/logout.php';
       }
     }
