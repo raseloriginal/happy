@@ -72,13 +72,23 @@ if ($action === 'save_settings') {
 
 // ── Regenerate/Reset QR token manually ────────────────────────────────────────
 if ($action === 'regenerate_qr') {
+    // Check if token already exists
+    $st = $pdo->prepare("SELECT qr_token FROM attendance_settings WHERE warehouse_id=?");
+    $st->execute([$wid]);
+    $row = $st->fetch();
+    if ($row && !empty($row['qr_token'])) {
+        jsonOut(false, null, 'QR Code has already been generated permanently');
+    }
+
     $today = date('Y-m-d');
     $token = bin2hex(random_bytes(20));
 
-    $pdo->prepare("UPDATE attendance_settings SET qr_token=?, token_date=? WHERE warehouse_id=?")
-        ->execute([$token, $today, $wid]);
+    $pdo->prepare("INSERT INTO attendance_settings (warehouse_id, qr_token, token_date)
+                   VALUES (?,?,?)
+                   ON DUPLICATE KEY UPDATE qr_token=VALUES(qr_token)")
+        ->execute([$wid, $token, $today]);
 
-    jsonOut(true, ['token' => $token, 'token_date' => $today], 'QR reset successfully');
+    jsonOut(true, ['token' => $token, 'token_date' => $today], 'QR generated successfully');
 }
 
 // ── List attendance ───────────────────────────────────────────────────────────

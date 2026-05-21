@@ -120,7 +120,9 @@ include __DIR__ . '/../includes/header.php';
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-gray-700"><i class="fa-solid fa-qrcode text-indigo-500 mr-2"></i>Permanent QR Code</h3>
             <div class="flex gap-2">
-              <button onclick="regenerateQR()" class="btn btn-ghost btn-sm" title="Reset QR Code"><i class="fa-solid fa-rotate-right mr-1"></i>Reset QR</button>
+              <?php if (empty($qrToken)): ?>
+                <button id="genQrBtn" onclick="regenerateQR()" class="btn btn-ghost btn-sm" title="Generate Permanent QR Code"><i class="fa-solid fa-qrcode mr-1"></i>Generate QR</button>
+              <?php endif; ?>
               <button onclick="printQR()" class="btn btn-primary btn-sm"><i class="fa-solid fa-print mr-1"></i>Print</button>
             </div>
           </div>
@@ -295,6 +297,10 @@ async function saveSettings() {
   attendTime   = res.data.attend_time.substring(0,5);
   showToast('Settings saved successfully!');
 
+  // Remove the generate button if it exists
+  const genBtn = document.getElementById('genQrBtn');
+  if (genBtn) genBtn.remove();
+
   // Refresh QR area
   document.getElementById('qrWrap').innerHTML = `
     <div id="qrCanvas"></div>
@@ -307,14 +313,23 @@ async function saveSettings() {
 
 // ── Regenerate QR ─────────────────────────────────────────────
 async function regenerateQR() {
-  if (!confirm('Are you sure you want to reset the permanent QR code? Existing printed QR codes for this warehouse will stop working.')) return;
   const res = await api(API + '?action=regenerate_qr', 'POST', {});
   if (!res.success) return showToast(res.message || 'Error', 'error');
   currentToken = res.data.token;
-  showToast('QR reset successfully!');
-  document.getElementById('qrCanvas') && renderQR(currentToken, 'qrCanvas', 220);
-  const disp = document.getElementById('qrTokenDisplay');
-  if (disp) disp.textContent = currentToken;
+  showToast('QR code generated successfully!');
+  
+  // Remove the generate button permanently from UI
+  const genBtn = document.getElementById('genQrBtn');
+  if (genBtn) genBtn.remove();
+
+  // Refresh QR area
+  document.getElementById('qrWrap').innerHTML = `
+    <div id="qrCanvas"></div>
+    <div class="text-center">
+      <div class="text-xs font-mono text-indigo-600 break-all" id="qrTokenDisplay">${currentToken}</div>
+      <div class="text-xs text-gray-400 mt-1">Permanent QR Code &nbsp;|&nbsp; Check-in by: <strong>${attendTime}</strong></div>
+    </div>`;
+  renderQR(currentToken, 'qrCanvas', 220);
 }
 
 // ── Print QR ──────────────────────────────────────────────────
