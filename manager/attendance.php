@@ -49,9 +49,23 @@ include __DIR__ . '/../includes/header.php';
 <!-- Extra print styles -->
 <style>
   @media print {
+    body { background: #ffffff !important; }
     body * { visibility: hidden !important; }
     #printArea, #printArea * { visibility: visible !important; }
-    #printArea { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; }
+    #printArea {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #fff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
   }
   .att-status-present  { background:#dcfce7; color:#166534; }
   .att-status-absent   { background:#fee2e2; color:#991b1b; }
@@ -177,12 +191,24 @@ include __DIR__ . '/../includes/header.php';
 
 <!-- ───── PRINT AREA ───────────────────────────────────────────── -->
 <div id="printArea" style="display:none">
-  <div style="font-family:'Inter',sans-serif; text-align:center; padding:30px;">
-    <h2 style="font-size:20px; font-weight:700; color:#1e1b4b; margin-bottom:4px;">Happy Bangladesh</h2>
-    <p style="font-size:13px; color:#4b5563; margin-bottom:16px;">Permanent Attendance QR Code</p>
-    <div id="printQrCanvas" style="display:inline-block; padding:16px; border:2px solid #c7d2fe; border-radius:12px; margin-bottom:14px;"></div>
-    <p style="font-size:12px; color:#374151; margin:4px 0;">Check-in Deadline: <strong id="printTime"></strong></p>
-    <p style="font-size:10px; color:#9ca3af; margin-top:12px;">Scan with Happy Bangladesh App to mark attendance</p>
+  <div style="font-family:'Inter', sans-serif; text-align:center; padding:60px 40px; border:8px double #4f46e5; border-radius:24px; max-width:600px; margin:50px auto; background:#fff; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);">
+    <div style="margin-bottom:24px;">
+      <img src="<?= rootPath() ?>/assets/img/logo/logo.png" alt="Happy Bangladesh" style="height:64px; margin:0 auto; display:block;" />
+    </div>
+    <h2 style="font-size:28px; font-weight:800; color:#1e1b4b; margin:16px 0 8px 0; letter-spacing:-0.025em;">PERMANENT ATTENDANCE</h2>
+    <p style="font-size:16px; color:#6b7280; font-weight:500; margin-bottom:32px;">Scan to Mark Your Daily Check-In</p>
+    
+    <div id="printQrCanvas" style="display:inline-block; padding:24px; border:2px dashed #818cf8; border-radius:20px; background:#faf5ff; margin-bottom:32px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);"></div>
+    
+    <div style="background:#f3f4f6; border-radius:12px; padding:16px 24px; display:inline-block; margin-bottom:32px;">
+      <span style="font-size:14px; color:#4b5563; font-weight:500;">Check-in Deadline:</span>
+      <span style="font-size:18px; color:#1f2937; font-weight:700; margin-left:8px;" id="printTime"></span>
+    </div>
+    
+    <p style="font-size:14px; color:#9ca3af; line-height:1.5;">
+      Open the <strong>Happy Bangladesh App</strong> on your mobile device,<br>
+      go to Attendance, and scan this QR code to mark your check-in.
+    </p>
   </div>
 </div>
 
@@ -277,10 +303,14 @@ function renderQR(token, containerId, size = 220) {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  el.appendChild(canvas);
   const payload = JSON.stringify({ token, wh: '<?= $wid ?>' });
-  new QRCode(el, { text: payload, width: size, height: size,
-    colorDark: '#1e1b4b', colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M });
+  if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+    QRCode.toCanvas(canvas, payload, { width: size, margin: 1 }, function(err) {
+      if (err) console.error('QR gen error:', err);
+    });
+  }
 }
 
 // ── Save settings & generate QR ───────────────────────────────
