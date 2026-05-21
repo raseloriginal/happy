@@ -28,11 +28,11 @@ $orders = $pdo->query('
     JOIN order_items oi ON oi.order_id=o.id
     JOIN products p ON p.id=oi.product_id
     ORDER BY CASE o.status
-               WHEN 'pending'          THEN 1
-               WHEN 'ready_sale'       THEN 2
-               WHEN 'out_for_delivery' THEN 3
-               WHEN 'delivered'        THEN 4
-               WHEN 'cancelled'        THEN 5
+               WHEN \'pending\'          THEN 1
+               WHEN \'ready_sale\'       THEN 2
+               WHEN \'out_for_delivery\' THEN 3
+               WHEN \'delivered\'        THEN 4
+               WHEN \'cancelled\'        THEN 5
                ELSE 6
              END, o.id DESC, oi.id
 ')->fetchAll();
