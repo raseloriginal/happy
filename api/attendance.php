@@ -49,24 +49,28 @@ if ($action === 'get_settings') {
     jsonOut(true, $row ?: ['attend_time' => '09:00', 'qr_token' => null, 'token_date' => null]);
 }
 
-// ── Save attend time & regenerate QR token ────────────────────────────────────
+// ── Save attend time & keep existing QR token or create one ───────────────────
 if ($action === 'save_settings') {
     $body        = json_decode(file_get_contents('php://input'), true) ?? [];
     $attend_time = $body['attend_time'] ?? '09:00';
     $today       = date('Y-m-d');
-    $token       = bin2hex(random_bytes(20)); // 40-char secure token
+
+    // Get current token if exists
+    $st = $pdo->prepare("SELECT qr_token FROM attendance_settings WHERE warehouse_id=?");
+    $st->execute([$wid]);
+    $row = $st->fetch();
+    $token = ($row && !empty($row['qr_token'])) ? $row['qr_token'] : bin2hex(random_bytes(20));
 
     $pdo->prepare("INSERT INTO attendance_settings (warehouse_id, attend_time, qr_token, token_date)
                    VALUES (?,?,?,?)
                    ON DUPLICATE KEY UPDATE attend_time=VALUES(attend_time),
-                                           qr_token=VALUES(qr_token),
-                                           token_date=VALUES(token_date)")
+                                           qr_token=VALUES(qr_token)")
         ->execute([$wid, $attend_time, $token, $today]);
 
     jsonOut(true, ['token' => $token, 'attend_time' => $attend_time, 'token_date' => $today], 'Settings saved');
 }
 
-// ── Regenerate QR token only ──────────────────────────────────────────────────
+// ── Regenerate/Reset QR token manually ────────────────────────────────────────
 if ($action === 'regenerate_qr') {
     $today = date('Y-m-d');
     $token = bin2hex(random_bytes(20));
@@ -74,7 +78,7 @@ if ($action === 'regenerate_qr') {
     $pdo->prepare("UPDATE attendance_settings SET qr_token=?, token_date=? WHERE warehouse_id=?")
         ->execute([$token, $today, $wid]);
 
-    jsonOut(true, ['token' => $token, 'token_date' => $today], 'QR refreshed');
+    jsonOut(true, ['token' => $token, 'token_date' => $today], 'QR reset successfully');
 }
 
 // ── List attendance ───────────────────────────────────────────────────────────
@@ -102,10 +106,10 @@ if ($action === 'attend') {
     $lng     = $body['longitude'] ?? null;
     $today   = date('Y-m-d');
 
-    // Validate token
-    $st = $pdo->prepare("SELECT * FROM attendance_settings WHERE warehouse_id=? AND qr_token=? AND token_date=?");
-    $st->execute([$wid, $token, $today]);
-    if (!$st->fetch()) jsonOut(false, null, 'Invalid or expired QR token');
+    // Validate token (permanent token check, no date restriction)
+    $st = $pdo->prepare("SELECT * FROM attendance_settings WHERE warehouse_id=? AND qr_token=?");
+    $st->execute([$wid, $token]);
+    if (!$st->fetch()) jsonOut(false, null, 'Invalid QR token');
 
     // Verify DSR belongs to this warehouse
     $ds = $pdo->prepare("SELECT id FROM dsr WHERE id=? AND warehouse_id=?");

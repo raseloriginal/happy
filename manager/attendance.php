@@ -42,7 +42,7 @@ $dsrList->execute([$wid]); $dsrList = $dsrList->fetchAll();
 $attendTime = substr($settings['attend_time'] ?? '09:00:00', 0, 5); // HH:MM
 $qrToken    = $settings['qr_token'] ?? '';
 $tokenDate  = $settings['token_date'] ?? '';
-$qrValid    = ($tokenDate === $today && $qrToken !== '');
+$qrValid    = ($qrToken !== '');
 
 include __DIR__ . '/../includes/header.php';
 ?>
@@ -73,7 +73,7 @@ include __DIR__ . '/../includes/header.php';
       <div class="flex flex-wrap items-center justify-between mb-6 gap-3">
         <div>
           <h2 class="text-xl font-bold text-gray-800"><i class="fa-solid fa-user-clock text-indigo-500 mr-2"></i>Attendance Management</h2>
-          <p class="text-sm text-gray-500">Set check-in time, generate daily QR, and manage DSR attendance.</p>
+          <p class="text-sm text-gray-500">Set check-in time, show permanent QR, and manage DSR attendance.</p>
         </div>
         <div class="flex gap-2">
           <input type="date" id="filterDate" value="<?= $today ?>" class="form-input text-sm" onchange="loadAttendance()">
@@ -93,10 +93,10 @@ include __DIR__ . '/../includes/header.php';
               <input type="time" id="attendTime" value="<?= htmlspecialchars($attendTime) ?>" class="form-input text-lg font-mono" />
             </div>
             <button onclick="saveSettings()" class="btn btn-primary" id="saveBtn">
-              <i class="fa-solid fa-floppy-disk mr-1"></i>Save & Generate QR
+              <i class="fa-solid fa-floppy-disk mr-1"></i>Save Settings
             </button>
           </div>
-          <p class="text-xs text-gray-400 mt-3"><i class="fa-solid fa-circle-info mr-1"></i>Saving will generate a new QR code valid for today. Share it with DSRs to mark attendance.</p>
+          <p class="text-xs text-gray-400 mt-3"><i class="fa-solid fa-circle-info mr-1"></i>Saving will update the attend time deadline. The QR code is permanent and does not expire daily.</p>
 
           <!-- Stats row -->
           <div class="grid grid-cols-3 gap-3 mt-5">
@@ -118,9 +118,9 @@ include __DIR__ . '/../includes/header.php';
         <!-- QR Code Card -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-gray-700"><i class="fa-solid fa-qrcode text-indigo-500 mr-2"></i>Daily QR Code</h3>
+            <h3 class="font-semibold text-gray-700"><i class="fa-solid fa-qrcode text-indigo-500 mr-2"></i>Permanent QR Code</h3>
             <div class="flex gap-2">
-              <button onclick="regenerateQR()" class="btn btn-ghost btn-sm" title="Regenerate"><i class="fa-solid fa-rotate-right mr-1"></i>Refresh</button>
+              <button onclick="regenerateQR()" class="btn btn-ghost btn-sm" title="Reset QR Code"><i class="fa-solid fa-rotate-right mr-1"></i>Reset QR</button>
               <button onclick="printQR()" class="btn btn-primary btn-sm"><i class="fa-solid fa-print mr-1"></i>Print</button>
             </div>
           </div>
@@ -130,13 +130,13 @@ include __DIR__ . '/../includes/header.php';
               <div id="qrCanvas"></div>
               <div class="text-center">
                 <div class="text-xs font-mono text-indigo-600 break-all" id="qrTokenDisplay"><?= htmlspecialchars($qrToken) ?></div>
-                <div class="text-xs text-gray-400 mt-1">Valid for: <strong><?= $today ?></strong> &nbsp;|&nbsp; Check-in by: <strong><?= htmlspecialchars($attendTime) ?></strong></div>
+                <div class="text-xs text-gray-400 mt-1">Permanent QR Code &nbsp;|&nbsp; Check-in by: <strong><?= htmlspecialchars($attendTime) ?></strong></div>
               </div>
             <?php else: ?>
               <div class="text-center text-gray-400 py-4">
                 <i class="fa-solid fa-qrcode text-5xl mb-3 opacity-20"></i>
-                <p class="text-sm">No QR for today yet.</p>
-                <p class="text-xs mt-1">Set the attend time and click <strong>Save & Generate QR</strong>.</p>
+                <p class="text-sm">No QR generated yet.</p>
+                <p class="text-xs mt-1">Set the attend time and click <strong>Save Settings</strong> to create a permanent QR.</p>
               </div>
             <?php endif; ?>
           </div>
@@ -177,9 +177,8 @@ include __DIR__ . '/../includes/header.php';
 <div id="printArea" style="display:none">
   <div style="font-family:'Inter',sans-serif; text-align:center; padding:30px;">
     <h2 style="font-size:20px; font-weight:700; color:#1e1b4b; margin-bottom:4px;">Happy Bangladesh</h2>
-    <p style="font-size:13px; color:#4b5563; margin-bottom:16px;">Daily Attendance QR Code</p>
+    <p style="font-size:13px; color:#4b5563; margin-bottom:16px;">Permanent Attendance QR Code</p>
     <div id="printQrCanvas" style="display:inline-block; padding:16px; border:2px solid #c7d2fe; border-radius:12px; margin-bottom:14px;"></div>
-    <p style="font-size:12px; color:#374151; margin:4px 0;">Date: <strong id="printDate"></strong></p>
     <p style="font-size:12px; color:#374151; margin:4px 0;">Check-in Deadline: <strong id="printTime"></strong></p>
     <p style="font-size:10px; color:#9ca3af; margin-top:12px;">Scan with Happy Bangladesh App to mark attendance</p>
   </div>
@@ -294,24 +293,25 @@ async function saveSettings() {
   if (!res.success) return showToast(res.message || 'Error', 'error');
   currentToken = res.data.token;
   attendTime   = res.data.attend_time.substring(0,5);
-  showToast('Settings saved & QR generated!');
+  showToast('Settings saved successfully!');
 
   // Refresh QR area
   document.getElementById('qrWrap').innerHTML = `
     <div id="qrCanvas"></div>
     <div class="text-center">
       <div class="text-xs font-mono text-indigo-600 break-all" id="qrTokenDisplay">${currentToken}</div>
-      <div class="text-xs text-gray-400 mt-1">Valid for: <strong>${TODAY}</strong> &nbsp;|&nbsp; Check-in by: <strong>${attendTime}</strong></div>
+      <div class="text-xs text-gray-400 mt-1">Permanent QR Code &nbsp;|&nbsp; Check-in by: <strong>${attendTime}</strong></div>
     </div>`;
   renderQR(currentToken, 'qrCanvas', 220);
 }
 
 // ── Regenerate QR ─────────────────────────────────────────────
 async function regenerateQR() {
+  if (!confirm('Are you sure you want to reset the permanent QR code? Existing printed QR codes for this warehouse will stop working.')) return;
   const res = await api(API + '?action=regenerate_qr', 'POST', {});
   if (!res.success) return showToast(res.message || 'Error', 'error');
   currentToken = res.data.token;
-  showToast('QR refreshed!');
+  showToast('QR reset successfully!');
   document.getElementById('qrCanvas') && renderQR(currentToken, 'qrCanvas', 220);
   const disp = document.getElementById('qrTokenDisplay');
   if (disp) disp.textContent = currentToken;
@@ -322,7 +322,6 @@ function printQR() {
   if (!currentToken) return showToast('No QR yet. Save settings first.', 'error');
   const area = document.getElementById('printArea');
   area.style.display = 'block';
-  document.getElementById('printDate').textContent = TODAY;
   document.getElementById('printTime').textContent = attendTime;
   renderQR(currentToken, 'printQrCanvas', 280);
   setTimeout(() => { window.print(); area.style.display = 'none'; }, 400);
