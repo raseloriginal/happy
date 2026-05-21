@@ -12,6 +12,9 @@ if (empty($_SESSION['user_id']) || $_SESSION['role'] !== 'dsr') {
 }
 
 $pdo    = getDB();
+require_once __DIR__ . '/../includes/attendance_helper.php';
+autoGenerateAttendance($pdo);
+
 $userId = $_SESSION['user_id'];
 $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -176,6 +179,8 @@ switch ($action) {
             }
         }
 
+        $checkedIn = ($attendance && $attendance['status'] !== 'pending' && $attendance['status'] !== 'absent');
+
         echo json_encode([
             'success' => true,
             'profile' => [
@@ -183,12 +188,14 @@ switch ($action) {
                 'warehouse_name' => $dsr['warehouse_name'],
                 'phone' => $_SESSION['phone'] ?? ''
             ],
-            'attendance' => $attendance ? [
+            'attendance' => $checkedIn ? [
                 'checked_in' => true,
                 'time' => date('h:i A', strtotime($attendance['checkin_time'])),
-                'warehouse_name' => $dsr['warehouse_name']
+                'warehouse_name' => $dsr['warehouse_name'],
+                'status' => $attendance['status']
             ] : [
-                'checked_in' => false
+                'checked_in' => false,
+                'status' => $attendance ? $attendance['status'] : 'absent'
             ],
             'active_dispatch' => $activeDispatch ? [
                 'id' => $activeDispatch['id'],

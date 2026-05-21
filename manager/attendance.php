@@ -68,8 +68,10 @@ include __DIR__ . '/../includes/header.php';
     }
   }
   .att-status-present  { background:#dcfce7; color:#166534; }
+  .att-status-active   { background:#dcfce7; color:#166534; }
   .att-status-absent   { background:#fee2e2; color:#991b1b; }
   .att-status-late     { background:#fef9c3; color:#854d0e; }
+  .att-status-pending  { background:#ffedd5; color:#9a3412; }
   .qr-box { border:2px dashed #a5b4fc; border-radius:16px; padding:24px; background:#f5f3ff;
              display:flex; flex-direction:column; align-items:center; gap:12px; }
   .map-link { display:inline-flex; align-items:center; gap:4px; color:#4f46e5;
@@ -113,18 +115,22 @@ include __DIR__ . '/../includes/header.php';
           <p class="text-xs text-gray-400 mt-3"><i class="fa-solid fa-circle-info mr-1"></i>Saving will update the attend time deadline. The QR code is permanent and does not expire daily.</p>
 
           <!-- Stats row -->
-          <div class="grid grid-cols-3 gap-3 mt-5">
+          <div class="grid grid-cols-4 gap-2 mt-5">
             <div class="rounded-lg bg-green-50 p-3 text-center">
               <div class="text-2xl font-bold text-green-700" id="cntPresent">—</div>
-              <div class="text-xs text-green-600 mt-1">Present</div>
+              <div class="text-xs text-green-600 mt-1 text-[10px] md:text-xs">Present</div>
             </div>
             <div class="rounded-lg bg-yellow-50 p-3 text-center">
               <div class="text-2xl font-bold text-yellow-700" id="cntLate">—</div>
-              <div class="text-xs text-yellow-600 mt-1">Late</div>
+              <div class="text-xs text-yellow-600 mt-1 text-[10px] md:text-xs">Late</div>
+            </div>
+            <div class="rounded-lg bg-orange-50 p-3 text-center">
+              <div class="text-2xl font-bold text-orange-700" id="cntPending">—</div>
+              <div class="text-xs text-orange-600 mt-1 text-[10px] md:text-xs">Pending</div>
             </div>
             <div class="rounded-lg bg-red-50 p-3 text-center">
               <div class="text-2xl font-bold text-red-700" id="cntAbsent">—</div>
-              <div class="text-xs text-red-600 mt-1">Absent</div>
+              <div class="text-xs text-red-600 mt-1 text-[10px] md:text-xs">Absent</div>
             </div>
           </div>
         </div>
@@ -234,8 +240,10 @@ include __DIR__ . '/../includes/header.php';
           <label class="form-label">Status</label>
           <select id="editStatus" class="form-input">
             <option value="present">Present</option>
+            <option value="active">Active</option>
             <option value="late">Late</option>
             <option value="absent">Absent</option>
+            <option value="pending">Pending</option>
           </select>
         </div>
       </div>
@@ -382,14 +390,16 @@ async function loadAttendance() {
   if (!res.success) return;
 
   const rows = res.data || [];
-  let present = 0, late = 0, absent = 0;
+  let present = 0, late = 0, pending = 0, absent = 0;
   rows.forEach(r => {
-    if (r.status === 'present') present++;
+    if (r.status === 'present' || r.status === 'active') present++;
     else if (r.status === 'late') late++;
-    else absent++;
+    else if (r.status === 'pending') pending++;
+    else if (r.status === 'absent') absent++;
   });
   document.getElementById('cntPresent').textContent = present;
   document.getElementById('cntLate').textContent    = late;
+  document.getElementById('cntPending').textContent = pending;
   document.getElementById('cntAbsent').textContent  = absent;
 
   if (!rows.length) {
@@ -399,7 +409,8 @@ async function loadAttendance() {
 
   document.getElementById('attendBody').innerHTML = rows.map((r, i) => {
     const statusCls = `att-status-${r.status}`;
-    const statusLabel = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+    let statusLabel = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+    if (r.status === 'present') statusLabel = 'Present (Active)';
     let locHtml = '<span class="text-gray-300 text-xs">—</span>';
     if (r.latitude && r.longitude) {
       locHtml = `<a href="https://www.google.com/maps?q=${r.latitude},${r.longitude}" target="_blank" class="map-link">
@@ -407,6 +418,19 @@ async function loadAttendance() {
         ${parseFloat(r.latitude).toFixed(4)}, ${parseFloat(r.longitude).toFixed(4)}
       </a>`;
     }
+
+    let actionsHtml = '';
+    if (r.status === 'pending' || r.status === 'absent') {
+      actionsHtml = `<button onclick="openManualForDsr(${r.dsr_id})"
+                             class="btn btn-success btn-sm flex items-center gap-1" title="Mark Attend"><i class="fa-solid fa-user-check"></i> Attend</button>`;
+    } else {
+      actionsHtml = `
+        <button onclick="openEdit(${r.id}, '${esc(r.name)}', '${r.checkin_time ?? ''}', '${r.status}', '${esc(r.note ?? '')}')"
+                class="btn btn-ghost btn-sm" title="Edit"><i class="fa-solid fa-pen"></i></button>
+        <button onclick="deleteRecord(${r.id})" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>
+      `;
+    }
+
     return `<tr>
       <td class="font-mono text-xs text-gray-400">${i+1}</td>
       <td class="font-medium">${esc(r.name)}</td>
@@ -416,11 +440,7 @@ async function loadAttendance() {
       <td><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${statusCls}">${statusLabel}</span></td>
       <td>
         <div class="flex gap-1 flex-wrap">
-          <button onclick="openManualForDsr(${r.id}, '${esc(r.name)}', '${r.checkin_time ?? ''}', '${r.status}', '${esc(r.note ?? '')}')"
-                  class="btn btn-warning btn-sm" title="Mark Attend"><i class="fa-solid fa-user-check"></i></button>
-          <button onclick="openEdit(${r.id}, '${esc(r.name)}', '${r.checkin_time ?? ''}', '${r.status}', '${esc(r.note ?? '')}')"
-                  class="btn btn-ghost btn-sm" title="Edit"><i class="fa-solid fa-pen"></i></button>
-          <button onclick="deleteRecord(${r.id})" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>
+          ${actionsHtml}
         </div>
       </td>
     </tr>`;
@@ -457,6 +477,25 @@ async function deleteRecord(id) {
 
 // ── Manual attend modal ───────────────────────────────────────
 function openManualModal() { showModal('manualModal'); }
+
+function openManualForDsr(dsrId) {
+  const select = document.getElementById('manualDsr');
+  if (select) {
+    select.value = dsrId;
+  }
+  const dateInput = document.getElementById('manualDate');
+  if (dateInput) {
+    dateInput.value = document.getElementById('filterDate').value || TODAY;
+  }
+  const timeInput = document.getElementById('manualTime');
+  if (timeInput) {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    timeInput.value = `${hours}:${minutes}`;
+  }
+  showModal('manualModal');
+}
 
 async function submitManual() {
   const dsr_id = document.getElementById('manualDsr').value;

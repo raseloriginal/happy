@@ -869,20 +869,34 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         const attStatusText = document.getElementById('att-status-text');
 
         if (data.attendance.checked_in) {
-          attBadge.className = 'bg-[#dbeafe] text-[#2563eb] text-[9px] font-bold px-2 py-0.5';
-          attBadge.textContent = 'উপস্থিত';
-          attStatusText.textContent = `আজ ${data.attendance.time} এ হাজিরা নিশ্চিত হয়েছে।`;
-          
           document.getElementById('att-checked-in-view').classList.remove('hidden');
           document.getElementById('att-checked-time').textContent = `আজ ${data.attendance.time} এ চেক-ইন হয়েছে (${data.attendance.warehouse_name})`;
           document.getElementById('att-checked-out-view').classList.add('hidden');
+          
+          if (data.attendance.status === 'late') {
+            attBadge.className = 'bg-yellow-100 text-yellow-700 text-[9px] font-bold px-2 py-0.5';
+            attBadge.textContent = 'দেরি';
+            attStatusText.textContent = `আজ ${data.attendance.time} এ দেরিতে হাজিরা নিশ্চিত হয়েছে।`;
+          } else {
+            // present
+            attBadge.className = 'bg-[#dbeafe] text-[#2563eb] text-[9px] font-bold px-2 py-0.5';
+            attBadge.textContent = 'উপস্থিত';
+            attStatusText.textContent = `আজ ${data.attendance.time} এ হাজিরা নিশ্চিত হয়েছে।`;
+          }
         } else {
-          attBadge.className = 'bg-red-100 text-red-700 text-[9px] font-bold px-2 py-0.5';
-          attBadge.textContent = 'অনুপস্থিত';
-          attStatusText.textContent = "আপনি আজ গুদামে হাজিরা নিশ্চিত করেননি!";
-
           document.getElementById('att-checked-in-view').classList.add('hidden');
           document.getElementById('att-checked-out-view').classList.remove('hidden');
+          
+          if (data.attendance.status === 'pending') {
+            attBadge.className = 'bg-amber-100 text-amber-700 text-[9px] font-bold px-2 py-0.5';
+            attBadge.textContent = 'অপেক্ষমান';
+            attStatusText.textContent = "আজকের হাজিরা এখনও নিশ্চিত করা হয়নি (অপেক্ষমান)।";
+          } else {
+            // absent
+            attBadge.className = 'bg-red-100 text-red-700 text-[9px] font-bold px-2 py-0.5';
+            attBadge.textContent = 'অনুপস্থিত';
+            attStatusText.textContent = "আপনি আজ গুদামে হাজিরা নিশ্চিত করেননি (অনুপস্থিত)!";
+          }
         }
 
         // Write Active Dispatch Card
