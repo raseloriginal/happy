@@ -37,6 +37,7 @@ include __DIR__ . '/../includes/header.php';
                   <a href="<?= rootPath() ?>/manager/qr_generate.php?lot_id=<?= $l['id'] ?>" class="btn btn-primary btn-sm"><i class="fa-solid fa-qrcode mr-1"></i> QR</a>
                   <a href="<?= rootPath() ?>/manager/qr_print.php?lot_id=<?= $l['id'] ?>" class="btn btn-ghost btn-sm"><i class="fa-solid fa-print mr-1"></i> Print</a>
                   <a href="<?= rootPath() ?>/manager/lot_view.php?id=<?= $l['id'] ?>" class="btn btn-ghost btn-sm"><i class="fa-solid fa-eye mr-1"></i> View</a>
+                  <a href="<?= rootPath() ?>/manager/lot_edit.php?id=<?= $l['id'] ?>" class="btn btn-ghost btn-sm"><i class="fa-solid fa-pen mr-1"></i> Edit</a>
                   <button onclick="deleteLot(<?= $l['id'] ?>)" class="btn btn-danger btn-sm">Delete</button>
                 </div>
               </td>

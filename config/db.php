@@ -6,11 +6,20 @@ $is_localhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost','10.146.105.8
              || (php_sapi_name() === 'cli'); // Assume localhost if run from CLI for now, or refine if needed
 
 if ($is_localhost) {
+    ini_set('display_errors', '1');
+    ini_set('display_startup_errors', '1');
+    error_reporting(E_ALL);
+
     define('DB_HOST', 'localhost');
     define('DB_NAME', 'happy_bangladesh');
     define('DB_USER', 'root');
     define('DB_PASS', '');
 } else {
+    ini_set('display_errors', '0');
+    ini_set('display_startup_errors', '0');
+    ini_set('log_errors', '1');
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+
     define('DB_HOST', 'localhost');
     define('DB_NAME', 'rasedwwq_happy');
     define('DB_USER', 'rasedwwq_happy');
