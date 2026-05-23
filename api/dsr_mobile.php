@@ -107,12 +107,11 @@ switch ($action) {
             $settleStmt->execute([$dispatch_id]);
             $settledRecord = $settleStmt->fetch();
 
-            // Fetch SRs whose company products are in this dispatch
             $srsStmt = $pdo->prepare('
                 SELECT DISTINCT s.id as sr_id, u.name as sr_name, c.name as company_name
                 FROM dispatch_items di
-                JOIN products p ON p.id = di.product_id
-                JOIN sr s ON s.company_id = p.company_id
+                JOIN orders o ON o.id = di.order_id
+                JOIN sr s ON s.id = o.sr_id
                 JOIN users u ON u.id = s.user_id
                 JOIN companies c ON c.id = s.company_id
                 WHERE di.dispatch_id=?
