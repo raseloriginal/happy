@@ -849,5 +849,7 @@ $user_id = $_SESSION['user_id'];
       });
     }
   </script>
+  <!-- Live Geolocation Tracking System -->
+  <script src="location_tracker.js"></script>
 </body>
 </html>

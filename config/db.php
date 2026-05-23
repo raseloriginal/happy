@@ -124,6 +124,24 @@ function getDB(): PDO {
                     $pdo->exec("ALTER TABLE `cash_settlements` ADD COLUMN `commission_details` TEXT NULL DEFAULT NULL AFTER `commission_amount`");
                 } catch (PDOException $ex) { }
             }
+
+            // Auto-migration: dsr_locations table
+            try {
+                $pdo->query("SELECT id FROM dsr_locations LIMIT 0");
+            } catch (PDOException $e) {
+                try {
+                    $pdo->exec("CREATE TABLE IF NOT EXISTS `dsr_locations` (
+                        `id` INT AUTO_INCREMENT PRIMARY KEY,
+                        `dsr_id` INT NOT NULL,
+                        `latitude` DECIMAL(10, 8) NOT NULL,
+                        `longitude` DECIMAL(11, 8) NOT NULL,
+                        `accuracy` DECIMAL(8, 2) DEFAULT NULL,
+                        `recorded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        KEY `dsr_id` (`dsr_id`),
+                        CONSTRAINT `dsr_locations_ibfk_1` FOREIGN KEY (`dsr_id`) REFERENCES `dsr` (`id`) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                } catch (PDOException $ex) { }
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));

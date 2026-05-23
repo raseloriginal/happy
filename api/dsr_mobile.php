@@ -610,6 +610,38 @@ switch ($action) {
         }
         break;
 
+    case 'track_location':
+        if ($method !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+
+        $d = json_decode(file_get_contents('php://input'), true);
+        $latitude = isset($d['latitude']) ? floatval($d['latitude']) : null;
+        $longitude = isset($d['longitude']) ? floatval($d['longitude']) : null;
+        $accuracy = isset($d['accuracy']) ? floatval($d['accuracy']) : null;
+
+        if (empty($latitude) || empty($longitude)) {
+            echo json_encode(['success' => false, 'message' => 'Latitude and longitude are required.']);
+            exit;
+        }
+
+        try {
+            $stmt = $pdo->prepare('
+                INSERT INTO dsr_locations (dsr_id, latitude, longitude, accuracy) 
+                VALUES (?, ?, ?, ?)
+            ');
+            $stmt->execute([$dsr_id, $latitude, $longitude, $accuracy]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Location tracked successfully'
+            ]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        }
+        break;
+
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid mobile API endpoint action']);
         break;

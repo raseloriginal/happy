@@ -852,5 +852,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       });
     }
   </script>
+  <!-- Live Geolocation Tracking System -->
+  <script src="location_tracker.js"></script>
 </body>
 </html>

@@ -38,6 +38,7 @@ function navLink(string $href, string $icon, string $label, string $current): st
       <?= navLink(rootPath() . '/admin/managers.php', 'fa-solid fa-user-tie', 'Managers', $current) ?>
       <?= navLink(rootPath() . '/admin/sr.php', 'fa-solid fa-user-tag', 'Sales Reps (SR)', $current) ?>
       <?= navLink(rootPath() . '/admin/dsr.php', 'fa-solid fa-truck', 'Delivery Reps (DSR)', $current) ?>
+      <?= navLink(rootPath() . '/admin/tracking.php', 'fa-solid fa-map-location-dot', 'DSR Live Tracking', $current) ?>
 
       <div class="sidebar-section">Reports</div>
       <?= navLink(rootPath() . '/admin/reports.php', 'fa-solid fa-chart-bar', 'Reports', $current) ?>
@@ -67,6 +68,7 @@ function navLink(string $href, string $icon, string $label, string $current): st
 
       <div class="sidebar-section">Operations</div>
       <?= navLink(rootPath() . '/manager/attendance.php', 'fa-solid fa-user-clock', 'Attendance', $current) ?>
+      <?= navLink(rootPath() . '/manager/tracking.php', 'fa-solid fa-map-location-dot', 'DSR Live Tracking', $current) ?>
       <?= navLink(rootPath() . '/manager/returns.php', 'fa-solid fa-undo', 'Returns', $current) ?>
       <?= navLink(rootPath() . '/manager/inventory.php', 'fa-solid fa-store', 'Inventory', $current) ?>
       <?= navLink(rootPath() . '/manager/expenses.php', 'fa-solid fa-money-bill-wave', 'Expenses', $current) ?>
