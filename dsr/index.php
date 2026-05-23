@@ -962,8 +962,8 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       if (!ad) return;
 
       // Populate settlement formula variables directly
-      document.getElementById('formula-out').textContent = \`৳\${ad.out_value.toFixed(2)}\`;
-      document.getElementById('formula-return').textContent = \`- ৳\${ad.return_value.toFixed(2)}\`;
+      document.getElementById('formula-out').textContent = `৳${ad.out_value.toFixed(2)}`;
+      document.getElementById('formula-return').textContent = `- ৳${ad.return_value.toFixed(2)}`;
 
       // Pre-populate damages if they already submitted settlement
       if (ad.settlement) {
