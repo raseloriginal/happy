@@ -1,16 +1,67 @@
 <?php
 // config/session.php — Session management & role guards
 
+// 30 days in seconds
+$session_lifetime = 30 * 24 * 60 * 60;
+
+// Dynamic Session Naming based on script path or Referer
+$script = $_SERVER['SCRIPT_NAME'] ?? '';
+$script = str_replace('\\', '/', $script);
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+$refererPath = parse_url($referer, PHP_URL_PATH) ?: '';
+
+$session_name = 'HAPPY_GENERAL_SESS';
+
+if (strpos($script, '/admin/') !== false || strpos($refererPath, '/admin/') !== false) {
+    $session_name = 'HAPPY_ADMIN_SESS';
+} elseif (strpos($script, '/manager/') !== false || strpos($refererPath, '/manager/') !== false) {
+    $session_name = 'HAPPY_MANAGER_SESS';
+} elseif (strpos($script, '/dsr/') !== false || strpos($refererPath, '/dsr/') !== false) {
+    $session_name = 'HAPPY_DSR_SESS';
+} elseif (strpos($script, '/dealer/') !== false || strpos($refererPath, '/dealer/') !== false) {
+    $session_name = 'HAPPY_DEALER_SESS';
+}
+
 if (session_status() === PHP_SESSION_NONE) {
+    // Custom session save path to prevent deletion by OS temp cleanups
+    $session_dir = __DIR__ . '/sessions';
+    if (!is_dir($session_dir)) {
+        mkdir($session_dir, 0755, true);
+        file_put_contents($session_dir . '/.htaccess', "Deny from all\n");
+    }
+    ini_set('session.save_path', $session_dir);
+    ini_set('session.gc_maxlifetime', $session_lifetime);
+    
+    session_set_cookie_params([
+        'lifetime' => $session_lifetime,
+        'path' => '/',
+        'secure' => false, // Set to true if running on HTTPS
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    
+    session_name($session_name);
     session_start();
 }
 
 /**
- * Require authentication — redirect to login if not logged in
+ * Require authentication — redirect to specific role login if not logged in
  */
 function requireAuth(): void {
     if (empty($_SESSION['user_id'])) {
-        header('Location: ' . rootUrl() . '/index.php');
+        $script = $_SERVER['SCRIPT_NAME'] ?? '';
+        $script = str_replace('\\', '/', $script);
+        $base = rootUrl();
+        
+        if (strpos($script, '/admin/') !== false) {
+            header('Location: ' . $base . '/admin/login.php');
+        } elseif (strpos($script, '/manager/') !== false) {
+            header('Location: ' . $base . '/manager/login.php');
+        } elseif (strpos($script, '/dsr/') !== false) {
+            header('Location: ' . $base . '/dsr/login.php');
+        } else {
+            header('Location: ' . $base . '/index.php');
+        }
         exit;
     }
 }

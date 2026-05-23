@@ -1,9 +1,12 @@
 const CACHE_NAME = 'dsr-pwa-cache-v1';
 const urlsToCache = [
   './index.php',
+  './login.php',
+  './manifest.json',
+  '../assets/img/logo/logo-black.png',
   '../assets/img/logo/logo-icon-black.png',
-  '../assets/img/logo/logo-wide-white.png',
-  '../assets/img/logo/logo-wide-black.png'
+  '../assets/img/logo/logo.png',
+  '../assets/img/logo/logo-icon.png'
 ];
 
 self.addEventListener('install', event => {

@@ -28,6 +28,22 @@ if (!$user || !password_verify($password, $user['password'])) {
     exit;
 }
 
+// Enforce role-specific login portal restrictions
+$sessName = session_name();
+$expectedRole = '';
+if ($sessName === 'HAPPY_ADMIN_SESS') {
+    $expectedRole = 'admin';
+} elseif ($sessName === 'HAPPY_MANAGER_SESS') {
+    $expectedRole = 'manager';
+} elseif ($sessName === 'HAPPY_DSR_SESS') {
+    $expectedRole = 'dsr';
+}
+
+if ($expectedRole && $user['role'] !== $expectedRole) {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized login portal for this user role.']);
+    exit;
+}
+
 // Set session
 $_SESSION['user_id']    = $user['id'];
 $_SESSION['name']       = $user['name'];
