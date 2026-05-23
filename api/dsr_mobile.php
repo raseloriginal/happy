@@ -106,6 +106,20 @@ switch ($action) {
             $settleStmt = $pdo->prepare('SELECT * FROM cash_settlements WHERE dispatch_id=? LIMIT 1');
             $settleStmt->execute([$dispatch_id]);
             $settledRecord = $settleStmt->fetch();
+
+            // Fetch SRs whose company products are in this dispatch
+            $srsStmt = $pdo->prepare('
+                SELECT DISTINCT s.id as sr_id, u.name as sr_name, c.name as company_name
+                FROM dispatch_items di
+                JOIN products p ON p.id = di.product_id
+                JOIN sr s ON s.company_id = p.company_id
+                JOIN users u ON u.id = s.user_id
+                JOIN companies c ON c.id = s.company_id
+                WHERE di.dispatch_id=?
+                ORDER BY c.name, u.name
+            ');
+            $srsStmt->execute([$dispatch_id]);
+            $assignedSRs = $srsStmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         // Recent Settled Dispatches
@@ -214,9 +228,11 @@ switch ($action) {
                     'damage_amount' => floatval($settledRecord['damage_amount']),
                     'expense_amount' => floatval($settledRecord['expense_amount']),
                     'commission_amount' => floatval($settledRecord['commission_amount'] ?? 0.00),
+                    'commission_details' => json_decode($settledRecord['commission_details'] ?? '{}', true),
                     'notes' => $settledRecord['notes'],
                     'notes_details' => json_decode($settledRecord['notes_details'], true)
-                ] : null
+                ] : null,
+                'assigned_srs' => $assignedSRs ?? []
             ] : null,
             'recent_dispatches' => $recentDispatches,
             'stats' => [
@@ -473,7 +489,13 @@ switch ($action) {
         $dispatch_id = intval($d['dispatch_id'] ?? 0);
         $damage_amount = floatval($d['damage_amount'] ?? 0);
         $expense_amount = floatval($d['expense_amount'] ?? 0);
-        $commission_amount = floatval($d['commission_amount'] ?? 0);
+        $commission_details = $d['commission_details'] ?? [];
+        $commission_amount = 0;
+        if (is_array($commission_details)) {
+            foreach ($commission_details as $amt) {
+                $commission_amount += floatval($amt);
+            }
+        }
         $amount_submitted = floatval($d['amount_submitted'] ?? 0);
         $notes_details = $d['notes_details'] ?? [];
         $notes_text = trim($d['notes_text'] ?? '');
@@ -524,21 +546,21 @@ switch ($action) {
         if ($existId) {
             $upStmt = $pdo->prepare('
                 UPDATE cash_settlements 
-                SET amount_expected=?, amount_submitted=?, difference=?, return_amount=?, damage_amount=?, expense_amount=?, commission_amount=?, notes_details=?, notes=?, settlement_date=CURDATE(), status="pending" 
+                SET amount_expected=?, amount_submitted=?, difference=?, return_amount=?, damage_amount=?, expense_amount=?, commission_amount=?, commission_details=?, notes_details=?, notes=?, settlement_date=CURDATE(), status="pending" 
                 WHERE id=?
             ');
             $upStmt->execute([
-                $amount_expected, $amount_submitted, $difference, $returnVal, $damage_amount, $expense_amount, $commission_amount,
+                $amount_expected, $amount_submitted, $difference, $returnVal, $damage_amount, $expense_amount, $commission_amount, json_encode($commission_details),
                 json_encode($notes_details), $notes_text, $existId
             ]);
         } else {
             $insStmt = $pdo->prepare('
-                INSERT INTO cash_settlements (dsr_id, dispatch_id, amount_expected, amount_submitted, difference, return_amount, damage_amount, expense_amount, commission_amount, notes_details, notes, settlement_date, status) 
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,CURDATE(),"pending")
+                INSERT INTO cash_settlements (dsr_id, dispatch_id, amount_expected, amount_submitted, difference, return_amount, damage_amount, expense_amount, commission_amount, commission_details, notes_details, notes, settlement_date, status) 
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURDATE(),"pending")
             ');
             $insStmt->execute([
                 $dsr_id, $dispatch_id, $amount_expected, $amount_submitted, $difference, 
-                $returnVal, $damage_amount, $expense_amount, $commission_amount, json_encode($notes_details), $notes_text
+                $returnVal, $damage_amount, $expense_amount, $commission_amount, json_encode($commission_details), json_encode($notes_details), $notes_text
             ]);
         }
 

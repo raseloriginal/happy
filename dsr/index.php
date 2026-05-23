@@ -532,7 +532,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
                 <th class="text-right pr-4">পরিমাণ</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="settlement-formula-tbody">
               <tr>
                 <td class="pl-4">মালের মোট দাম</td>
                 <td class="text-right font-mono font-bold text-blue-600 pr-4" id="formula-out">৳0.00</td>
@@ -557,15 +557,8 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
                   <input type="number" id="input-expense" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-orange-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="০.০০" />
                 </td>
               </tr>
-              <tr>
-                <td class="pl-4 flex items-center gap-1.5">
-                  যোগ কমিশন (৳)
-                </td>
-                <td class="text-right p-1.5 pr-4">
-                  <input type="number" id="input-commission" value="0" step="any" min="0" oninput="calcSettlementExpected()" class="w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-emerald-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="০.০০" />
-                </td>
-              </tr>
-              <tr class="bg-blue-50">
+              <!-- SR Commission Rows Will Be Injected Here via JS -->
+              <tr class="bg-blue-50" id="expected-row">
                 <td class="font-bold text-blue-800 pl-4">জমা দেওয়ার টাকা</td>
                 <td class="text-right font-mono font-bold text-[#2563eb] text-xs pr-4" id="formula-expected">৳0.00</td>
               </tr>
@@ -932,12 +925,11 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           document.getElementById('formula-out').textContent = `৳${ad.out_value.toFixed(2)}`;
           document.getElementById('formula-return').textContent = `- ৳${ad.return_value.toFixed(2)}`;
 
-          // Pre-populate damages if they already submitted settlement
-          if (ad.settlement) {
-            document.getElementById('input-damage').value = ad.settlement.damage_amount || 0;
-            document.getElementById('input-expense').value = ad.settlement.expense_amount || 0;
-            document.getElementById('input-commission').value = ad.settlement.commission_amount || 0;
-            document.getElementById('settlement-remarks').value = ad.settlement.notes || '';
+            // Pre-populate damages if they already submitted settlement
+            if (ad.settlement) {
+              document.getElementById('input-damage').value = ad.settlement.damage_amount || 0;
+              document.getElementById('input-expense').value = ad.settlement.expense_amount || 0;
+              document.getElementById('settlement-remarks').value = ad.settlement.notes || '';
 
             // Load quantities from database notes counter
             if (ad.settlement.notes_details) {
@@ -945,21 +937,44 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
               // Rerender banknote counters to match updated quantities
               renderBanknotes();
             }
-          } else {
-            document.getElementById('input-damage').value = 0;
-            document.getElementById('input-expense').value = 0;
-            document.getElementById('input-commission').value = 0;
-            document.getElementById('settlement-remarks').value = '';
+            } else {
+              document.getElementById('input-damage').value = 0;
+              document.getElementById('input-expense').value = 0;
+              document.getElementById('settlement-remarks').value = '';
             noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
             renderBanknotes();
           }
 
-          // Disable/Enable fields based on whether the settlement is approved
-          const isApproved = ad.status === 'settled' || (ad.settlement && ad.settlement.status === 'approved');
-          document.getElementById('input-damage').disabled = isApproved;
-          document.getElementById('input-expense').disabled = isApproved;
-          document.getElementById('input-commission').disabled = isApproved;
-          document.getElementById('settlement-remarks').disabled = isApproved;
+            const isApproved = ad.status === 'settled' || (ad.settlement && ad.settlement.status === 'approved');
+            document.getElementById('input-damage').disabled = isApproved;
+            document.getElementById('input-expense').disabled = isApproved;
+            document.getElementById('settlement-remarks').disabled = isApproved;
+
+            // Render SR Commissions
+            const formulaTbody = document.querySelector('#settlement-formula-tbody');
+            // first remove all old commission rows
+            document.querySelectorAll('.sr-commission-row').forEach(e => e.remove());
+
+            if (ad.assigned_srs && ad.assigned_srs.length > 0) {
+              ad.assigned_srs.forEach(sr => {
+                const srVal = (ad.settlement && ad.settlement.commission_details && ad.settlement.commission_details[sr.sr_id]) ? ad.settlement.commission_details[sr.sr_id] : 0;
+                const tr = document.createElement('tr');
+                tr.className = 'sr-commission-row';
+                tr.innerHTML = `
+                  <td class="pl-4 flex items-center gap-1.5 py-1.5">
+                    <div class="flex flex-col">
+                      <span class="text-gray-700">যোগ কমিশন (৳)</span>
+                      <span class="text-[9px] text-gray-500 font-bold font-mono">${sr.sr_name} - ${sr.company_name}</span>
+                    </div>
+                  </td>
+                  <td class="text-right p-1.5 pr-4">
+                    <input type="number" data-srid="${sr.sr_id}" value="${srVal}" step="any" min="0" oninput="calcSettlementExpected()" class="sr-commission-input w-24 bg-white border border-[#cbd5e1] py-1 px-2 text-right text-xs focus:outline-none focus:border-[#2563eb] text-emerald-600 font-bold font-mono disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="০.০০" ${isApproved ? 'disabled' : ''} />
+                  </td>
+                `;
+                const expectedRow = document.getElementById('expected-row');
+                formulaTbody.insertBefore(tr, expectedRow);
+              });
+            }
 
           const submitBtn = document.getElementById('submit-settle-btn');
           if (submitBtn) {
@@ -987,7 +1002,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           document.getElementById('formula-return').textContent = '- ৳0.00';
           document.getElementById('input-damage').value = 0;
           document.getElementById('input-expense').value = 0;
-          document.getElementById('input-commission').value = 0;
+          document.querySelectorAll('.sr-commission-row').forEach(e => e.remove());
           document.getElementById('settlement-remarks').value = '';
           noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
           renderBanknotes();
@@ -995,7 +1010,6 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           // Disable inputs and submit button as there is no active dispatch
           document.getElementById('input-damage').disabled = true;
           document.getElementById('input-expense').disabled = true;
-          document.getElementById('input-commission').disabled = true;
           document.getElementById('settlement-remarks').disabled = true;
 
           const submitBtn = document.getElementById('submit-settle-btn');
@@ -1356,7 +1370,11 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       const ad = dashboardData.active_dispatch;
       const damage = parseFloat(document.getElementById('input-damage').value) || 0;
       const expense = parseFloat(document.getElementById('input-expense').value) || 0;
-      const commission = parseFloat(document.getElementById('input-commission').value) || 0;
+      
+      let commission = 0;
+      document.querySelectorAll('.sr-commission-input').forEach(input => {
+        commission += parseFloat(input.value) || 0;
+      });
 
       // Expected Submissions Formula: Out - Return - Damage - Expense + Commission
       const out_val = parseFloat(ad.out_value) || 0;
@@ -1411,7 +1429,12 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       const active_dispatch_id = dashboardData.active_dispatch.id;
       const damage = parseFloat(document.getElementById('input-damage').value) || 0;
       const expense = parseFloat(document.getElementById('input-expense').value) || 0;
-      const commission = parseFloat(document.getElementById('input-commission').value) || 0;
+      
+      let commission_details = {};
+      document.querySelectorAll('.sr-commission-input').forEach(input => {
+        const srId = input.dataset.srid;
+        commission_details[srId] = parseFloat(input.value) || 0;
+      });
 
       // Calculate total notes counted sum
       let totalCounted = 0;
@@ -1435,7 +1458,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
         dispatch_id: active_dispatch_id,
         damage_amount: damage,
         expense_amount: expense,
-        commission_amount: commission,
+        commission_details: commission_details,
         amount_submitted: totalCounted,
         notes_details: noteQuantities,
         notes_text: remarks

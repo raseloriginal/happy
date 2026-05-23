@@ -115,6 +115,15 @@ function getDB(): PDO {
             } catch (PDOException $e) {
                 // Ignore failure if tables don't exist yet
             }
+
+            // Auto-migration: Add commission_details to cash_settlements
+            try {
+                $pdo->query("SELECT commission_details FROM cash_settlements LIMIT 0");
+            } catch (PDOException $e) {
+                try {
+                    $pdo->exec("ALTER TABLE `cash_settlements` ADD COLUMN `commission_details` TEXT NULL DEFAULT NULL AFTER `commission_amount`");
+                } catch (PDOException $ex) { }
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));
