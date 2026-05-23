@@ -303,67 +303,10 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       <!-- Attendance Camera Scanner Card (Initially hidden) -->
       <div id="attendance-scanner-card" class="hidden bg-white border border-[#cbd5e1] p-4 space-y-3 shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-          <h4 class="font-bold text-xs text-gray-700 flex items-center gap-1.5 uppercase tracking-wide">
-            <i class="fa-solid fa-camera text-[#2563eb] animate-pulse"></i> ক্যামেরা
-          </h4>
-          <button onclick="closeAttendanceScanner()" class="text-xs text-red-600 font-bold hover:underline"><i class="fa-solid fa-times"></i> বন্ধ</button>
-        </div>
-        <div id="att-qr-reader" class="overflow-hidden bg-black aspect-square max-w-[280px] mx-auto border border-[#cbd5e1]"></div>
-        <p class="text-[9px] text-center text-gray-500">QR কোড ধরুন ক্যামেরার সামনে</p>
-      </div>
-
-      <!-- Active Dispatch Card -->
-      <div class="bg-white border border-[#cbd5e1] p-4 space-y-3" id="dispatch-card">
-        <div class="flex items-center justify-between pb-2 border-b border-gray-200">
-          <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-truck text-[#2563eb] mr-1.5"></i>আজকের ডেলিভারি</h3>
-          <span class="bg-gray-100 text-gray-600 text-[9px] font-bold px-2 py-0.5" id="disp-badge">ডিসপ্যাচ নেই</span>
-        </div>
-
-        <!-- No active dispatch placeholder -->
-        <div id="disp-empty-view" class="text-center py-6 space-y-1">
-          <i class="fa-solid fa-box-open text-2xl text-gray-300 block"></i>
-          <p class="text-xs text-gray-500 font-bold">আজ ভ্যানে কোনো মাল নেই।</p>
-          <p class="text-[9px] text-gray-400">ম্যানেজারকে মাল লোড করতে বলুন।</p>
-        </div>
-
-        <!-- Active dispatch content -->
-        <div id="disp-active-view" class="hidden space-y-4">
-          
-          <!-- Excel Sheet Representation of Dispatch Info -->
-          <div class="border border-[#cbd5e1]">
-            <table class="excel-table">
-              <thead>
-                <tr>
-                  <th class="excel-row-num">নং</th>
-                  <th>বিষয়</th>
-                  <th>তথ্য</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="excel-row-num">১</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">ডিসপ্যাচ নং</td>
-                  <td class="font-mono text-gray-800 font-bold" id="disp-id-label">#DISP-0000</td>
-                </tr>
-                <tr>
-                  <td class="excel-row-num">২</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">কোম্পানি</td>
-                  <td class="font-bold text-gray-700" id="disp-company">Eggland Co.</td>
-                </tr>
-                <tr>
-                  <td class="excel-row-num">৩</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">SR এর নাম</td>
-                  <td class="text-gray-700" id="disp-sr">Anwar Hossain</td>
-                </tr>
-                <tr>
-                  <td class="excel-row-num">৪</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">মালের দাম</td>
-                  <td class="font-mono font-bold text-blue-600" id="disp-out-value">৳0.00</td>
-                </tr>
-                <tr>
-                  <td class="excel-row-num">৫</td>
-                  <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px]">ফেরত টাকা</td>
-                  <td class="font-mono font-bold text-red-600" id="disp-return-value">৳0.00</td>
+          <h4 class="font-bold text-xs text-gray-700 flex items-center gap-1.5 uppercase tracking-      <!-- Active Dispatches Container -->
+      <div id="dispatches-container" class="space-y-4">
+        <!-- Dispatches will be rendered here dynamically by JS -->
+      </div>return-value">৳0.00</td>
                 </tr>
               </tbody>
             </table>
@@ -514,6 +457,13 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           <i class="fa-solid fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-[#2563eb] text-xs"></i>
           <input type="date" id="settlement-date-select" onchange="loadSettlementForDate()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 pl-8 pr-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 font-bold font-mono rounded" />
         </div>
+      </div>
+
+      <!-- Settlement SR Selector -->
+      <div class="bg-white border border-[#cbd5e1] p-3 shadow-sm rounded hidden" id="settlement-sr-container">
+        <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">ডেলিভারি নির্বাচন করুন</label>
+        <select id="settlement-sr-select" onchange="selectSettlementDispatch()" class="w-full bg-[#f8fafc] border border-[#cbd5e1] py-1.5 px-2 text-xs focus:outline-none focus:border-[#2563eb] text-gray-800 font-bold font-mono rounded">
+        </select>
       </div>
 
       <!-- Settlement Spreadsheet Table -->
@@ -899,113 +849,188 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
           }
         }
 
-        // Write Active Dispatch Card
-        const dispBadge = document.getElementById('disp-badge');
-        const dispIdLabel = document.getElementById('disp-id-label');
-        const emptyView = document.getElementById('disp-empty-view');
-        const activeView = document.getElementById('disp-active-view');
+        // Render Active Dispatches
+        const dispatchesContainer = document.getElementById('dispatches-container');
+        dispatchesContainer.innerHTML = '';
 
-        if (data.active_dispatch) {
-          const ad = data.active_dispatch;
-          
-          dispBadge.className = 'bg-blue-100 text-blue-800 text-[9px] font-bold px-2 py-0.5';
-          
-          if (ad.status === 'loaded') {
-            dispBadge.textContent = 'ডেলিভারিতে আছে';
-          } else if (ad.status === 'delivered') {
-            dispBadge.textContent = 'সেটেলমেন্ট_মুলতুবি';
-          } else {
-            dispBadge.textContent = ad.status.toUpperCase();
-          }
+        if (data.active_dispatches && data.active_dispatches.length > 0) {
+          data.active_dispatches.forEach((ad) => {
+            let badgeClass = 'bg-blue-100 text-blue-800';
+            let badgeText = ad.status.toUpperCase();
+            if (ad.status === 'loaded') badgeText = 'ডেলিভারিতে আছে';
+            else if (ad.status === 'delivered') badgeText = 'সেটেলমেন্ট_মুলতুবি';
 
-          dispIdLabel.textContent = `#DISP-${String(ad.id).padStart(4, '0')}`;
-          
-          document.getElementById('disp-company').textContent = ad.company_name;
-          document.getElementById('disp-sr').textContent = ad.sr_name;
-          document.getElementById('disp-out-value').textContent = `৳${ad.out_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
-          document.getElementById('disp-return-value').textContent = `৳${ad.return_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+            const cardHtml = `
+              <div class="bg-white border border-[#cbd5e1] p-4 space-y-3">
+                <div class="flex items-center justify-between pb-2 border-b border-gray-200">
+                  <h3 class="font-bold text-xs text-gray-700 uppercase tracking-wide"><i class="fa-solid fa-truck text-[#2563eb] mr-1.5"></i>ডেলিভারি #${String(ad.id).padStart(4, '0')}</h3>
+                  <span class="${badgeClass} text-[9px] font-bold px-2 py-0.5">${badgeText}</span>
+                </div>
+                
+                <div class="border border-[#cbd5e1]">
+                  <table class="excel-table w-full">
+                    <tbody>
+                      <tr>
+                        <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px] pl-2 w-1/3">কোম্পানি</td>
+                        <td class="font-bold text-gray-700 pl-2">${ad.company_name}</td>
+                      </tr>
+                      <tr>
+                        <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px] pl-2">SR এর নাম</td>
+                        <td class="text-gray-700 font-bold pl-2">${ad.sr_name}</td>
+                      </tr>
+                      <tr>
+                        <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px] pl-2">মালের দাম</td>
+                        <td class="font-mono font-bold text-blue-600 pl-2">৳${ad.out_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                      <tr>
+                        <td class="bg-gray-50 font-bold text-gray-500 uppercase tracking-wider text-[9px] pl-2">ফেরত টাকা</td>
+                        <td class="font-mono font-bold text-red-600 pl-2">৳${ad.return_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
 
-          emptyView.classList.add('hidden');
-          activeView.classList.remove('hidden');
-
-          // Populate settlement formula variables directly
-          document.getElementById('formula-out').textContent = `৳${ad.out_value.toFixed(2)}`;
-          document.getElementById('formula-return').textContent = `- ৳${ad.return_value.toFixed(2)}`;
-
-          // Pre-populate damages if they already submitted settlement
-          if (ad.settlement) {
-            document.getElementById('input-damage').value = ad.settlement.damage_amount || 0;
-            document.getElementById('input-expense').value = ad.settlement.expense_amount || 0;
-            document.getElementById('input-commission').value = ad.settlement.commission_amount || 0;
-            document.getElementById('settlement-remarks').value = ad.settlement.notes || '';
-
-            // Load quantities from database notes counter
-            if (ad.settlement.notes_details) {
-              noteQuantities = { ...noteQuantities, ...ad.settlement.notes_details };
-              // Rerender banknote counters to match updated quantities
-              renderBanknotes();
-            }
-          } else {
-            document.getElementById('input-damage').value = 0;
-            document.getElementById('input-expense').value = 0;
-            document.getElementById('input-commission').value = 0;
-            document.getElementById('settlement-remarks').value = '';
-            noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
-            renderBanknotes();
-          }
-
-          // Disable/Enable fields based on whether the settlement is approved
-          const isApproved = ad.status === 'settled' || (ad.settlement && ad.settlement.status === 'approved');
-          document.getElementById('input-damage').disabled = isApproved;
-          document.getElementById('input-expense').disabled = isApproved;
-          document.getElementById('input-commission').disabled = isApproved;
-          document.getElementById('settlement-remarks').disabled = isApproved;
-
-          const submitBtn = document.getElementById('submit-settle-btn');
-          if (submitBtn) {
-            if (isApproved) {
-              submitBtn.disabled = true;
-              submitBtn.innerHTML = '<i class="fa-solid fa-lock text-sm"></i> সেটেলমেন্ট অনুমোদিত ও বন্ধ';
-              submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
-            } else {
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> নগদ সেটেলমেন্ট রিপোর্ট জমা দিন';
-              submitBtn.className = 'w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 btn-bounce';
-            }
-          }
-
+                <div class="flex gap-2">
+                  <button onclick="switchTab('van')" class="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2 px-3 flex items-center justify-center gap-1 border border-[#cbd5e1] btn-bounce">
+                    <i class="fa-solid fa-list-check text-[#2563eb]"></i> স্টক দেখুন
+                  </button>
+                  <button onclick="goToSettlement(${ad.id})" class="flex-1 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-xs py-2 px-3 flex items-center justify-center gap-1 btn-bounce">
+                    <i class="fa-solid fa-money-bill-transfer"></i> টাকা জমা
+                  </button>
+                </div>
+              </div>
+            `;
+            dispatchesContainer.innerHTML += cardHtml;
+          });
         } else {
-          dispBadge.className = 'bg-gray-150 text-gray-500 text-[9px] font-bold px-2 py-0.5';
-          dispBadge.textContent = 'কোনো ডিসপ্যাচ নেই';
-          dispIdLabel.textContent = 'প্রযোজ্য নয়';
-          
-          emptyView.classList.remove('hidden');
-          activeView.classList.add('hidden');
+          dispatchesContainer.innerHTML = `
+            <div class="bg-white border border-[#cbd5e1] p-4 text-center py-6 space-y-1">
+              <i class="fa-solid fa-box-open text-2xl text-gray-300 block"></i>
+              <p class="text-xs text-gray-500 font-bold">আজ ভ্যানে কোনো মাল নেই।</p>
+              <p class="text-[9px] text-gray-400">ম্যানেজারকে মাল লোড করতে বলুন।</p>
+            </div>
+          `;
+        }
 
-          // Clear formula
-          document.getElementById('formula-out').textContent = '৳0.00';
-          document.getElementById('formula-return').textContent = '- ৳0.00';
-          document.getElementById('input-damage').value = 0;
-          document.getElementById('input-expense').value = 0;
-          document.getElementById('input-commission').value = 0;
-          document.getElementById('settlement-remarks').value = '';
-          noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
-          renderBanknotes();
+        // Initialize Settlement SR Selector if we have active dispatches
+        populateSettlementSelector();
+      }
+    }
 
-          // Disable inputs and submit button as there is no active dispatch
-          document.getElementById('input-damage').disabled = true;
-          document.getElementById('input-expense').disabled = true;
-          document.getElementById('input-commission').disabled = true;
-          document.getElementById('settlement-remarks').disabled = true;
+    let currentSettlementDispatchId = null;
 
-          const submitBtn = document.getElementById('submit-settle-btn');
-          if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> সেটেলমেন্টের জন্য কোনো সক্রিয় ডিসপ্যাচ নেই';
-            submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
-          }
+    function populateSettlementSelector() {
+      const select = document.getElementById('settlement-sr-select');
+      const container = document.getElementById('settlement-sr-container');
+      
+      select.innerHTML = '<option value="">-- ডেলিভারি নির্বাচন করুন --</option>';
+      
+      if (!dashboardData || !dashboardData.active_dispatches || dashboardData.active_dispatches.length === 0) {
+        container.classList.add('hidden');
+        clearSettlementForm();
+        return;
+      }
+
+      container.classList.remove('hidden');
+      dashboardData.active_dispatches.forEach(ad => {
+        const isSettled = ad.status === 'settled' || (ad.settlement && ad.settlement.status === 'approved');
+        const statusMarker = isSettled ? '(অনুমোদিত)' : '(বাকি)';
+        select.innerHTML += `<option value="${ad.id}">#DISP-${String(ad.id).padStart(4, '0')} - ${ad.sr_name} ${statusMarker}</option>`;
+      });
+
+      if (currentSettlementDispatchId) {
+        select.value = currentSettlementDispatchId;
+      }
+      selectSettlementDispatch();
+    }
+
+    function goToSettlement(dispatchId) {
+      currentSettlementDispatchId = dispatchId;
+      switchTab('settlement');
+    }
+
+    function selectSettlementDispatch() {
+      const dispatchId = document.getElementById('settlement-sr-select').value;
+      currentSettlementDispatchId = dispatchId;
+      
+      if (!dispatchId) {
+        clearSettlementForm();
+        return;
+      }
+
+      const ad = dashboardData.active_dispatches.find(d => d.id == dispatchId);
+      if (!ad) return;
+
+      // Populate settlement formula variables directly
+      document.getElementById('formula-out').textContent = \`৳\${ad.out_value.toFixed(2)}\`;
+      document.getElementById('formula-return').textContent = \`- ৳\${ad.return_value.toFixed(2)}\`;
+
+      // Pre-populate damages if they already submitted settlement
+      if (ad.settlement) {
+        document.getElementById('input-damage').value = ad.settlement.damage_amount || 0;
+        document.getElementById('input-expense').value = ad.settlement.expense_amount || 0;
+        document.getElementById('input-commission').value = ad.settlement.commission_amount || 0;
+        document.getElementById('settlement-remarks').value = ad.settlement.notes || '';
+
+        // Load quantities from database notes counter
+        if (ad.settlement.notes_details) {
+          noteQuantities = { ...noteQuantities, ...ad.settlement.notes_details };
+        }
+      } else {
+        document.getElementById('input-damage').value = 0;
+        document.getElementById('input-expense').value = 0;
+        document.getElementById('input-commission').value = 0;
+        document.getElementById('settlement-remarks').value = '';
+        noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
+      }
+      
+      renderBanknotes();
+
+      // Disable/Enable fields based on whether the settlement is approved
+      const isApproved = ad.status === 'settled' || (ad.settlement && ad.settlement.status === 'approved');
+      document.getElementById('input-damage').disabled = isApproved;
+      document.getElementById('input-expense').disabled = isApproved;
+      document.getElementById('input-commission').disabled = isApproved;
+      document.getElementById('settlement-remarks').disabled = isApproved;
+
+      const submitBtn = document.getElementById('submit-settle-btn');
+      if (submitBtn) {
+        if (isApproved) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fa-solid fa-lock text-sm"></i> সেটেলমেন্ট অনুমোদিত ও বন্ধ';
+          submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> নগদ সেটেলমেন্ট রিপোর্ট জমা দিন';
+          submitBtn.className = 'w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 btn-bounce';
         }
       }
+
+      calcSettlementExpected();
+    }
+
+    function clearSettlementForm() {
+      document.getElementById('formula-out').textContent = '৳0.00';
+      document.getElementById('formula-return').textContent = '- ৳0.00';
+      document.getElementById('input-damage').value = 0;
+      document.getElementById('input-expense').value = 0;
+      document.getElementById('input-commission').value = 0;
+      document.getElementById('settlement-remarks').value = '';
+      noteQuantities = { '1000':0, '500':0, '200':0, '100':0, '50':0, '20':0, '10':0 };
+      renderBanknotes();
+
+      document.getElementById('input-damage').disabled = true;
+      document.getElementById('input-expense').disabled = true;
+      document.getElementById('input-commission').disabled = true;
+      document.getElementById('settlement-remarks').disabled = true;
+
+      const submitBtn = document.getElementById('submit-settle-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ডেলিভারি নির্বাচন করুন';
+        submitBtn.className = 'w-full bg-gray-400 text-white font-extrabold text-xs py-3 px-4 flex items-center justify-center gap-1.5 cursor-not-allowed';
+      }
+      calcSettlementExpected();
     }
 
     // Fetch and Render Van Stock List
@@ -1044,7 +1069,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       const summaryCard = document.getElementById('van-summary-card');
       if (data.dispatch_id) {
         summaryCard.classList.remove('hidden');
-        document.getElementById('summary-dispatch-id').textContent = `#DISP-${String(data.dispatch_id).padStart(4, '0')}`;
+        document.getElementById('summary-dispatch-id').textContent = `#DISP-${data.dispatch_id}`;
         
         let grossSales = 0;
         if (data.products) {
@@ -1276,9 +1301,8 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
       const container = document.getElementById('banknotes-grid-table');
       container.innerHTML = '';
 
-      const isEditable = dashboardData && dashboardData.active_dispatch && 
-                         dashboardData.active_dispatch.status !== 'settled' && 
-                         !(dashboardData.active_dispatch.settlement && dashboardData.active_dispatch.settlement.status === 'approved');
+      const ad = dashboardData.active_dispatches ? dashboardData.active_dispatches.find(d => d.id == currentSettlementDispatchId) : null;
+      const isEditable = ad && ad.status !== 'settled' && !(ad.settlement && ad.settlement.status === 'approved');
 
       let idx = 1;
       currencyNotes.forEach(n => {
@@ -1351,9 +1375,10 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
     // Calculate final expected submission amount & counted notes sum
     function calcSettlementExpected() {
-      if (!dashboardData || !dashboardData.active_dispatch) return;
+      if (!dashboardData || !dashboardData.active_dispatches) return;
 
-      const ad = dashboardData.active_dispatch;
+      const ad = dashboardData.active_dispatches.find(d => d.id == currentSettlementDispatchId);
+      if (!ad) return;
       const damage = parseFloat(document.getElementById('input-damage').value) || 0;
       const expense = parseFloat(document.getElementById('input-expense').value) || 0;
       const commission = parseFloat(document.getElementById('input-commission').value) || 0;
@@ -1403,12 +1428,18 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
     // Submit Settlement Report to Backend
     async function submitCashSettlement() {
-      if (!dashboardData || !dashboardData.active_dispatch) {
+      if (!currentSettlementDispatchId) {
+        showToast('প্রথমে একটি ডেলিভারি নির্বাচন করুন।', 'warning');
+        return;
+      }
+      
+      const ad = dashboardData.active_dispatches ? dashboardData.active_dispatches.find(d => d.id == currentSettlementDispatchId) : null;
+      if (!ad) {
         showToast('সেটেলমেন্টের জন্য কোনো সক্রিয় ডিসপ্যাচ লোড নেই।', 'warning');
         return;
       }
 
-      const active_dispatch_id = dashboardData.active_dispatch.id;
+      const active_dispatch_id = ad.id;
       const damage = parseFloat(document.getElementById('input-damage').value) || 0;
       const expense = parseFloat(document.getElementById('input-expense').value) || 0;
       const commission = parseFloat(document.getElementById('input-commission').value) || 0;

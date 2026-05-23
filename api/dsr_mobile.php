@@ -55,11 +55,11 @@ switch ($action) {
                 LEFT JOIN users u ON u.id=s.user_id 
                 LEFT JOIN companies c ON c.id=o.company_id 
                 WHERE d.dsr_id=? AND d.dispatch_date=? 
-                ORDER BY d.id DESC LIMIT 1
+                ORDER BY d.id DESC
             ");
             $dispStmt->execute([$dsr_id, $selected_date]);
         } else {
-            // Active dispatch for this DSR (status loaded or delivered)
+            // Active dispatches for this DSR (status loaded or delivered)
             $dispStmt = $pdo->prepare("
                 SELECT d.*, o.order_date, u.name as sr_name, c.name as company_name 
                 FROM dispatches d 
@@ -68,18 +68,18 @@ switch ($action) {
                 LEFT JOIN users u ON u.id=s.user_id 
                 LEFT JOIN companies c ON c.id=o.company_id 
                 WHERE d.dsr_id=? AND d.status IN ('loaded', 'delivered') 
-                ORDER BY d.id DESC LIMIT 1
+                ORDER BY d.id DESC
             ");
             $dispStmt->execute([$dsr_id]);
         }
-        $activeDispatch = $dispStmt->fetch();
+        $activeDispatchesRaw = $dispStmt->fetchAll();
 
-        $outVal = 0.00;
-        $returnVal = 0.00;
-        $settledRecord = null;
+        $activeDispatches = [];
+        $totalVanValue = 0.00;
+        $loadedProductsList = [];
 
-        if ($activeDispatch) {
-            $dispatch_id = $activeDispatch['id'];
+        foreach ($activeDispatchesRaw as $dispatch) {
+            $dispatch_id = $dispatch['id'];
 
             // Total Out Value: sum(qty_out * selling_price)
             $outStmt = $pdo->prepare('
@@ -90,6 +90,8 @@ switch ($action) {
             ');
             $outStmt->execute([$dispatch_id]);
             $outVal = floatval($outStmt->fetchColumn());
+
+            $totalVanValue += $outVal;
 
             // Return Value: sum(qty_in * selling_price) from return items
             $retStmt = $pdo->prepare('
@@ -106,6 +108,79 @@ switch ($action) {
             $settleStmt = $pdo->prepare('SELECT * FROM cash_settlements WHERE dispatch_id=? LIMIT 1');
             $settleStmt->execute([$dispatch_id]);
             $settledRecord = $settleStmt->fetch();
+
+            $prodStmt = $pdo->prepare('
+                SELECT 
+                    p.name as product_name, 
+                    SUM(di.qty_out) as qty_loaded,
+                    p.selling_price,
+                    p.pieces_per_box
+                FROM dispatch_items di
+                JOIN products p ON p.id=di.product_id
+                WHERE di.dispatch_id=?
+                GROUP BY p.id
+            ');
+            $prodStmt->execute([$dispatch_id]);
+            $rawProds = $prodStmt->fetchAll();
+
+            $dispatchProducts = [];
+            foreach ($rawProds as $rp) {
+                $ppb = max(intval($rp['pieces_per_box']), 1);
+                $qty = intval($rp['qty_loaded']);
+                $val = $qty * floatval($rp['selling_price']);
+                
+                $boxes = floor($qty / $ppb);
+                $remainder = $qty % $ppb;
+                $formatted_qty = $boxes . ' Box' . ($boxes != 1 ? 'es':'') . ($remainder > 0 ? ' & ' . $remainder . ' Pcs' : '');
+
+                $prodObj = [
+                    'product_name' => $rp['product_name'],
+                    'qty_pieces' => $qty,
+                    'qty_formatted' => $formatted_qty,
+                    'total_value' => $val
+                ];
+                $dispatchProducts[] = $prodObj;
+                
+                // Keep a flat list for overall van stock if needed
+                $found = false;
+                foreach ($loadedProductsList as &$existingProd) {
+                    if ($existingProd['product_name'] === $rp['product_name']) {
+                        $existingProd['qty_pieces'] += $qty;
+                        $existingProd['total_value'] += $val;
+                        $totBoxes = floor($existingProd['qty_pieces'] / $ppb);
+                        $totRem = $existingProd['qty_pieces'] % $ppb;
+                        $existingProd['qty_formatted'] = $totBoxes . ' Box' . ($totBoxes != 1 ? 'es':'') . ($totRem > 0 ? ' & ' . $totRem . ' Pcs' : '');
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $loadedProductsList[] = $prodObj;
+                }
+            }
+
+            $activeDispatches[] = [
+                'id' => $dispatch['id'],
+                'dispatch_date' => $dispatch['dispatch_date'],
+                'status' => $dispatch['status'],
+                'sr_name' => $dispatch['sr_name'] ?? 'Ready Sale',
+                'company_name' => $dispatch['company_name'] ?? 'N/A',
+                'out_value' => $outVal,
+                'return_value' => $returnVal,
+                'products' => $dispatchProducts,
+                'settlement' => $settledRecord ? [
+                    'id' => $settledRecord['id'],
+                    'status' => $settledRecord['status'],
+                    'amount_expected' => floatval($settledRecord['amount_expected']),
+                    'amount_submitted' => floatval($settledRecord['amount_submitted']),
+                    'difference' => floatval($settledRecord['difference']),
+                    'damage_amount' => floatval($settledRecord['damage_amount']),
+                    'expense_amount' => floatval($settledRecord['expense_amount']),
+                    'commission_amount' => floatval($settledRecord['commission_amount'] ?? 0.00),
+                    'notes' => $settledRecord['notes'],
+                    'notes_details' => json_decode($settledRecord['notes_details'], true)
+                ] : null
+            ];
         }
 
         // Recent Settled Dispatches
@@ -144,41 +219,6 @@ switch ($action) {
         $allDeliveredVal = max($allLoadedVal - $allReturnedVal, 0);
         $avgDeliveryRatio = $allLoadedVal > 0 ? ($allDeliveredVal / $allLoadedVal) * 100 : 0;
 
-        $loadedProductsList = [];
-        if ($activeDispatch) {
-            $dispatch_id = $activeDispatch['id'];
-            $prodStmt = $pdo->prepare('
-                SELECT 
-                    p.name as product_name, 
-                    SUM(di.qty_out) as qty_loaded,
-                    p.selling_price,
-                    p.pieces_per_box
-                FROM dispatch_items di
-                JOIN products p ON p.id=di.product_id
-                WHERE di.dispatch_id=?
-                GROUP BY p.id
-            ');
-            $prodStmt->execute([$dispatch_id]);
-            $rawProds = $prodStmt->fetchAll();
-
-            foreach ($rawProds as $rp) {
-                $ppb = max(intval($rp['pieces_per_box']), 1);
-                $qty = intval($rp['qty_loaded']);
-                $val = $qty * floatval($rp['selling_price']);
-                
-                $boxes = floor($qty / $ppb);
-                $remainder = $qty % $ppb;
-                $formatted_qty = $boxes . ' Box' . ($boxes != 1 ? 'es':'') . ($remainder > 0 ? ' & ' . $remainder . ' Pcs' : '');
-
-                $loadedProductsList[] = [
-                    'product_name' => $rp['product_name'],
-                    'qty_pieces' => $qty,
-                    'qty_formatted' => $formatted_qty,
-                    'total_value' => $val
-                ];
-            }
-        }
-
         $checkedIn = ($attendance && $attendance['status'] !== 'pending' && $attendance['status'] !== 'absent');
 
         echo json_encode([
@@ -197,31 +237,11 @@ switch ($action) {
                 'checked_in' => false,
                 'status' => $attendance ? $attendance['status'] : 'absent'
             ],
-            'active_dispatch' => $activeDispatch ? [
-                'id' => $activeDispatch['id'],
-                'dispatch_date' => $activeDispatch['dispatch_date'],
-                'status' => $activeDispatch['status'],
-                'sr_name' => $activeDispatch['sr_name'] ?? 'Ready Sale',
-                'company_name' => $activeDispatch['company_name'] ?? 'N/A',
-                'out_value' => $outVal,
-                'return_value' => $returnVal,
-                'settlement' => $settledRecord ? [
-                    'id' => $settledRecord['id'],
-                    'status' => $settledRecord['status'],
-                    'amount_expected' => floatval($settledRecord['amount_expected']),
-                    'amount_submitted' => floatval($settledRecord['amount_submitted']),
-                    'difference' => floatval($settledRecord['difference']),
-                    'damage_amount' => floatval($settledRecord['damage_amount']),
-                    'expense_amount' => floatval($settledRecord['expense_amount']),
-                    'commission_amount' => floatval($settledRecord['commission_amount'] ?? 0.00),
-                    'notes' => $settledRecord['notes'],
-                    'notes_details' => json_decode($settledRecord['notes_details'], true)
-                ] : null
-            ] : null,
+            'active_dispatches' => $activeDispatches,
             'recent_dispatches' => $recentDispatches,
             'stats' => [
                 'delivery_ratio' => $avgDeliveryRatio,
-                'current_van_value' => $activeDispatch ? $outVal : 0.00,
+                'current_van_value' => $totalVanValue,
                 'total_delivered_all_time' => $allDeliveredVal
             ],
             'loaded_products' => $loadedProductsList
@@ -356,23 +376,25 @@ switch ($action) {
         $selected_date = isset($_GET['date']) ? trim($_GET['date']) : '';
 
         if (!empty($selected_date)) {
-            // Find dispatch on that specific date
-            $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND dispatch_date=? ORDER BY id DESC LIMIT 1");
+            // Find dispatches on that specific date
+            $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND dispatch_date=? ORDER BY id DESC");
             $dispStmt->execute([$dsr_id, $selected_date]);
         } else {
-            // Get active dispatch ID
-            $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND status IN ('loaded', 'delivered') ORDER BY id DESC LIMIT 1");
+            // Get active dispatch IDs
+            $dispStmt = $pdo->prepare("SELECT id FROM dispatches WHERE dsr_id=? AND status IN ('loaded', 'delivered') ORDER BY id DESC");
             $dispStmt->execute([$dsr_id]);
         }
-        $active_dispatch_id = $dispStmt->fetchColumn();
+        $dispatch_ids = $dispStmt->fetchAll(PDO::FETCH_COLUMN);
 
-        if (!$active_dispatch_id) {
+        if (empty($dispatch_ids)) {
             echo json_encode(['success' => true, 'dispatch_id' => null, 'products' => [], 'settlement' => null]);
             exit;
         }
 
-        // Fetch products loaded on this dispatch
-        $stockStmt = $pdo->prepare('
+        $placeholders = implode(',', array_fill(0, count($dispatch_ids), '?'));
+
+        // Fetch products loaded on these dispatches
+        $stockStmt = $pdo->prepare("
             SELECT 
                 p.id as product_id, 
                 p.name as product_name, 
@@ -381,22 +403,23 @@ switch ($action) {
                 SUM(di.qty_out) as pieces_loaded
             FROM dispatch_items di
             JOIN products p ON p.id=di.product_id
-            WHERE di.dispatch_id=?
+            WHERE di.dispatch_id IN ($placeholders)
             GROUP BY p.id
-        ');
-        $stockStmt->execute([$active_dispatch_id]);
+        ");
+        $stockStmt->execute($dispatch_ids);
         $loadedProducts = $stockStmt->fetchAll();
 
         $products = [];
         foreach ($loadedProducts as $lp) {
-            // Get returned pieces for this product in this dispatch (manager verified returns)
-            $retStmt = $pdo->prepare('
+            // Get returned pieces for this product in these dispatches
+            $retStmt = $pdo->prepare("
                 SELECT COALESCE(SUM(ri.qty_in), 0) as pieces_returned
                 FROM return_items ri
                 JOIN returns r ON r.id=ri.return_id
-                WHERE r.dispatch_id=? AND ri.product_id=? AND r.status="completed"
-            ');
-            $retStmt->execute([$active_dispatch_id, $lp['product_id']]);
+                WHERE r.dispatch_id IN ($placeholders) AND ri.product_id=? AND r.status='completed'
+            ");
+            $params = array_merge($dispatch_ids, [$lp['product_id']]);
+            $retStmt->execute($params);
             $pieces_returned = intval($retStmt->fetchColumn());
 
             $pieces_sold = max(intval($lp['pieces_loaded']) - $pieces_returned, 0);
@@ -438,26 +461,32 @@ switch ($action) {
             ];
         }
 
-        // Fetch settlement summary
+        // Fetch settlement summary consolidated
         $settlement = null;
-        $settleStmt = $pdo->prepare("SELECT * FROM cash_settlements WHERE dispatch_id=? LIMIT 1");
-        $settleStmt->execute([$active_dispatch_id]);
+        $settleStmt = $pdo->prepare("SELECT 
+            SUM(amount_expected) as amount_expected,
+            SUM(amount_submitted) as amount_submitted,
+            SUM(difference) as difference,
+            SUM(damage_amount) as damage_amount,
+            SUM(expense_amount) as expense_amount
+            FROM cash_settlements WHERE dispatch_id IN ($placeholders)");
+        $settleStmt->execute($dispatch_ids);
         $settleRow = $settleStmt->fetch(PDO::FETCH_ASSOC);
-        if ($settleRow) {
+        
+        if ($settleRow && $settleRow['amount_expected'] !== null) {
             $settlement = [
-                'id' => $settleRow['id'],
                 'amount_expected' => floatval($settleRow['amount_expected']),
                 'amount_submitted' => floatval($settleRow['amount_submitted']),
                 'difference' => floatval($settleRow['difference']),
                 'damage_amount' => floatval($settleRow['damage_amount']),
                 'expense_amount' => floatval($settleRow['expense_amount']),
-                'notes' => $settleRow['notes']
+                'notes' => 'Multiple dispatches consolidated.'
             ];
         }
 
         echo json_encode([
             'success' => true,
-            'dispatch_id' => $active_dispatch_id ? intval($active_dispatch_id) : null,
+            'dispatch_id' => implode(', ', $dispatch_ids),
             'products' => $products,
             'settlement' => $settlement
         ]);
