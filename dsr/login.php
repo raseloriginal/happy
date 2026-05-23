@@ -19,7 +19,7 @@ if (isLoggedIn() && ($_SESSION['role'] ?? '') === 'dsr') {
   <!-- PWA Support -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#000000" />
-  <link rel="apple-touch-icon" href="../assets/img/logo/logo-icon-black.png" />
+  <link rel="apple-touch-icon" href="../assets/img/logo/pwa-icon-192.png" />
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
