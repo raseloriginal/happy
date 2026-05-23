@@ -104,6 +104,7 @@ include __DIR__ . '/../includes/header.php';
             <option value="পলি">পলি</option>
             <option value="কার্টুন">কার্টুন</option>
             <option value="পিস">পিস</option>
+            <option value="কেস">কেস</option>
             <option value="বস্তা">বস্তা</option>
             <option value="জার">জার</option>
             <option value="কেজি">কেজি</option>
