@@ -1,8 +1,6 @@
-const CACHE_NAME = 'dsr-pwa-cache-v3';
+const CACHE_NAME = 'dsr-pwa-cache-v2';
 const urlsToCache = [
   './index.php',
-  './stock.php',
-  './settlement.php',
   './login.php',
   './manifest.json',
   '../assets/img/logo/logo-black.png',
