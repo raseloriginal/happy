@@ -963,7 +963,7 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
                 tr.innerHTML = `
                   <td class="pl-4 flex items-center gap-1.5 py-1.5">
                     <div class="flex flex-col">
-                      <span class="text-gray-700">যোগ কমিশন (৳)</span>
+                      <span class="text-gray-700">যোগ ওভার/কমিশন (৳)</span>
                       <span class="text-[9px] text-gray-500 font-bold font-mono">${sr.sr_name} - ${sr.company_name}</span>
                     </div>
                   </td>
