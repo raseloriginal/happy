@@ -176,10 +176,26 @@ async function completeReturn() {
   const items = dispatchBoxes.filter(b => (b.returnQty || 0) > 0).map(b => ({
     qr_code_id: b.qr_code_id, product_id: b.product_id, qty_in: b.returnQty, type: b.type || 'scan'
   }));
-  if (items.length === 0) { showToast('No return quantities set', 'warning'); return; }
+  
+  if (items.length === 0) { 
+    if (!confirm('You have scanned 0 returns. Are you sure you want to complete this dispatch with NO returned products?')) return;
+  } else {
+    if (!confirm(`Are you sure you want to process returns for ${items.length} boxes?`)) return;
+  }
+
+  const btn = document.getElementById('complete-btn');
+  btn.disabled = true;
+  btn.innerText = 'Processing...';
+
   const data = await api('<?= rootPath() ?>/api/returns.php?action=complete', 'POST', { dispatch_id: parseInt(did), items });
-  if (data.success) { showToast('Return completed!'); setTimeout(() => location.reload(), 1500); }
-  else showToast(data.message || 'Error', 'error');
+  if (data.success) { 
+    showToast('Return completed!'); 
+    setTimeout(() => location.reload(), 1500); 
+  } else {
+    showToast(data.message || 'Error', 'error');
+    btn.disabled = false;
+    btn.innerText = 'Complete Return';
+  }
 }
 
 registerUsbScanner(scanReturn);

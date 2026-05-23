@@ -100,11 +100,15 @@ include __DIR__ . '/../includes/header.php';
       <div class="grid grid-cols-3 gap-3">
         <div><label class="form-label">Box Type</label>
           <select id="edit-bt" class="form-input">
-            <option value="box">box</option>
-            <option value="poli">poli</option>
-            <option value="piece">piece</option>
-            <option value="katun">katun</option>
-            <option value="jar">jar</option>
+            <option value="বক্স">বক্স</option>
+            <option value="পলি">পলি</option>
+            <option value="কার্টুন">কার্টুন</option>
+            <option value="পিস">পিস</option>
+            <option value="বস্তা">বস্তা</option>
+            <option value="জার">জার</option>
+            <option value="কেজি">কেজি</option>
+            <option value="ডজন">ডজন</option>
+            <option value="কম্বো">কম্বো</option>
           </select>
         </div>
         <div><label class="form-label">Pieces per Box</label><input id="edit-ppb" type="number" class="form-input" min="1" /></div>
@@ -156,11 +160,15 @@ function addBulkRow() {
     <td><input class="form-input row-name" placeholder="Enter name..." required /></td>
     <td>
       <select class="form-input row-bt">
-        <option value="box">box</option>
-        <option value="poli">poli</option>
-        <option value="piece">piece</option>
-        <option value="katun">katun</option>
-        <option value="jar">jar</option>
+        <option value="বক্স">বক্স</option>
+        <option value="পলি">পলি</option>
+        <option value="কার্টুন">কার্টুন</option>
+        <option value="পিস">পিস</option>
+        <option value="বস্তা">বস্তা</option>
+        <option value="জার">জার</option>
+        <option value="কেজি">কেজি</option>
+        <option value="ডজন">ডজন</option>
+        <option value="কম্বো">কম্বো</option>
       </select>
     </td>
     <td><input type="number" class="form-input row-ppb" value="1" min="1" /></td>
