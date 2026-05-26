@@ -57,6 +57,10 @@ function getDB(): PDO {
             // Auto-migration: Check if scanned_qrs column exists in orders table, add it if missing
             try {
                 $pdo->query("SELECT scanned_qrs FROM orders LIMIT 0");
+                // Column exists, mark migration as applied to prevent duplicate execution in migrate.php
+                try {
+                    $pdo->exec("INSERT IGNORE INTO migrations (migration_name) VALUES ('005_add_scanned_qrs_and_ready_sale.sql')");
+                } catch (PDOException $ex) {}
             } catch (PDOException $e) {
                 try {
                     $pdo->exec("ALTER TABLE `orders` ADD COLUMN `scanned_qrs` TEXT NULL DEFAULT NULL AFTER `status`");
