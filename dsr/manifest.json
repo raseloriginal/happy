@@ -2,7 +2,7 @@
   "name": "DSR Panel - Happy CRM",
   "short_name": "DSR Panel",
   "description": "Mobile Application for Happy CRM DSR Panel",
-  "start_url": "./index.php",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
