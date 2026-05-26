@@ -36,8 +36,9 @@ switch ($method) {
                 'category_id'    => $_POST['category_id'] ?? null,
                 'box_type'       => $_POST['box_type'] ?? '',
                 'pieces_per_box' => $_POST['pieces_per_box'] ?? 1,
-                'selling_price'  => $_POST['selling_price'] ?? 0,
                 'dealer_percentage' => $_POST['dealer_percentage'] ?? 0,
+                'initial_boxes'  => $_POST['initial_boxes'] ?? 0,
+                'initial_pieces' => $_POST['initial_pieces'] ?? 0,
                 'image_idx'      => null,
             ];
         } elseif (isset($_POST['bulk'])) {
@@ -84,6 +85,17 @@ switch ($method) {
             try {
                 $pdo->prepare('INSERT INTO products (company_id, category_id, name, box_type, image, pieces_per_box, selling_price, dealer_percentage) VALUES (?,?,?,?,?,?,?,?)')
                     ->execute([$company_id, $cat_id, $name, $box_t, $image, $ppb, $price, $dp]);
+                $product_id = $pdo->lastInsertId();
+
+                $init_boxes = (int)($item['initial_boxes'] ?? 0);
+                $init_pcs   = (int)($item['initial_pieces'] ?? 0);
+                $wid = $_SESSION['warehouse_id'] ?? 0;
+                
+                if ($wid > 0 && ($init_boxes > 0 || $init_pcs > 0)) {
+                    $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE qty_boxes = qty_boxes + VALUES(qty_boxes), qty_pieces = qty_pieces + VALUES(qty_pieces)')
+                        ->execute([$product_id, $wid, $init_boxes, $init_pcs]);
+                    logInventoryActivity($pdo, $product_id, $wid, 'initial_stock', null, $init_boxes, $init_pcs, 'Initial stock entry');
+                }
             } catch (PDOException $e) {
                 if ($e->getCode() == 23000) {
                     $errors[] = "\"$name\" already exists.";
@@ -103,6 +115,42 @@ switch ($method) {
 
     case 'PUT':
         $d = json_decode(file_get_contents('php://input'), true);
+        
+        if ($action === 'edit_stock') {
+            $wid = $_SESSION['warehouse_id'] ?? 0;
+            if (!$wid) {
+                ob_clean();
+                echo json_encode(['success' => false, 'message' => 'No warehouse assigned to session.']);
+                exit;
+            }
+            $product_id = (int)$d['id'];
+            $new_boxes  = (int)$d['qty_boxes'];
+            $new_pieces = (int)$d['qty_pieces'];
+            $note       = trim($d['note'] ?? '');
+            
+            $stmt = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
+            $stmt->execute([$product_id, $wid]);
+            $current = $stmt->fetch();
+            
+            $curr_b = $current ? (int)$current['qty_boxes'] : 0;
+            $curr_p = $current ? (int)$current['qty_pieces'] : 0;
+            
+            $diff_b = $new_boxes - $curr_b;
+            $diff_p = $new_pieces - $curr_p;
+            
+            // Always update/insert to ensure inventory row exists
+            $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE qty_boxes = VALUES(qty_boxes), qty_pieces = VALUES(qty_pieces)')
+                ->execute([$product_id, $wid, $new_boxes, $new_pieces]);
+            
+            // Only log if there's an actual change, OR if it's their very first time saving stock for this product (i.e. current was false)
+            if ($diff_b != 0 || $diff_p != 0 || !$current) {
+                logInventoryActivity($pdo, $product_id, $wid, 'edit_stock', null, $diff_b, $diff_p, $note ?: 'Initial stock confirmation');
+            }
+            ob_clean();
+            echo json_encode(['success' => true]);
+            exit;
+        }
+
         try {
             $pdo->prepare('UPDATE products SET company_id=?, category_id=?, name=?, box_type=?, pieces_per_box=?, selling_price=?, dealer_percentage=?, status=? WHERE id=?')
                 ->execute([

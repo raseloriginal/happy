@@ -92,6 +92,7 @@ if ($action === 'complete' && $method === 'POST') {
 
             $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
                 ->execute([$new_boxes, $new_pieces, $item['product_id'], $wid]);
+            logInventoryActivity($pdo, $item['product_id'], $wid, 'dispatch', $dispatch_id, 0, -intval($item['pieces_total']), "Dispatched for Order $order_id");
         }
     }
 

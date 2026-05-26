@@ -57,6 +57,7 @@ include __DIR__ . '/../includes/header.php';
               <th>#</th><th>Product</th><th>Company</th><th>Category</th>
               <th class="text-right">Boxes</th><th class="text-right">Pieces</th>
               <th class="text-right">Stock Value</th><th>Last Updated</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -67,7 +68,7 @@ include __DIR__ . '/../includes/header.php';
               $total_pieces = ($inv['qty_boxes'] * $ppb) + $inv['qty_pieces'];
               $value = $total_pieces * $inv['selling_price'];
             ?>
-            <tr class="<?= $rowClass ?>" data-company="<?= htmlspecialchars($inv['company_name']) ?>" data-cat="<?= htmlspecialchars($inv['category_name'] ?? '') ?>" data-low="<?= $isLow ? '1' : '0' ?>">
+            <tr class="cursor-pointer hover:bg-gray-50 <?= $rowClass ?>" onclick="toggleLogs(<?= $inv['product_id'] ?>)" data-company="<?= htmlspecialchars($inv['company_name']) ?>" data-cat="<?= htmlspecialchars($inv['category_name'] ?? '') ?>" data-low="<?= $isLow ? '1' : '0' ?>">
               <td class="text-gray-400 text-xs"><?= $i+1 ?></td>
               <td class="font-medium">
                 <?= htmlspecialchars($inv['product_name']) ?>
@@ -79,6 +80,36 @@ include __DIR__ . '/../includes/header.php';
               <td class="text-right text-gray-600"><?= $inv['qty_pieces'] ?></td>
               <td class="text-right text-green-700 font-medium">৳<?= number_format($value, 0) ?></td>
               <td class="text-xs text-gray-400"><?= date('d M Y H:i', strtotime($inv['last_updated'])) ?></td>
+              <td class="text-gray-400"><i class="fa-solid fa-chevron-down"></i></td>
+            </tr>
+            <tr id="logs-row-<?= $inv['product_id'] ?>" style="display:none;" class="bg-gray-50/60">
+              <td colspan="9" class="p-4 border-b">
+                <div class="flex items-center justify-between mb-3">
+                  <h4 class="font-bold text-gray-700">Stock History</h4>
+                  <div class="flex gap-2 items-center text-sm">
+                    <input type="date" id="date-from-<?= $inv['product_id'] ?>" class="form-input py-1 px-2 text-xs h-8" onchange="loadLogs(<?= $inv['product_id'] ?>)" />
+                    <span class="text-gray-500">to</span>
+                    <input type="date" id="date-to-<?= $inv['product_id'] ?>" class="form-input py-1 px-2 text-xs h-8" onchange="loadLogs(<?= $inv['product_id'] ?>)" />
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+                  <table class="w-full text-left text-sm m-0">
+                    <thead class="bg-gray-100 text-gray-600">
+                      <tr>
+                        <th class="py-2 px-3 font-semibold text-xs uppercase tracking-wide">Date</th>
+                        <th class="py-2 px-3 font-semibold text-xs uppercase tracking-wide">Activity</th>
+                        <th class="py-2 px-3 font-semibold text-xs uppercase tracking-wide text-right">Change (+/-)</th>
+                        <th class="py-2 px-3 font-semibold text-xs uppercase tracking-wide text-right">Balance</th>
+                        <th class="py-2 px-3 font-semibold text-xs uppercase tracking-wide">User</th>
+                        <th class="py-2 px-3 font-semibold text-xs uppercase tracking-wide">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody id="logs-body-<?= $inv['product_id'] ?>">
+                      <tr><td colspan="6" class="text-center py-4 text-gray-400">Loading...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </td>
             </tr>
             <?php endforeach; ?>
             <?php if (empty($inventory)): ?><tr><td colspan="8" class="text-center py-8 text-gray-400">No inventory data yet.</td></tr><?php endif; ?>
@@ -97,6 +128,8 @@ function filterTable() {
   const lowOnly = document.getElementById('f-low').checked;
 
   document.querySelectorAll('#inv-table tbody tr').forEach(tr => {
+    if (tr.id && tr.id.startsWith('logs-row-')) return;
+    
     const tComp = (tr.dataset.company || '').toLowerCase();
     const tCat  = (tr.dataset.cat   || '').toLowerCase();
     const tLow  = tr.dataset.low === '1';
@@ -109,5 +142,68 @@ function filterTable() {
 
     tr.style.display = show ? '' : 'none';
   });
+}
+
+let openLogsRow = null;
+
+function toggleLogs(pid) {
+  const row = document.getElementById('logs-row-' + pid);
+  if (row.style.display === 'none') {
+    if (openLogsRow && openLogsRow !== row) openLogsRow.style.display = 'none';
+    row.style.display = '';
+    openLogsRow = row;
+    loadLogs(pid);
+  } else {
+    row.style.display = 'none';
+    openLogsRow = null;
+  }
+}
+
+async function loadLogs(pid) {
+  const from = document.getElementById('date-from-' + pid).value;
+  const to = document.getElementById('date-to-' + pid).value;
+  const tbody = document.getElementById('logs-body-' + pid);
+  
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading stock history...</td></tr>';
+  
+  let url = '<?= rootPath() ?>/api/inventory.php?action=logs&product_id=' + pid;
+  if (from) url += '&from_date=' + from;
+  if (to) url += '&to_date=' + to;
+  
+  const res = await api(url);
+  if (res.success) {
+    if (res.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">No stock history found for the selected period.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = res.data.map(l => {
+      const isPos = l.change_boxes > 0 || l.change_pieces > 0;
+      const isNeg = l.change_boxes < 0 || l.change_pieces < 0;
+      const color = isPos ? 'text-green-600 bg-green-50' : (isNeg ? 'text-red-600 bg-red-50' : 'text-gray-500 bg-gray-50');
+      const sign = isPos ? '+' : '';
+      
+      const actionName = l.action_type.replace(/_/g, ' ').toUpperCase();
+      
+      return `
+        <tr class="border-t border-gray-100">
+          <td class="py-2 px-3 whitespace-nowrap text-xs text-gray-500">${l.created_at}</td>
+          <td class="py-2 px-3 font-medium text-gray-700 text-xs">${actionName}</td>
+          <td class="py-2 px-3 text-right font-semibold text-sm">
+            <span class="inline-block px-2 py-0.5 rounded ${color}">
+              ${sign}${l.change_boxes}B ${l.change_pieces != 0 ? sign+l.change_pieces+'P' : ''}
+            </span>
+          </td>
+          <td class="py-2 px-3 text-right font-medium text-gray-800">
+            ${l.balance_boxes}B ${l.balance_pieces != 0 ? l.balance_pieces+'P' : ''}
+          </td>
+          <td class="py-2 px-3 text-xs text-gray-600">${l.user_name || 'System'}</td>
+          <td class="py-2 px-3 text-xs text-gray-500 max-w-[200px] truncate" title="${l.notes || ''}">${l.notes || '-'}</td>
+        </tr>
+      `;
+    }).join('');
+  } else {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-400">Failed to load logs.</td></tr>';
+  }
 }
 </script>

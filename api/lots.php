@@ -53,6 +53,7 @@ try {
                 // Update inventory
                 $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,0) ON DUPLICATE KEY UPDATE qty_boxes = qty_boxes + VALUES(qty_boxes)')
                     ->execute([$item['product_id'], $wid, $item['qty_boxes']]);
+                logInventoryActivity($pdo, $item['product_id'], $wid, 'lot_add', $lot_id, $item['qty_boxes'], 0, "Added via Lot $lot_id");
 
                 // Auto update product selling price
                 // Formula: selling_price = (buying_price + (buying_price * dealer_percentage / 100)) / pieces_per_box
@@ -128,6 +129,7 @@ try {
                 // Reduce inventory. Cap at 0 using GREATEST to avoid negative inventory.
                 $pdo->prepare('UPDATE inventory SET qty_boxes = GREATEST(0, qty_boxes - ?) WHERE product_id = ? AND warehouse_id = ?')
                     ->execute([$qty_boxes, $product_id, $warehouse_id]);
+                logInventoryActivity($pdo, $product_id, $warehouse_id, 'lot_delete', $id, -$qty_boxes, 0, "Lot $id deleted");
             }
 
             // 4. Delete the unused active QR codes for this lot
@@ -188,6 +190,7 @@ try {
                 // Reduce inventory. Cap at 0 to avoid negative inventory.
                 $pdo->prepare('UPDATE inventory SET qty_boxes = GREATEST(0, qty_boxes - ?) WHERE product_id = ? AND warehouse_id = ?')
                     ->execute([$qty_boxes, $product_id, $warehouse_id]);
+                logInventoryActivity($pdo, $product_id, $warehouse_id, 'lot_edit_remove', $id, -$qty_boxes, 0, "Lot $id edited (old items removed)");
             }
 
             // 4. Delete existing active/unused QR codes for this lot
@@ -207,6 +210,7 @@ try {
                 // Update inventory
                 $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,0) ON DUPLICATE KEY UPDATE qty_boxes = qty_boxes + VALUES(qty_boxes)')
                     ->execute([$item['product_id'], $new_warehouse_id, $item['qty_boxes']]);
+                logInventoryActivity($pdo, $item['product_id'], $new_warehouse_id, 'lot_edit_add', $id, $item['qty_boxes'], 0, "Lot $id edited (new items added)");
 
                 // Auto update product selling price
                 $prodStmt = $pdo->prepare('SELECT pieces_per_box, dealer_percentage FROM products WHERE id=?');

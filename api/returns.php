@@ -74,11 +74,13 @@ if ($action === 'complete' && $method === 'POST') {
 
             $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
                 ->execute([$new_boxes, $new_pieces, $item['product_id'], $wid]);
+            logInventoryActivity($pdo, $item['product_id'], $wid, 'return', $return_id, 0, intval($item['qty_in']), "Return from Dispatch $did");
         } else {
             $new_boxes = floor(intval($item['qty_in']) / $pieces_per_box);
             $new_pieces = intval($item['qty_in']) % $pieces_per_box;
             $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,?)')
                 ->execute([$item['product_id'], $wid, $new_boxes, $new_pieces]);
+            logInventoryActivity($pdo, $item['product_id'], $wid, 'return', $return_id, 0, intval($item['qty_in']), "Return from Dispatch $did");
         }
     }
 

@@ -187,6 +187,7 @@ switch ($method) {
 
                     $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
                         ->execute([$new_boxes, $new_pieces, $qr['product_id'], $wid]);
+                    logInventoryActivity($pdo, $qr['product_id'], $wid, 'ready_sale', $order_id, 0, -$pieces_sold, "Ready Sale (Order $order_id)");
                 }
             }
         }
@@ -287,6 +288,7 @@ switch ($method) {
 
                     $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
                         ->execute([$new_boxes, $new_pieces, $qr['product_id'], $wid]);
+                    logInventoryActivity($pdo, $qr['product_id'], $wid, 'order_cancelled', $id, 0, $pieces_sold, "Cancelled Ready Sale (Order $id)");
                 }
             }
         } elseif ($order['status'] === 'out_for_delivery' || $order['status'] === 'delivered') {
@@ -329,6 +331,7 @@ switch ($method) {
 
                     $pdo->prepare('UPDATE inventory SET qty_boxes=?, qty_pieces=? WHERE product_id=? AND warehouse_id=?')
                         ->execute([$new_boxes, $new_pieces, $item['product_id'], $wid]);
+                    logInventoryActivity($pdo, $item['product_id'], $wid, 'order_cancelled', $id, 0, $qty_out, "Cancelled Dispatch (Order $id)");
                 }
             }
 

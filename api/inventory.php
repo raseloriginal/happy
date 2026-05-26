@@ -1,28 +1,48 @@
 <?php
 // api/inventory.php
+ob_start();
 header('Content-Type: application/json');
+
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/session.php';
 requireRole(['admin','manager']);
 
 $pdo    = getDB();
 $method = $_SERVER['REQUEST_METHOD'];
-$wid    = $_SESSION['warehouse_id'] ?? 0;
+$action = $_GET['action'] ?? '';
 
-$where  = ['i.warehouse_id=?'];
-$params = [$wid];
-if (!empty($_GET['company_id'])) { $where[] = 'p.company_id=?'; $params[] = $_GET['company_id']; }
-if (!empty($_GET['category_id'])){ $where[] = 'p.category_id=?'; $params[] = $_GET['category_id']; }
+switch ($method) {
+    case 'GET':
+        if ($action === 'logs') {
+            $product_id = intval($_GET['product_id'] ?? 0);
+            $warehouse_id = $_SESSION['warehouse_id'] ?? intval($_GET['warehouse_id'] ?? 0);
+            
+            $from_date = $_GET['from_date'] ?? null;
+            $to_date = $_GET['to_date'] ?? null;
+            
+            $query = 'SELECT il.*, u.name as user_name FROM inventory_logs il LEFT JOIN users u ON u.id = il.user_id WHERE il.product_id = ? AND il.warehouse_id = ?';
+            $params = [$product_id, $warehouse_id];
+            
+            if ($from_date) {
+                $query .= ' AND DATE(il.created_at) >= ?';
+                $params[] = $from_date;
+            }
+            if ($to_date) {
+                $query .= ' AND DATE(il.created_at) <= ?';
+                $params[] = $to_date;
+            }
+            
+            $query .= ' ORDER BY il.created_at DESC';
+            
+            $stmt = $pdo->prepare($query);
+            $stmt->execute($params);
+            
+            ob_clean();
+            echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
+            exit;
+        }
+        break;
+}
 
-$sql = 'SELECT i.*, p.name as product_name, p.pieces_per_box, p.selling_price, co.name as company_name, cat.name as category_name, w.name as warehouse_name
-        FROM inventory i
-        JOIN products p ON p.id=i.product_id
-        JOIN companies co ON co.id=p.company_id
-        LEFT JOIN categories cat ON cat.id=p.category_id
-        JOIN warehouses w ON w.id=i.warehouse_id
-        WHERE ' . implode(' AND ', $where) . '
-        ORDER BY i.qty_boxes ASC, p.name';
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
+ob_clean();
+echo json_encode(['success' => false, 'message' => 'Invalid action']);

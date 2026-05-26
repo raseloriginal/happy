@@ -142,10 +142,58 @@ function getDB(): PDO {
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
                 } catch (PDOException $ex) { }
             }
+
+            // Auto-migration: inventory_logs table
+            try {
+                $pdo->query("SELECT id FROM inventory_logs LIMIT 0");
+            } catch (PDOException $e) {
+                try {
+                    $pdo->exec("CREATE TABLE IF NOT EXISTS `inventory_logs` (
+                        `id` int(11) NOT NULL AUTO_INCREMENT,
+                        `product_id` int(11) NOT NULL,
+                        `warehouse_id` int(11) NOT NULL,
+                        `user_id` int(11) DEFAULT NULL,
+                        `action_type` varchar(50) NOT NULL, 
+                        `reference_id` int(11) DEFAULT NULL,
+                        `change_boxes` int(11) NOT NULL DEFAULT 0,
+                        `change_pieces` int(11) NOT NULL DEFAULT 0,
+                        `balance_boxes` int(11) NOT NULL DEFAULT 0,
+                        `balance_pieces` int(11) NOT NULL DEFAULT 0,
+                        `notes` text DEFAULT NULL,
+                        `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+                        PRIMARY KEY (`id`),
+                        KEY `product_id` (`product_id`),
+                        KEY `warehouse_id` (`warehouse_id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+                } catch (PDOException $ex) { }
+            }
         } catch (PDOException $e) {
             http_response_code(500);
             die(json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]));
         }
     }
     return $pdo;
+}
+
+function logInventoryActivity($pdo, $product_id, $warehouse_id, $action_type, $ref_id = null, $change_boxes = 0, $change_pieces = 0, $notes = '') {
+    $user_id = $_SESSION['user_id'] ?? null;
+    
+    // Fetch current balance
+    $stmt = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
+    $stmt->execute([$product_id, $warehouse_id]);
+    $row = $stmt->fetch();
+    
+    $balance_boxes = $row ? (int)$row['qty_boxes'] : 0;
+    $balance_pieces = $row ? (int)$row['qty_pieces'] : 0;
+    
+    // Skip logging if there is no change and it's not an initial setup
+    if ($change_boxes == 0 && $change_pieces == 0 && $action_type !== 'initial_stock' && $action_type !== 'edit_stock') {
+        return;
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO inventory_logs (product_id, warehouse_id, user_id, action_type, reference_id, change_boxes, change_pieces, balance_boxes, balance_pieces, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([
+        $product_id, $warehouse_id, $user_id, $action_type, $ref_id, 
+        $change_boxes, $change_pieces, $balance_boxes, $balance_pieces, $notes
+    ]);
 }
