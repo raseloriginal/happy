@@ -54,13 +54,13 @@ function requireAuth(): void {
         $base = rootUrl();
         
         if (strpos($script, '/admin/') !== false) {
-            header('Location: ' . $base . '/admin/login.php');
+            header('Location: ' . $base . '/admin/login');
         } elseif (strpos($script, '/manager/') !== false) {
-            header('Location: ' . $base . '/manager/login.php');
+            header('Location: ' . $base . '/manager/login');
         } elseif (strpos($script, '/dsr/') !== false) {
-            header('Location: ' . $base . '/dsr/login.php');
+            header('Location: ' . $base . '/dsr/login');
         } else {
-            header('Location: ' . $base . '/index.php');
+            header('Location: ' . $base . '/index');
         }
         exit;
     }
@@ -85,11 +85,11 @@ function requireRole($roles): void {
 function getDashboardUrl(): string {
     $base = rootUrl();
     switch ($_SESSION['role'] ?? '') {
-        case 'admin':   return $base . '/admin/index.php';
-        case 'manager': return $base . '/manager/index.php';
-        case 'dsr':     return $base . '/dsr/index.php';
-        case 'dealer':  return $base . '/dealer/index.php';
-        default:        return $base . '/index.php';
+        case 'admin':   return $base . '/admin/index';
+        case 'manager': return $base . '/manager/index';
+        case 'dsr':     return $base . '/dsr/index';
+        case 'dealer':  return $base . '/dealer/index';
+        default:        return $base . '/index';
     }
 }
 

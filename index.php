@@ -266,7 +266,7 @@ foreach ($roles as $r) {
 
   <main class="portal-grid">
     <!-- Admin Portal -->
-    <a href="admin/login.php" class="portal-card admin" id="portal-admin">
+    <a href="admin/login" class="portal-card admin" id="portal-admin">
       <div class="card-top">
         <div class="icon-box"><i class="fa-solid fa-user-shield"></i></div>
         <h2>Admin Portal</h2>
@@ -276,7 +276,7 @@ foreach ($roles as $r) {
     </a>
 
     <!-- Manager Portal -->
-    <a href="manager/login.php" class="portal-card manager" id="portal-manager">
+    <a href="manager/login" class="portal-card manager" id="portal-manager">
       <div class="card-top">
         <div class="icon-box"><i class="fa-solid fa-user-tie"></i></div>
         <h2>Manager Portal</h2>
@@ -286,7 +286,7 @@ foreach ($roles as $r) {
     </a>
 
     <!-- DSR Portal -->
-    <a href="dsr/login.php" class="portal-card dsr" id="portal-dsr">
+    <a href="dsr/login" class="portal-card dsr" id="portal-dsr">
       <div class="card-top">
         <div class="icon-box"><i class="fa-solid fa-truck"></i></div>
         <h2>DSR Sheet App</h2>

@@ -19,16 +19,16 @@ session_destroy();
 // Redirect back to specific portal login page
 switch ($role) {
     case 'admin':
-        header('Location: ' . rootPath() . '/admin/login.php');
+        header('Location: ' . rootPath() . '/admin/login');
         break;
     case 'manager':
-        header('Location: ' . rootPath() . '/manager/login.php');
+        header('Location: ' . rootPath() . '/manager/login');
         break;
     case 'dsr':
-        header('Location: ' . rootPath() . '/dsr/login.php');
+        header('Location: ' . rootPath() . '/dsr/login');
         break;
     default:
-        header('Location: ' . rootPath() . '/index.php');
+        header('Location: ' . rootPath() . '/index');
         break;
 }
 exit;
