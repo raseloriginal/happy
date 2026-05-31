@@ -1,9 +1,10 @@
-// DSR PWA Service Worker - v6
-// IMPORTANT: Never cache PHP pages or navigations. Only cache static assets.
-const CACHE_NAME = 'dsr-static-cache-v6';
-
-// Only cache truly static assets (images, fonts, manifest)
-const STATIC_ASSETS = [
+const CACHE_NAME = 'dsr-pwa-cache-v4';
+const urlsToCache = [
+  './',
+  './index',
+  './stock',
+  './settlement',
+  './login',
   './manifest.json',
   '../assets/img/logo/logo-black.png',
   '../assets/img/logo/logo-icon-black.png',
@@ -13,71 +14,70 @@ const STATIC_ASSETS = [
   '../assets/img/logo/pwa-icon-512.png'
 ];
 
-// On install: skip waiting immediately and only cache static assets
 self.addEventListener('install', event => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      // Use individual adds so one failure doesn't break everything
-      return Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url)));
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        return cache.addAll(urlsToCache);
+      })
   );
 });
 
-// On activate: delete ALL old caches and claim clients immediately
+self.addEventListener('fetch', event => {
+  // Only handle GET requests and http/https URLs to prevent crashes on POST or extension requests
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response; // Return cached response
+        }
+
+        // Clone request because it's a stream
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then(
+          response => {
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+
+            // Clone the response
+            const responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                // Don't cache API requests dynamically if they change often, but for basic PWA this is ok
+                // In production, you might want to exclude /api/ paths from aggressive caching
+                if (!event.request.url.includes('/api/')) {
+                  cache.put(event.request, responseToCache);
+                }
+              });
+
+            return response;
+          }
+        ).catch(() => {
+          // Optional: return offline fallback page here if network fails
+        });
+      })
+  );
+});
+
 self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          // Delete every cache that isn't our current one
-          if (cacheName !== CACHE_NAME) {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => {
-      return self.clients.claim();
-    })
-  );
-});
-
-// On fetch: NEVER intercept navigation requests (PHP pages, redirects, etc.)
-self.addEventListener('fetch', event => {
-  const req = event.request;
-
-  // Skip non-GET requests
-  if (req.method !== 'GET') return;
-
-  // Skip non-http(s) requests
-  if (!req.url.startsWith('http')) return;
-
-  // CRITICAL: Never intercept navigation — let PHP handle all page loads
-  if (req.mode === 'navigate') return;
-
-  // Skip API calls — always fresh from network
-  if (req.url.includes('/api/')) return;
-
-  // Skip PHP files — never serve from cache
-  if (req.url.includes('.php')) return;
-
-  // For remaining static assets: cache-first strategy
-  event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-
-      return fetch(req).then(response => {
-        // Only cache valid, same-origin responses
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(req, responseToCache);
-          });
-        }
-        return response;
-      }).catch(() => {
-        // Network failed and no cache — just fail silently
-      });
     })
   );
 });

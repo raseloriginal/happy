@@ -31,7 +31,38 @@ function getDashboardUrl(string $role): string {
 }
 
 // Check if already logged in to any session and redirect
-// REMOVED: Auto-redirect disabled as per user request to always show gateway portal
+$roles = ['admin', 'manager', 'dsr', 'dealer'];
+foreach ($roles as $r) {
+    $sessName = 'HAPPY_' . strtoupper($r) . '_SESS';
+    if (isset($_COOKIE[$sessName])) {
+        // Temporarily switch session to this name
+        session_name($sessName);
+        
+        // Match the same settings as config/session.php
+        $session_lifetime = 30 * 24 * 60 * 60;
+        $session_dir = __DIR__ . '/config/sessions';
+        ini_set('session.save_path', $session_dir);
+        ini_set('session.gc_maxlifetime', $session_lifetime);
+        session_set_cookie_params([
+            'lifetime' => $session_lifetime,
+            'path' => '/',
+            'secure' => false,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+        
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        if (!empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === $r) {
+            header('Location: ' . getDashboardUrl($r));
+            exit;
+        }
+        
+        session_write_close();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

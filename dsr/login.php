@@ -310,26 +310,12 @@ if (isLoggedIn() && ($_SESSION['role'] ?? '') === 'dsr') {
       }
     });
 
-    // PWA Service Worker: Unregister old broken SWs then register the new one
+    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        try {
-          // Step 1: Unregister ALL existing service workers (kill old broken SW)
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          for (const reg of registrations) {
-            await reg.unregister();
-            console.log('Unregistered old SW:', reg.scope);
-          }
-          // Step 2: Clear ALL caches (remove stale cached PHP pages)
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
-          console.log('All caches cleared.');
-          // Step 3: Register the new safe SW
-          const reg = await navigator.serviceWorker.register('sw.js');
-          console.log('New DSR SW registered:', reg.scope);
-        } catch (err) {
-          console.error('DSR SW setup failed:', err);
-        }
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('DSR SW registered successfully:', reg.scope))
+          .catch(err => console.error('DSR SW registration failed:', err));
       });
     }
   </script>
