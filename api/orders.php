@@ -23,7 +23,7 @@ switch ($method) {
             exit;
         } elseif ($action === 'sr_products') {
             $sr_id = intval($_GET['sr_id'] ?? 0);
-            $stmt  = $pdo->prepare('SELECT p.id, p.name, p.pieces_per_box, p.selling_price FROM sr s JOIN products p ON p.company_id=s.company_id WHERE s.id=? AND p.status=1 ORDER BY p.name');
+            $stmt  = $pdo->prepare('SELECT p.id, p.name, p.pieces_per_box, p.selling_price, p.image FROM sr s JOIN products p ON p.company_id=s.company_id WHERE s.id=? AND p.status=1 ORDER BY p.name');
             $stmt->execute([$sr_id]);
             echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
         } elseif ($action === 'stats') {

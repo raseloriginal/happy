@@ -80,6 +80,21 @@ include __DIR__ . '/../includes/header.php';
     </div>
   </div>
 </div>
+
+<!-- Product Selection Modal -->
+<div id="product-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="closeProductModal()"></div>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg relative z-10 flex flex-col max-h-[90vh]">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="font-bold text-gray-800">Select Product</h3>
+      <button type="button" onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+    </div>
+    <div class="p-5 overflow-y-auto flex-1 space-y-3" id="product-modal-list">
+      <!-- products injected here -->
+    </div>
+  </div>
+</div>
+
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 <script>
 let srProducts = [];
@@ -156,6 +171,7 @@ async function loadSRProducts() {
 }
 
 function getProductOptions(selectedId = '') {
+  // Not used anymore with the modal approach, keeping for compatibility if needed elsewhere
   let opts = '<option value="">Select Product</option>';
   srProducts.forEach(p => {
     opts += `<option value="${p.id}" data-price="${p.selling_price}" data-ppb="${p.pieces_per_box}" ${p.id == selectedId ? 'selected' : ''}>${p.name} (${p.pieces_per_box} pcs/box)</option>`;
@@ -163,14 +179,86 @@ function getProductOptions(selectedId = '') {
   return opts;
 }
 
+let currentRowForModal = null;
+
+function openProductModal(triggerEl) {
+  currentRowForModal = triggerEl.closest('tr');
+  const list = document.getElementById('product-modal-list');
+  list.innerHTML = '';
+  
+  const used = [];
+  document.querySelectorAll('.product-sel-id').forEach(inp => {
+    if (inp.value) used.push(inp.value);
+  });
+  const currentVal = currentRowForModal.querySelector('.product-sel-id').value;
+
+  srProducts.forEach(p => {
+    const isUsed = used.includes(String(p.id)) && String(p.id) !== currentVal;
+    const opacity = isUsed ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50 hover:bg-indigo-50/30';
+    const clickAttr = isUsed ? '' : `onclick="selectProductFromModal(${p.id})"`;
+    const imgUrl = p.image ? ('<?= rootPath() ?>/' + p.image) : '<?= rootPath() ?>/assets/img/placeholder.png';
+    
+    list.innerHTML += `
+      <div class="flex items-center gap-4 p-3 border border-gray-100 rounded-xl transition ${opacity}" ${clickAttr}>
+        <img src="${imgUrl}" class="w-12 h-12 object-contain rounded-lg bg-gray-50 border border-gray-100 p-1" onerror="this.src='<?= rootPath() ?>/assets/img/placeholder.png'" />
+        <div class="flex-1">
+          <div class="font-bold text-gray-800 text-sm">${p.name}</div>
+          <div class="text-xs text-gray-500">${p.pieces_per_box} pcs/box • ৳${p.selling_price}/pc</div>
+        </div>
+        ${isUsed ? '<span class="text-xs text-red-500 font-medium">Added</span>' : '<button type="button" class="btn btn-ghost btn-sm">Select</button>'}
+      </div>
+    `;
+  });
+  
+  document.getElementById('product-modal').classList.remove('hidden');
+}
+
+function closeProductModal() {
+  document.getElementById('product-modal').classList.add('hidden');
+  currentRowForModal = null;
+}
+
+function selectProductFromModal(productId) {
+  if (!currentRowForModal) return;
+  const p = srProducts.find(x => x.id == productId);
+  if (!p) return;
+  
+  const tr = currentRowForModal;
+  
+  tr.querySelector('.product-sel-id').value = p.id;
+  
+  const nameEl = tr.querySelector('.product-sel-name');
+  nameEl.textContent = p.name;
+  nameEl.classList.remove('text-gray-500');
+  nameEl.classList.add('text-gray-900');
+  
+  const imgEl = tr.querySelector('.product-sel-img');
+  imgEl.src = p.image ? ('<?= rootPath() ?>/' + p.image) : '<?= rootPath() ?>/assets/img/placeholder.png';
+  imgEl.classList.remove('hidden');
+
+  tr.dataset.ppb = p.pieces_per_box;
+  tr.dataset.price = p.selling_price;
+  
+  const ppb = parseInt(p.pieces_per_box || 1);
+  const piecePrice = parseFloat(p.selling_price || 0);
+  const boxPrice = piecePrice * ppb;
+  tr.querySelector('.row-price').textContent = '৳' + boxPrice.toFixed(2) + ' (৳' + piecePrice.toFixed(2) + '/pcs)';
+  
+  updateRowTotal(tr.querySelector('.qty-inp'));
+  closeProductModal();
+  updateUsed();
+}
+
 function addProductRow() {
   const tbody = document.getElementById('products-body');
   const tr    = document.createElement('tr');
   tr.innerHTML = `
     <td>
-      <select class="form-input product-sel" required onchange="rowChanged(this)">
-        ${getProductOptions()}
-      </select>
+      <input type="hidden" class="product-sel-id" required>
+      <div class="flex items-center gap-3 cursor-pointer border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 hover:bg-gray-100 transition" onclick="openProductModal(this)">
+        <img src="" class="w-10 h-10 object-contain rounded hidden product-sel-img" />
+        <span class="product-sel-name text-gray-500 font-medium text-sm">Click to Select Product</span>
+      </div>
     </td>
     <td><input type="number" class="form-input qty-inp" min="1" placeholder="boxes" required oninput="updateRowTotal(this)" /></td>
     <td class="text-right text-gray-500 text-sm row-price">—</td>
@@ -182,29 +270,21 @@ function addProductRow() {
 }
 
 function rowChanged(sel) {
-  const opt = sel.options[sel.selectedIndex];
-  const tr  = sel.closest('tr');
-  if (opt.value) {
-    const ppb = parseInt(opt.dataset.ppb || 1);
-    const piecePrice = parseFloat(opt.dataset.price || 0);
-    const boxPrice = piecePrice * ppb;
-    tr.querySelector('.row-price').textContent = '৳' + boxPrice.toFixed(2) + ' (৳' + piecePrice.toFixed(2) + '/pcs)';
-  } else {
-    tr.querySelector('.row-price').textContent = '—';
-  }
-  updateRowTotal(tr.querySelector('.qty-inp'));
-  updateUsed();
+  // Deprecated - logic moved to selectProductFromModal
 }
 
 function updateRowTotal(input) {
   const tr = input.closest('tr');
-  const sel = tr.querySelector('.product-sel');
-  const opt = sel.options[sel.selectedIndex];
+  const selId = tr.querySelector('.product-sel-id').value;
   const qty = parseFloat(input.value) || 0;
-  const piecePrice = opt.value ? parseFloat(opt.dataset.price || 0) : 0;
-  const ppb = opt.value ? parseInt(opt.dataset.ppb || 1) : 1;
-  const boxPrice = piecePrice * ppb;
-  const total = qty * boxPrice;
+  
+  let total = 0;
+  if (selId) {
+    const piecePrice = parseFloat(tr.dataset.price || 0);
+    const ppb = parseInt(tr.dataset.ppb || 1);
+    const boxPrice = piecePrice * ppb;
+    total = qty * boxPrice;
+  }
   tr.querySelector('.row-total').textContent = '৳' + total.toFixed(2);
   updateGrandTotal();
 }
@@ -219,13 +299,7 @@ function updateGrandTotal() {
 }
 
 function updateUsed() {
-  const used = [];
-  document.querySelectorAll('.product-sel').forEach(s => { if (s.value) used.push(s.value); });
-  document.querySelectorAll('.product-sel').forEach(s => {
-    s.querySelectorAll('option').forEach(o => {
-      o.disabled = o.value && used.includes(o.value) && o.value !== s.value;
-    });
-  });
+  // Selection handling moved dynamically to openProductModal
 }
 
 document.getElementById('order-form').addEventListener('submit', async function(e) {
@@ -233,12 +307,11 @@ document.getElementById('order-form').addEventListener('submit', async function(
   const items = [];
   let valid   = true;
   document.querySelectorAll('#products-body tr').forEach(tr => {
-    const sel = tr.querySelector('.product-sel');
-    const opt = sel.options[sel.selectedIndex];
-    const pid = sel.value;
+    const pid = tr.querySelector('.product-sel-id').value;
     const qtyBoxes = parseInt(tr.querySelector('.qty-inp').value);
     if (!pid || !qtyBoxes || qtyBoxes < 1) { valid = false; return; }
-    const ppb = parseInt(opt.dataset.ppb || 1);
+    
+    const ppb = parseInt(tr.dataset.ppb || 1);
     const qtyPieces = qtyBoxes * ppb;
     items.push({ product_id: pid, qty_pieces: qtyPieces });
   });
