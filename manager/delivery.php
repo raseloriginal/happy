@@ -32,10 +32,10 @@ include __DIR__ . '/../includes/header.php';
           <!-- Order & DSR Selection -->
           <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
             <div>
-              <label class="form-label">Select Pending Order *</label>
-              <select id="order-select" class="form-input" onchange="loadOrderItems()">
-                <option value="">Loading orders…</option>
-              </select>
+              <label class="form-label">Select Pending SR(s) *</label>
+              <div id="sr-container" class="form-input p-2 space-y-2 max-h-40 overflow-y-auto" style="height: auto; min-height: 42px;">
+                 <div class="text-gray-400">Loading SRs...</div>
+              </div>
             </div>
             <div>
               <label class="form-label">Select DSR (Driver) *</label>
@@ -103,30 +103,41 @@ include __DIR__ . '/../includes/header.php';
 let orderItems   = [];   // [{product_id, product_name, required_boxes, scanned: 0}]
 let scannedBoxes = [];   // [{qr_id, product_id, qr_uid, pieces_total}]
 
-// Load pending orders on page load
+// Load pending SRs on page load
 window.addEventListener('DOMContentLoaded', async () => {
-  const data = await api('<?= rootPath() ?>/api/delivery.php?action=pending_orders');
-  const sel  = document.getElementById('order-select');
-  sel.innerHTML = '<option value="">Select Order</option>';
-  (data.data || []).forEach(o => {
-    sel.innerHTML += `<option value="${o.id}">#${String(o.id).padStart(4,'0')} — ${o.sr_name} (${o.company_name}) ${o.order_date}</option>`;
+  const data = await api('<?= rootPath() ?>/api/delivery.php?action=pending_srs');
+  const container  = document.getElementById('sr-container');
+  container.innerHTML = '';
+  if (!data.data || data.data.length === 0) {
+      container.innerHTML = '<div class="text-gray-400">No pending orders.</div>';
+      return;
+  }
+  data.data.forEach(s => {
+    container.innerHTML += `<label class="flex items-center gap-2 cursor-pointer p-1 hover:bg-gray-50 rounded">
+        <input type="checkbox" value="${s.id}" class="sr-checkbox rounded border-gray-300 text-primary focus:ring-primary" onchange="loadOrderItems()">
+        <span>${s.sr_name}</span>
+      </label>`;
   });
 });
 
+function getSelectedSRs() {
+    return Array.from(document.querySelectorAll('.sr-checkbox:checked')).map(cb => parseInt(cb.value));
+}
+
 async function loadOrderItems() {
-  const oid = document.getElementById('order-select').value;
+  const srIds = getSelectedSRs();
   orderItems   = [];
   scannedBoxes = [];
   document.getElementById('scan-log').innerHTML = '<div id="scan-log-placeholder" class="text-gray-400 text-xs">Scanned boxes will appear here</div>';
 
-  if (!oid) {
+  if (srIds.length === 0) {
     document.getElementById('order-placeholder').style.display = 'block';
     document.getElementById('products-panel').style.display = 'none';
     document.getElementById('scan-btn').disabled = true;
     return;
   }
 
-  const data = await api('<?= rootPath() ?>/api/delivery.php?action=order_items&order_id=' + oid);
+  const data = await api('<?= rootPath() ?>/api/delivery.php?action=order_items&sr_ids=' + srIds.join(','));
   const list  = document.getElementById('products-list');
   list.innerHTML = '';
   orderItems = [];
@@ -159,8 +170,8 @@ async function loadOrderItems() {
 let isScanning = false;
 
 async function processQRScan(uid) {
-  const oid = document.getElementById('order-select').value;
-  if (!oid) { showToast('Select an order first', 'warning'); return; }
+  const srIds = getSelectedSRs();
+  if (srIds.length === 0) { showToast('Select at least one SR first', 'warning'); return; }
 
   // 1. Local Duplicate Check (Already fully scanned)
   if (scannedBoxes.some(s => s.qr_uid === uid)) {
@@ -174,7 +185,7 @@ async function processQRScan(uid) {
 
   const scannedIds = scannedBoxes.map(s => s.qr_id);
   const data = await api('<?= rootPath() ?>/api/delivery.php?action=scan_box', 'POST', {
-    qr_uid: uid, order_id: parseInt(oid), scanned_ids: scannedIds
+    qr_uid: uid, sr_ids: srIds, scanned_ids: scannedIds
   });
 
   isScanning = false;
@@ -312,14 +323,14 @@ function handleManualInput(e) {
 registerUsbScanner(processQRScan);
 
 async function completeDelivery() {
-  const oid   = document.getElementById('order-select').value;
+  const srIds = getSelectedSRs();
   const dsrId = document.getElementById('dsr-select').value;
   if (!dsrId) { showToast('Select a DSR first', 'warning'); return; }
 
   // Warning check if not all boxes scanned
   const allDone = orderItems.length > 0 && orderItems.every(i => i.scanned >= i.required);
   if (!allDone) {
-    if (!confirm('Warning: You have not scanned all the ordered boxes. Are you sure you want to complete this delivery dispatch with ONLY the scanned boxes? Unscanned boxes will not be loaded onto the van.')) {
+    if (!confirm('Warning: You have not scanned all the ordered boxes for the selected SRs. Are you sure you want to complete this delivery dispatch with ONLY the scanned boxes? Unscanned boxes will not be loaded onto the van.')) {
       return;
     }
   }
@@ -329,13 +340,13 @@ async function completeDelivery() {
   stopScan();
 
   const data = await api('<?= rootPath() ?>/api/delivery.php?action=complete', 'POST', {
-    order_id: parseInt(oid),
+    sr_ids: srIds,
     dsr_id: parseInt(dsrId),
     scanned: scannedBoxes
   });
 
   if (data.success) {
-    showToast('Order sent to van!');
+    showToast('Orders sent to van!');
     setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/orders.php', 1500);
   } else {
     showToast(data.message || 'Error', 'error');
