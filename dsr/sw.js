@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dsr-pwa-cache-v4';
+const CACHE_NAME = 'dsr-pwa-cache-v5';
 const urlsToCache = [
   './',
   './index',
@@ -26,6 +26,11 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
   // Only handle GET requests and http/https URLs to prevent crashes on POST or extension requests
   if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+    return;
+  }
+
+  // Bypass service worker for document navigation to prevent ERR_FAILED on PHP redirects
+  if (event.request.mode === 'navigate') {
     return;
   }
 
