@@ -1,74 +1,8 @@
 <?php
-// index.php — Gateway & Session Router
-
-// Define paths
-function rootPath(): string {
-    static $path = null;
-    if ($path === null) {
-        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-        $scriptDir = str_replace('\\', '/', dirname($scriptName));
-        $path = str_replace(['/manager', '/admin', '/api', '/dsr', '/dealer', '/config', '/includes', '/eggland'], '', $scriptDir);
-        $path = rtrim($path, '/');
-    }
-    return $path;
-}
-
-function rootUrl(): string {
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-            || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
-            || (($_SERVER['SERVER_PORT'] ?? '') == 443);
-    $protocol = $isHttps ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    return $protocol . '://' . $host . rootPath();
-}
-
-function getDashboardUrl(string $role): string {
-    $base = rootUrl();
-    switch ($role) {
-        case 'admin':   return $base . '/admin/index.php';
-        case 'manager': return $base . '/manager/index.php';
-        case 'dsr':     return $base . '/dsr/index.php';
-        case 'dealer':  return $base . '/dealer/index.php';
-        default:        return $base . '/index.php';
-    }
-}
-
-// Check if already logged in to any session and redirect
-$roles = ['admin', 'manager', 'dsr', 'dealer'];
-foreach ($roles as $r) {
-    $sessName = 'HAPPY_' . strtoupper($r) . '_SESS';
-    if (isset($_COOKIE[$sessName])) {
-        // Temporarily switch session to this name
-        session_name($sessName);
-        
-        // Match the same settings as config/session.php
-        $session_lifetime = 30 * 24 * 60 * 60;
-        $session_dir = __DIR__ . '/config/sessions';
-        ini_set('session.save_path', $session_dir);
-        ini_set('session.gc_maxlifetime', $session_lifetime);
-        $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-                 || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
-                 || (($_SERVER['SERVER_PORT'] ?? '') == 443);
-        session_set_cookie_params([
-            'lifetime' => $session_lifetime,
-            'path' => '/',
-            'secure' => $is_https,
-            'httponly' => true,
-            'samesite' => 'Lax'
-        ]);
-        
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        if (!empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === $r) {
-            header('Location: ' . getDashboardUrl($r));
-            exit;
-        }
-        
-        session_write_close();
-    }
-}
+// index.php — Gateway Portal
+// Always shows the portal selection page.
+// Individual portals (admin/login, manager/login, dsr/login) handle
+// their own "already logged in" auto-redirects.
 ?>
 <!DOCTYPE html>
 <html lang="en">
