@@ -436,15 +436,13 @@ $warehouses = $pdo->query('SELECT id, name FROM warehouses WHERE status=1 ORDER 
 
   <!-- JavaScript SPA App Logic -->
   <script>
-    // Register Service Worker for PWA
-    if ('serviceWorker' in navigator) {
+    // PWA Service Worker — mobile only (skip on desktop to avoid standalone popup)
+    const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if ('serviceWorker' in navigator && isMobileDevice) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then(registration => {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          }, err => {
-            console.log('ServiceWorker registration failed: ', err);
-          });
+          .then(reg => console.log('DSR SW registered:', reg.scope))
+          .catch(err => console.error('DSR SW failed:', err));
       });
     }
 

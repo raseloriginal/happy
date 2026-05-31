@@ -310,12 +310,13 @@ if (isLoggedIn() && ($_SESSION['role'] ?? '') === 'dsr') {
       }
     });
 
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
+    // PWA Service Worker — mobile only (skip on desktop to avoid standalone popup)
+    const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if ('serviceWorker' in navigator && isMobileDevice) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('DSR SW registered successfully:', reg.scope))
-          .catch(err => console.error('DSR SW registration failed:', err));
+          .then(reg => console.log('DSR SW registered:', reg.scope))
+          .catch(err => console.error('DSR SW failed:', err));
       });
     }
   </script>
