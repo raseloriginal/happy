@@ -32,10 +32,13 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.save_path', $session_dir);
     ini_set('session.gc_maxlifetime', $session_lifetime);
     
+    $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+             || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+             || (($_SERVER['SERVER_PORT'] ?? '') == 443);
     session_set_cookie_params([
         'lifetime' => $session_lifetime,
         'path' => '/',
-        'secure' => false, // Set to true if running on HTTPS
+        'secure' => $is_https, // Auto-detect HTTPS (required for secure cookies on production)
         'httponly' => true,
         'samesite' => 'Lax'
     ]);

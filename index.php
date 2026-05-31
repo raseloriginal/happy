@@ -43,10 +43,13 @@ foreach ($roles as $r) {
         $session_dir = __DIR__ . '/config/sessions';
         ini_set('session.save_path', $session_dir);
         ini_set('session.gc_maxlifetime', $session_lifetime);
+        $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                 || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+                 || (($_SERVER['SERVER_PORT'] ?? '') == 443);
         session_set_cookie_params([
             'lifetime' => $session_lifetime,
             'path' => '/',
-            'secure' => false,
+            'secure' => $is_https,
             'httponly' => true,
             'samesite' => 'Lax'
         ]);
