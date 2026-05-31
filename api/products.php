@@ -26,6 +26,58 @@ switch ($method) {
         break;
 
     case 'POST':
+        if ($action === 'edit') {
+            $id = (int)($_POST['id'] ?? 0);
+            if (!$id) {
+                ob_clean();
+                echo json_encode(['success' => false, 'message' => 'Product ID required.']);
+                exit;
+            }
+            
+            $stmt = $pdo->prepare("SELECT image FROM products WHERE id=?");
+            $stmt->execute([$id]);
+            $currentImg = $stmt->fetchColumn();
+            
+            $image = $currentImg;
+            if (!empty($_FILES['image']['tmp_name'])) {
+                $ext   = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+                $allow = ['jpg', 'jpeg', 'png', 'webp'];
+                if (in_array($ext, $allow)) {
+                    $dir = __DIR__ . '/../assets/img/products/';
+                    if (!is_dir($dir)) mkdir($dir, 0755, true);
+                    $fname = md5(uniqid()) . '.' . $ext;
+                    move_uploaded_file($_FILES['image']['tmp_name'], $dir . $fname);
+                    $image = 'assets/img/products/' . $fname;
+                }
+            }
+
+            try {
+                $pdo->prepare('UPDATE products SET company_id=?, category_id=?, name=?, box_type=?, pieces_per_box=?, selling_price=?, dealer_percentage=?, status=?, image=? WHERE id=?')
+                    ->execute([
+                        $_POST['company_id'],
+                        $_POST['category_id'] ?: null,
+                        trim($_POST['name']),
+                        $_POST['box_type'] ?? '',
+                        $_POST['pieces_per_box'],
+                        $_POST['selling_price'] ?? 0,
+                        $_POST['dealer_percentage'] ?? 0,
+                        $_POST['status'] ?? 1,
+                        $image,
+                        $id
+                    ]);
+                ob_clean();
+                echo json_encode(['success' => true]);
+            } catch (PDOException $e) {
+                ob_clean();
+                if ($e->getCode() == 23000) {
+                    echo json_encode(['success' => false, 'message' => 'Product name already exists for this company.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+                }
+            }
+            exit;
+        }
+
         $company_id = $_POST['company_id'] ?? 0;
         $items = [];
 

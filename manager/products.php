@@ -157,6 +157,13 @@ include __DIR__ . '/../includes/header.php';
         <div><label class="form-label">Pieces per Box</label><input id="edit-ppb" type="number" class="form-input" min="1" /></div>
         <div><label class="form-label">Dealer %</label><input id="edit-dp" type="number" step="0.01" class="form-input" /></div>
       </div>
+      <div>
+        <label class="form-label">Product Image (Leave blank to keep current)</label>
+        <div class="flex items-center gap-3">
+          <img id="edit-img-preview" class="w-12 h-12 rounded object-cover border bg-gray-50 hidden" />
+          <input type="file" id="edit-image" class="form-input" accept="image/*" onchange="previewEditImage(this)" />
+        </div>
+      </div>
       <div class="flex gap-2 pt-2"><button type="submit" class="btn btn-primary flex-1">Update</button><button type="button" onclick="closeModal('edit-modal')" class="btn btn-ghost flex-1">Cancel</button></div>
     </form>
   </div>
@@ -316,20 +323,45 @@ function editProduct(p) {
   document.getElementById('edit-bt').value = p.box_type || '';
   document.getElementById('edit-ppb').value = p.pieces_per_box;
   document.getElementById('edit-dp').value = p.dealer_percentage;
+  
+  document.getElementById('edit-image').value = '';
+  const imgPrev = document.getElementById('edit-img-preview');
+  if (p.image) {
+    imgPrev.src = '<?= rootPath() ?>/' + p.image;
+    imgPrev.classList.remove('hidden');
+  } else {
+    imgPrev.classList.add('hidden');
+  }
+
   openModal('edit-modal');
+}
+
+function previewEditImage(input) {
+  const file = input.files[0];
+  const prev = document.getElementById('edit-img-preview');
+  if (file) {
+    prev.src = URL.createObjectURL(file);
+    prev.classList.remove('hidden');
+  }
 }
 
 document.getElementById('edit-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('<?= rootPath() ?>/api/products.php', 'PUT', {
-    id: document.getElementById('edit-id').value,
-    company_id: document.getElementById('edit-company').value,
-    category_id: document.getElementById('edit-category').value,
-    name: document.getElementById('edit-name').value,
-    box_type: document.getElementById('edit-bt').value,
-    pieces_per_box: document.getElementById('edit-ppb').value,
-    dealer_percentage: document.getElementById('edit-dp').value
-  });
+  const fd = new FormData();
+  fd.append('id', document.getElementById('edit-id').value);
+  fd.append('company_id', document.getElementById('edit-company').value);
+  fd.append('category_id', document.getElementById('edit-category').value);
+  fd.append('name', document.getElementById('edit-name').value);
+  fd.append('box_type', document.getElementById('edit-bt').value);
+  fd.append('pieces_per_box', document.getElementById('edit-ppb').value);
+  fd.append('dealer_percentage', document.getElementById('edit-dp').value);
+  
+  const file = document.getElementById('edit-image').files[0];
+  if (file) {
+    fd.append('image', file);
+  }
+
+  const data = await api('<?= rootPath() ?>/api/products.php?action=edit', 'POST', fd);
   if (data.success) { showToast('Product updated!'); closeModal('edit-modal'); location.reload(); }
   else showToast(data.message || 'Error', 'error');
 });
