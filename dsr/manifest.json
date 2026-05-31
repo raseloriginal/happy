@@ -2,12 +2,10 @@
   "name": "DSR Panel - Happy CRM",
   "short_name": "DSR Panel",
   "description": "Mobile Application for Happy CRM DSR Panel",
-  "start_url": "./login",
+  "start_url": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "../assets/img/logo/pwa-icon-192.png",
@@ -19,7 +17,7 @@
       "src": "../assets/img/logo/pwa-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
