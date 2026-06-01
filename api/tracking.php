@@ -1,6 +1,7 @@
 <?php
 // api/tracking.php — Fetch latest DSR location coordinates for Admin/Manager map views
 header('Content-Type: application/json');
+date_default_timezone_set('Asia/Dhaka'); // Bangladesh Standard Time (UTC+6)
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/session.php';
 
@@ -12,6 +13,7 @@ $role = $_SESSION['role'];
 $warehouse_id = $_SESSION['warehouse_id'] ?? null;
 
 try {
+    $today = date('Y-m-d'); // Use PHP Bangladesh date, not MySQL CURDATE() which uses UTC
     $query = "
         SELECT 
             d.id as dsr_id,
@@ -28,7 +30,7 @@ try {
         FROM dsr d
         JOIN users u ON u.id = d.user_id
         JOIN warehouses w ON w.id = d.warehouse_id
-        LEFT JOIN dsr_attendance da ON da.dsr_id = d.id AND da.checkin_date = CURDATE()
+        LEFT JOIN dsr_attendance da ON da.dsr_id = d.id AND da.checkin_date = ?
         LEFT JOIN (
             SELECT dl1.*
             FROM dsr_locations dl1
@@ -41,7 +43,7 @@ try {
         WHERE d.status = 1
     ";
 
-    $params = [];
+    $params = [$today]; // today as first param for the LEFT JOIN
     if ($role === 'manager') {
         $query .= " AND d.warehouse_id = ?";
         $params[] = $warehouse_id;

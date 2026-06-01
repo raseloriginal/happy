@@ -40,9 +40,10 @@ switch ($action) {
             exit;
         }
 
-        // Today's attendance status
-        $attStmt = $pdo->prepare('SELECT * FROM dsr_attendance WHERE dsr_id=? AND checkin_date=CURDATE() LIMIT 1');
-        $attStmt->execute([$dsr_id]);
+        // Today's attendance status — use PHP date so MySQL doesn't use its own UTC timezone
+        $today = date('Y-m-d'); // Asia/Dhaka timezone (set above)
+        $attStmt = $pdo->prepare('SELECT * FROM dsr_attendance WHERE dsr_id=? AND checkin_date=? LIMIT 1');
+        $attStmt->execute([$dsr_id, $today]);
         $attendance = $attStmt->fetch();
 
         // Query by specific date if supplied
