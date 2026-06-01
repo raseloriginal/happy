@@ -5,7 +5,10 @@ requireRole('manager');
 $pageTitle  = 'Products';
 $pdo        = getDB();
 $wid        = $_SESSION['warehouse_id'] ?? 0;
-$products   = $pdo->query("SELECT p.*, co.name as company_name, cat.name as category_name, IFNULL(i.qty_boxes, 0) as stock_boxes, IFNULL(i.qty_pieces, 0) as stock_pieces FROM products p JOIN companies co ON co.id=p.company_id LEFT JOIN categories cat ON cat.id=p.category_id LEFT JOIN inventory i ON i.product_id=p.id AND i.warehouse_id=$wid WHERE p.status=1 ORDER BY p.id DESC")->fetchAll();
+// Auto-migrate: add buying_price column to products if not exists
+try { $pdo->query("SELECT buying_price FROM products LIMIT 0"); }
+catch (PDOException $e) { $pdo->exec("ALTER TABLE products ADD COLUMN buying_price DECIMAL(10,2) DEFAULT NULL"); }
+$products   = $pdo->query("SELECT p.*, co.name as company_name, cat.name as category_name, IFNULL(i.qty_boxes, 0) as stock_boxes, IFNULL(i.qty_pieces, 0) as stock_pieces, IFNULL(p.buying_price, 0) as buying_price FROM products p JOIN companies co ON co.id=p.company_id LEFT JOIN categories cat ON cat.id=p.category_id LEFT JOIN inventory i ON i.product_id=p.id AND i.warehouse_id=$wid WHERE p.status=1 ORDER BY p.id DESC")->fetchAll();
 $companies  = $pdo->query('SELECT id, name FROM companies WHERE status=1 ORDER BY name')->fetchAll();
 $categories = $pdo->query('SELECT id, name FROM categories WHERE status=1 ORDER BY name')->fetchAll();
 include __DIR__ . '/../includes/header.php';
@@ -187,10 +190,10 @@ include __DIR__ . '/../includes/header.php';
         <div><label class="form-label">New Pieces *</label><input type="number" id="stock-new-p" class="form-input" required min="0" /></div>
       </div>
       <div>
-        <label class="form-label">Selling Price (৳) <span class="text-xs text-gray-400 font-normal">— update if price changed</span></label>
+        <label class="form-label">Buying Price per Box (৳) <span class="text-xs text-gray-400 font-normal">— update if price changed</span></label>
         <div class="relative">
           <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">৳</span>
-          <input type="number" id="stock-selling-price" class="form-input pl-7" min="0" step="0.01" placeholder="0.00" />
+          <input type="number" id="stock-buying-price" class="form-input pl-7" min="0" step="0.01" placeholder="0.00" />
         </div>
       </div>
       <div>
@@ -380,22 +383,22 @@ function openStockModal(p) {
   document.getElementById('stock-curr-p').value = p.stock_pieces;
   document.getElementById('stock-new-b').value = p.stock_boxes;
   document.getElementById('stock-new-p').value = p.stock_pieces;
-  document.getElementById('stock-selling-price').value = p.selling_price ?? '';
+  document.getElementById('stock-buying-price').value = p.buying_price ?? '';
   document.getElementById('stock-note').value = '';
   openModal('stock-modal');
 }
 
 document.getElementById('stock-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const sellingPrice = document.getElementById('stock-selling-price').value;
+  const buyingPrice = document.getElementById('stock-buying-price').value;
   const payload = {
     id: document.getElementById('stock-id').value,
     qty_boxes: document.getElementById('stock-new-b').value,
     qty_pieces: document.getElementById('stock-new-p').value,
     note: document.getElementById('stock-note').value
   };
-  if (sellingPrice !== '' && sellingPrice !== null) {
-    payload.selling_price = parseFloat(sellingPrice);
+  if (buyingPrice !== '' && buyingPrice !== null) {
+    payload.buying_price = parseFloat(buyingPrice);
   }
   const data = await api('<?= rootPath() ?>/api/products.php?action=edit_stock', 'PUT', payload);
   if (data.success) { showToast('Stock updated!'); closeModal('stock-modal'); location.reload(); }

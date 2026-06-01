@@ -179,7 +179,7 @@ switch ($method) {
             $new_boxes     = (int)$d['qty_boxes'];
             $new_pieces    = (int)$d['qty_pieces'];
             $note          = trim($d['note'] ?? '');
-            $selling_price = isset($d['selling_price']) ? floatval($d['selling_price']) : null;
+            $buying_price  = isset($d['buying_price']) ? floatval($d['buying_price']) : null;
             
             $stmt = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
             $stmt->execute([$product_id, $wid]);
@@ -195,11 +195,33 @@ switch ($method) {
             $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE qty_boxes = VALUES(qty_boxes), qty_pieces = VALUES(qty_pieces)')
                 ->execute([$product_id, $wid, $new_boxes, $new_pieces]);
             
-            // Update selling price on the product if provided
-            if ($selling_price !== null && $selling_price >= 0) {
-                $pdo->prepare('UPDATE products SET selling_price=? WHERE id=?')
-                    ->execute([$selling_price, $product_id]);
-                if (!$note) $note = 'Price updated to ৳' . number_format($selling_price, 2);
+            // Auto-migrate: add buying_price column to products if not exists
+            try { $pdo->query("SELECT buying_price FROM products LIMIT 0"); }
+            catch (PDOException $e) {
+                $pdo->exec("ALTER TABLE products ADD COLUMN buying_price DECIMAL(10,2) DEFAULT NULL");
+            }
+
+            // Update buying price on the product if provided, and recalculate selling_price
+            if ($buying_price !== null && $buying_price >= 0) {
+                // Get dealer_percentage and pieces_per_box for this product
+                $prodStmt = $pdo->prepare('SELECT pieces_per_box, dealer_percentage FROM products WHERE id=?');
+                $prodStmt->execute([$product_id]);
+                $prod = $prodStmt->fetch();
+
+                if ($prod) {
+                    $ppb = (float)($prod['pieces_per_box'] ?: 1);
+                    $dp  = (float)($prod['dealer_percentage'] ?: 0);
+                    // Same formula as lots: selling_price per piece = buying_price_per_box * (1 + dp/100) / ppb
+                    $selling_price_box   = $buying_price * (1 + ($dp / 100));
+                    $selling_price_piece = $selling_price_box / $ppb;
+
+                    $pdo->prepare('UPDATE products SET buying_price=?, selling_price=? WHERE id=?')
+                        ->execute([$buying_price, $selling_price_piece, $product_id]);
+                } else {
+                    $pdo->prepare('UPDATE products SET buying_price=? WHERE id=?')
+                        ->execute([$buying_price, $product_id]);
+                }
+                if (!$note) $note = 'Buying price updated to ৳' . number_format($buying_price, 2) . '/box';
             }
 
             // Only log if there's an actual change, OR if it's their very first time saving stock for this product (i.e. current was false)
