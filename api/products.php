@@ -175,10 +175,11 @@ switch ($method) {
                 echo json_encode(['success' => false, 'message' => 'No warehouse assigned to session.']);
                 exit;
             }
-            $product_id = (int)$d['id'];
-            $new_boxes  = (int)$d['qty_boxes'];
-            $new_pieces = (int)$d['qty_pieces'];
-            $note       = trim($d['note'] ?? '');
+            $product_id    = (int)$d['id'];
+            $new_boxes     = (int)$d['qty_boxes'];
+            $new_pieces    = (int)$d['qty_pieces'];
+            $note          = trim($d['note'] ?? '');
+            $selling_price = isset($d['selling_price']) ? floatval($d['selling_price']) : null;
             
             $stmt = $pdo->prepare('SELECT qty_boxes, qty_pieces FROM inventory WHERE product_id=? AND warehouse_id=?');
             $stmt->execute([$product_id, $wid]);
@@ -194,6 +195,13 @@ switch ($method) {
             $pdo->prepare('INSERT INTO inventory (product_id, warehouse_id, qty_boxes, qty_pieces) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE qty_boxes = VALUES(qty_boxes), qty_pieces = VALUES(qty_pieces)')
                 ->execute([$product_id, $wid, $new_boxes, $new_pieces]);
             
+            // Update selling price on the product if provided
+            if ($selling_price !== null && $selling_price >= 0) {
+                $pdo->prepare('UPDATE products SET selling_price=? WHERE id=?')
+                    ->execute([$selling_price, $product_id]);
+                if (!$note) $note = 'Price updated to ৳' . number_format($selling_price, 2);
+            }
+
             // Only log if there's an actual change, OR if it's their very first time saving stock for this product (i.e. current was false)
             if ($diff_b != 0 || $diff_p != 0 || !$current) {
                 logInventoryActivity($pdo, $product_id, $wid, 'edit_stock', null, $diff_b, $diff_p, $note ?: 'Initial stock confirmation');

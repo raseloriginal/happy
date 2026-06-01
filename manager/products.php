@@ -187,8 +187,15 @@ include __DIR__ . '/../includes/header.php';
         <div><label class="form-label">New Pieces *</label><input type="number" id="stock-new-p" class="form-input" required min="0" /></div>
       </div>
       <div>
+        <label class="form-label">Selling Price (৳) <span class="text-xs text-gray-400 font-normal">— update if price changed</span></label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">৳</span>
+          <input type="number" id="stock-selling-price" class="form-input pl-7" min="0" step="0.01" placeholder="0.00" />
+        </div>
+      </div>
+      <div>
         <label class="form-label">Note (Reason for change)</label>
-        <input id="stock-note" class="form-input" placeholder="e.g. Physical count correction, Damage, etc." />
+        <input id="stock-note" class="form-input" placeholder="e.g. Physical count correction, Damage, Price update, etc." />
       </div>
       <div class="flex gap-2 pt-2">
         <button type="submit" class="btn btn-primary flex-1">Save Stock</button>
@@ -373,18 +380,24 @@ function openStockModal(p) {
   document.getElementById('stock-curr-p').value = p.stock_pieces;
   document.getElementById('stock-new-b').value = p.stock_boxes;
   document.getElementById('stock-new-p').value = p.stock_pieces;
+  document.getElementById('stock-selling-price').value = p.selling_price ?? '';
   document.getElementById('stock-note').value = '';
   openModal('stock-modal');
 }
 
 document.getElementById('stock-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const data = await api('<?= rootPath() ?>/api/products.php?action=edit_stock', 'PUT', {
+  const sellingPrice = document.getElementById('stock-selling-price').value;
+  const payload = {
     id: document.getElementById('stock-id').value,
     qty_boxes: document.getElementById('stock-new-b').value,
     qty_pieces: document.getElementById('stock-new-p').value,
     note: document.getElementById('stock-note').value
-  });
+  };
+  if (sellingPrice !== '' && sellingPrice !== null) {
+    payload.selling_price = parseFloat(sellingPrice);
+  }
+  const data = await api('<?= rootPath() ?>/api/products.php?action=edit_stock', 'PUT', payload);
   if (data.success) { showToast('Stock updated!'); closeModal('stock-modal'); location.reload(); }
   else showToast(data.message || 'Error', 'error');
 });
