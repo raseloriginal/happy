@@ -1,23 +1,24 @@
 {
-  "name": "DSR Panel - Happy CRM",
+  "name": "DSR Sheet App — Happy Bangladesh",
   "short_name": "DSR Panel",
-  "description": "Mobile Application for Happy CRM DSR Panel",
-  "start_url": "./",
-  "display": "standalone",
+  "description": "Mobile field app for DSR delivery operations — Happy Bangladesh ERP",
+  "start_url": "/dsr/login",
+  "scope": "/dsr/",
+  "display": "browser",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "../assets/img/logo/pwa-icon-192.png",
+      "src": "/assets/img/logo/pwa-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "../assets/img/logo/pwa-icon-512.png",
+      "src": "/assets/img/logo/pwa-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }

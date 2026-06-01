@@ -1,6 +1,7 @@
 <?php
 // api/dsr_mobile.php — Backend REST API for DSR Mobile App
 header('Content-Type: application/json');
+date_default_timezone_set('Asia/Dhaka'); // Bangladesh Standard Time (UTC+6)
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../config/session.php';
 

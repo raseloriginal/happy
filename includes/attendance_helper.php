@@ -2,6 +2,8 @@
 // includes/attendance_helper.php — Attendance pre-generation and absent cutoff helper
 
 function autoGenerateAttendance($pdo) {
+    date_default_timezone_set('Asia/Dhaka'); // Bangladesh Standard Time (UTC+6)
+
     // Avoid double run if already done in this request
     static $run = false;
     if ($run) return;

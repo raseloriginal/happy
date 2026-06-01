@@ -16,8 +16,6 @@ if (isLoggedIn() && ($_SESSION['role'] ?? '') === 'dsr') {
   <title>DSR Sheet App Login — Happy Bangladesh</title>
   <meta name="description" content="Secure delivery staff login for Happy Bangladesh ERP" />
   
-  <!-- PWA Support -->
-  <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#000000" />
   <link rel="apple-touch-icon" href="../assets/img/logo/pwa-icon-192.png" />
   
@@ -310,14 +308,7 @@ if (isLoggedIn() && ($_SESSION['role'] ?? '') === 'dsr') {
       }
     });
 
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('DSR SW registered successfully:', reg.scope))
-          .catch(err => console.error('DSR SW registration failed:', err));
-      });
-    }
+    // Service worker is registered only after successful login (in index.php)
   </script>
 </body>
 </html>

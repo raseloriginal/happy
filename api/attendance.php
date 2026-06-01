@@ -4,6 +4,7 @@ require_once __DIR__ . '/../config/db.php';
 requireRole('manager');
 
 header('Content-Type: application/json');
+date_default_timezone_set('Asia/Dhaka'); // Bangladesh Standard Time (UTC+6)
 $pdo    = getDB();
 require_once __DIR__ . '/../includes/attendance_helper.php';
 autoGenerateAttendance($pdo);
