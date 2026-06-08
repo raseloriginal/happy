@@ -79,20 +79,54 @@ if ($action === 'complete' && $method === 'POST') {
     }
 
     $inQuery = implode(',', array_fill(0, count($sr_ids), '?'));
-    $ordersStmt = $pdo->prepare("SELECT id FROM orders WHERE sr_id IN ($inQuery) AND status='pending' ORDER BY id ASC");
+    $ordersStmt = $pdo->prepare("SELECT id, sr_id FROM orders WHERE sr_id IN ($inQuery) AND status='pending' ORDER BY id ASC");
     $ordersStmt->execute($sr_ids);
-    $pending_orders = $ordersStmt->fetchAll(PDO::FETCH_COLUMN);
+    $pending_orders_raw = $ordersStmt->fetchAll();
 
-    if (empty($pending_orders)) {
+    if (empty($pending_orders_raw)) {
         $pdo->rollBack();
         echo json_encode(['success' => false, 'message' => 'No pending orders found for selected SRs']);
         exit;
     }
 
-    $insertDispatch = $pdo->prepare('INSERT INTO dispatches (dsr_id, order_id, warehouse_id, manager_id, dispatch_date, status) VALUES (?,?,?,?,CURDATE(),"loaded")');
+    // ── Build set of product_ids that were actually scanned ──────────────────
+    $scannedProductIds = array_values(array_unique(array_column($scanned, 'product_id')));
+
+    // ── For each order, check if it has at least one scanned product ─────────
+    // Option A: Only dispatch orders whose products were scanned; leave rest pending
+    $pending_orders  = []; // order_ids to dispatch
+    $skipped_orders  = []; // order_ids to leave pending (no scans)
+
+    if (empty($scannedProductIds)) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'No products were scanned. Please scan at least one product box.']);
+        exit;
+    }
+
+    $pidIn = implode(',', array_fill(0, count($scannedProductIds), '?'));
+    foreach ($pending_orders_raw as $row) {
+        $oid = $row['id'];
+        $itemCheck = $pdo->prepare("SELECT COUNT(*) FROM order_items WHERE order_id=? AND product_id IN ($pidIn)");
+        $itemCheck->execute(array_merge([$oid], $scannedProductIds));
+        $matchCount = (int)$itemCheck->fetchColumn();
+
+        if ($matchCount > 0) {
+            $pending_orders[] = $oid;
+        } else {
+            $skipped_orders[] = $oid;
+        }
+    }
+
+    if (empty($pending_orders)) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'No scanned products matched any selected SR orders. Please scan at least one product box.']);
+        exit;
+    }
+
+    $insertDispatch     = $pdo->prepare('INSERT INTO dispatches (dsr_id, order_id, warehouse_id, manager_id, dispatch_date, status) VALUES (?,?,?,?,CURDATE(),"loaded")');
     $insertDispatchItem = $pdo->prepare('INSERT INTO dispatch_items (dispatch_id, order_id, qr_code_id, product_id, qty_out) VALUES (?,?,?,?,?)');
-    $updateQR = $pdo->prepare("UPDATE qr_codes SET status='dispatched', pieces_remaining=0 WHERE id=?");
-    $updateOrder = $pdo->prepare("UPDATE orders SET status='out_for_delivery' WHERE id=?");
+    $updateQR           = $pdo->prepare("UPDATE qr_codes SET status='dispatched', pieces_remaining=0 WHERE id=?");
+    $updateOrder        = $pdo->prepare("UPDATE orders SET status='out_for_delivery' WHERE id=?");
 
     $reqStmt = $pdo->prepare("SELECT order_id, product_id, qty_pieces FROM order_items WHERE order_id IN (" . implode(',', array_fill(0, count($pending_orders), '?')) . ")");
     $reqStmt->execute($pending_orders);
@@ -169,7 +203,14 @@ if ($action === 'complete' && $method === 'POST') {
 
     $pdo->commit();
 
-    echo json_encode(['success' => true, 'message' => 'Orders sent to van!']);
+    echo json_encode([
+        'success'          => true,
+        'message'          => 'Orders sent to van!',
+        'dispatched_count' => count($pending_orders),
+        'skipped_count'    => count($skipped_orders),
+        'dispatched_ids'   => $pending_orders,
+        'skipped_ids'      => $skipped_orders,
+    ]);
     exit;
 }
 

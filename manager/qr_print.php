@@ -159,7 +159,7 @@ async function loadStickers() {
     `;
 
     const canvas = document.createElement('canvas');
-    generateQRCanvas(canvas, qr.qr_uid, 80);
+    generateQRCanvas(canvas, qr.qr_uid, 80); // <--- CHANGE WEB PREVIEW QR SIZE HERE (80 is the width/height in pixels)
     div.querySelector('.sticker-qr-container').appendChild(canvas);
 
     grid.appendChild(div);
@@ -238,20 +238,76 @@ function renderBengaliText(text, fontSizePt, maxWidthMm, maxLines) {
   const finalLines = lines.slice(0, maxLines);
 
   // ---- draw ----
+  const paddingTopMm = 0.8; // Padding to prevent clipping of Bengali matras (e-kar, i-kar)
+  const paddingTopPx = Math.round(paddingTopMm * MM2PX);
+
   const c   = document.createElement('canvas');
   c.width   = maxWPx;
-  c.height  = lhPx * (finalLines.length || 1);
+  c.height  = (lhPx * (finalLines.length || 1)) + paddingTopPx;
   const ctx = c.getContext('2d');
   ctx.font        = `bold ${fPx}px 'Noto Sans Bengali', 'SolaimanLipi', sans-serif`;
   ctx.fillStyle   = '#000000';
   ctx.textBaseline = 'top';
-  finalLines.forEach((line, i) => ctx.fillText(line, 0, i * lhPx));
+  finalLines.forEach((line, i) => ctx.fillText(line, 0, paddingTopPx + (i * lhPx)));
 
   return {
     url   : c.toDataURL('image/png'),
     lines : finalLines.length,
-    lhMm              // height of one line in mm
+    lhMm  : lhMm + (paddingTopMm / (finalLines.length || 1)) // Distribute padding across lines to maintain exact aspect ratio
   };
+}
+
+function drawStickerToPDF(pdf, card, pageCount) {
+  const canvas = card.querySelector('canvas');
+  if (!canvas) return;
+  const qrData      = canvas.toDataURL('image/png');
+  const productName = card.querySelector('.sticker-product-name').innerText;
+  const qtyText     = card.querySelector('.sticker-qty').innerText;
+  const qrUid       = card.querySelector('.sticker-qr-uid').innerText;
+
+  if (pageCount > 0) pdf.addPage([38, 25], 'l');
+
+  // Draw QR Code (14mm x 14mm)
+  pdf.addImage(qrData, 'PNG', 1, 1, 18, 18); // <--- CHANGE PDF QR POSITION & SIZE HERE (1.5=X pos, 3.5=Y pos, 14=Width, 14=Height in mm)
+
+  // Draw QR UID under QR
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(qrUid, 11, 22, { align: 'center' });
+
+  // Right side constants
+  const textX     = 20;
+  const textWidth = 15;
+
+  // 1. Product Name — rendered by browser canvas for correct Bengali shaping
+  const nr     = renderBengaliText(productName, 6, textWidth, 3);
+  const nameY  = 1.5;  // Aligned with QR Code top (3.5mm)
+  const nameH  = nr.lines * nr.lhMm;
+  pdf.addImage(nr.url, 'PNG', textX, nameY, textWidth, nameH);
+  let currentY = nameY + nameH + 2;
+
+  // 2. Price
+  const priceText = card.querySelector('.sticker-price').innerText;
+  if (priceText) {
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(priceText, textX, currentY);
+    currentY += 4;
+  }
+
+  // 3. Qty — flows right after price
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(qtyText.split('\n')[0], textX, currentY);
+  currentY += 3;
+
+  // 4. Exp — flows right after Qty
+  const expText = card.querySelector('.sticker-exp').innerText;
+  if (expText) {
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(expText, textX, currentY);
+  }
 }
 
 async function downloadPDF() {
@@ -273,58 +329,8 @@ async function downloadPDF() {
     const card = cards[i];
     if (card.style.display === 'none') continue; // Skip filtered-out stickers!
 
-    const canvas = card.querySelector('canvas');
-    if (!canvas) continue;
-    const qrData      = canvas.toDataURL('image/png');
-    const productName = card.querySelector('.sticker-product-name').innerText;
-    const qtyText     = card.querySelector('.sticker-qty').innerText;
-    const qrUid       = card.querySelector('.sticker-qr-uid').innerText;
-
-    if (pageCount > 0) pdf.addPage([38, 25], 'l');
+    drawStickerToPDF(pdf, card, pageCount);
     pageCount++;
-
-
-
-    // Draw QR Code (14mm x 14mm)
-    pdf.addImage(qrData, 'PNG', 1.5, 3.5, 14, 14);
-
-    // Draw QR UID under QR
-    pdf.setFontSize(5.5);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(qrUid, 8.5, 19.5, { align: 'center' });
-
-    // Right side constants
-    const textX     = 17;
-    const textWidth = 19;
-
-    // 1. Product Name — rendered by browser canvas for correct Bengali shaping
-    const nr     = renderBengaliText(productName, 6, textWidth, 3);
-    const nameY  = 3.5;  // Aligned with QR Code top (3.5mm)
-    const nameH  = nr.lines * nr.lhMm;
-    pdf.addImage(nr.url, 'PNG', textX, nameY, textWidth, nameH);
-    let currentY = nameY + nameH + 2;
-
-    // 2. Price
-    const priceText = card.querySelector('.sticker-price').innerText;
-    if (priceText) {
-      pdf.setFontSize(7);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(priceText, textX, currentY);
-      currentY += 4;
-    }
-
-    // 3. Qty — flows right after price
-    pdf.setFontSize(6);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(qtyText.split('\n')[0], textX, currentY);
-    currentY += 3;
-
-    // 4. Exp — flows right after Qty
-    const expText = card.querySelector('.sticker-exp').innerText;
-    if (expText) {
-      pdf.setFontSize(6);
-      pdf.text(expText, textX, currentY);
-    }
   }
 
   const lotSelect = document.getElementById('lot-select');
@@ -359,14 +365,14 @@ function downloadDoc() {
         position: relative;
         overflow: hidden;
       }
-      .sticker-left { float: left; width: 16mm; height: 25mm; padding-top: 1.5mm; text-align: center; }
+      .sticker-left { float: left; width: 16mm; height: 25mm; padding-top: 1.5mm; text-align: center; } /* <--- CHANGE WORD DOC QR CONTAINER PADDING/WIDTH HERE */
       .sticker-right { float: left; width: 21mm; height: 25mm; padding-top: 2mm; padding-left: 1mm; }
       .sticker-product-name { font-size: 8.5pt; font-weight: bold; line-height: 1; color: #000; margin-bottom: 0.5mm; }
       .sticker-price { font-size: 7.5pt; font-weight: bold; color: #000; }
       .sticker-qty { font-size: 6pt; color: #111; margin-top: 2.5mm; line-height: 1; }
       .sticker-exp { font-size: 6pt; color: #111; line-height: 1; }
       .sticker-qr-uid { font-size: 5.5pt; font-weight: bold; margin-top: 0.5mm; color: #000; text-align: center; }
-      img.qr-code { width: 14mm; height: 14mm; display: block; margin: 0 auto; }
+      img.qr-code { width: 14mm; height: 14mm; display: block; margin: 0 auto; } /* <--- CHANGE WORD DOC QR SIZE & MARGIN HERE */
     </style>
     </head>
     <body><div class="Section1">

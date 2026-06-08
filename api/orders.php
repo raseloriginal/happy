@@ -6,6 +6,26 @@ require_once __DIR__ . '/../config/session.php';
 requireRole(['admin','manager']);
 
 $pdo    = getDB();
+
+// Auto-run migration if pending_approvals table is missing
+try {
+    $pdo->query("SELECT 1 FROM pending_approvals LIMIT 1");
+} catch (Exception $e) {
+    $sqlFile = __DIR__ . '/../database/migrations/007_pending_approvals.sql';
+    if (file_exists($sqlFile)) {
+        try {
+            $sql = file_get_contents($sqlFile);
+            $pdo->exec($sql);
+        } catch (Exception $ex) {
+            echo json_encode(['success' => false, 'message' => 'Auto-migration failed: ' . $ex->getMessage()]);
+            exit;
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Table pending_approvals is missing. Please run migrations.']);
+        exit;
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
@@ -203,26 +223,22 @@ switch ($method) {
             exit;
         }
 
-        $pdo->beginTransaction();
-
-        // 1. Fetch order details
-        $stmt = $pdo->prepare('SELECT * FROM orders WHERE id=?');
+        // Fetch order details first
+        $stmt = $pdo->prepare('SELECT o.*, u.name as sr_name FROM orders o JOIN sr s ON s.id=o.sr_id JOIN users u ON u.id=s.user_id WHERE o.id=?');
         $stmt->execute([$id]);
         $order = $stmt->fetch();
 
         if (!$order) {
             echo json_encode(['success' => false, 'message' => 'Order not found']);
-            $pdo->rollBack();
             exit;
         }
 
         if ($order['status'] === 'cancelled') {
             echo json_encode(['success' => true, 'message' => 'Order is already cancelled']);
-            $pdo->rollBack();
             exit;
         }
 
-        // 2. Prevent cancelling if already settled and approved
+        // Prevent cancelling if already settled and approved
         $settledCheck = $pdo->prepare("
             SELECT cs.id 
             FROM cash_settlements cs
@@ -232,9 +248,27 @@ switch ($method) {
         $settledCheck->execute([$id]);
         if ($settledCheck->fetchColumn()) {
             echo json_encode(['success' => false, 'message' => 'Cannot cancel an order that has already been settled and approved.']);
-            $pdo->rollBack();
             exit;
         }
+
+        if ($_SESSION['role'] === 'manager') {
+            // Check for duplicate pending request
+            $dup = $pdo->prepare("SELECT id FROM pending_approvals WHERE action_type='cancel_order' AND target_id=? AND status='pending'");
+            $dup->execute([$id]);
+            if ($dup->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'A pending cancellation request for this order already exists. Please wait for admin approval.']);
+                exit;
+            }
+
+            $summary = "Cancel Order #{$id} for SR {$order['sr_name']} (Retailer: " . ($order['retailer_name'] ?? 'N/A') . ")";
+            $ins = $pdo->prepare("INSERT INTO pending_approvals (action_type, target_id, payload, summary, requested_by) VALUES ('cancel_order', ?, ?, ?, ?)");
+            $ins->execute([$id, json_encode(['order_id' => $id]), $summary, $_SESSION['user_id']]);
+
+            echo json_encode(['success' => true, 'approval_pending' => true, 'message' => 'Cancellation request submitted for admin approval.']);
+            exit;
+        }
+
+        $pdo->beginTransaction();
 
         // 3. Resolve warehouse ID
         $wid = $_SESSION['warehouse_id'] ?? 0;

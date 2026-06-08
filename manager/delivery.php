@@ -101,10 +101,13 @@ include __DIR__ . '/../includes/header.php';
 <?php include __DIR__ . '/../includes/footer.php'; ?>
 <script>
 let orderItems   = [];   // [{product_id, product_name, required_boxes, scanned: 0}]
-let scannedBoxes = [];   // [{qr_id, product_id, qr_uid, pieces_total}]
+let scannedBoxes = [];   // [{qr_id, product_id, qr_uid, pieces_total, product_name}]
 
 // Load pending SRs on page load
 window.addEventListener('DOMContentLoaded', async () => {
+  // Restore any existing scans from session
+  scannedBoxes = loadScansFromSession();
+
   const data = await api('<?= rootPath() ?>/api/delivery.php?action=pending_srs');
   const container  = document.getElementById('sr-container');
   container.innerHTML = '';
@@ -124,16 +127,39 @@ function getSelectedSRs() {
     return Array.from(document.querySelectorAll('.sr-checkbox:checked')).map(cb => parseInt(cb.value));
 }
 
+// ── Session storage helpers ──────────────────────────────────────────────────
+const SCAN_STORAGE_KEY = 'delivery_scan_session';
+
+function saveScansToSession() {
+  try {
+    sessionStorage.setItem(SCAN_STORAGE_KEY, JSON.stringify(scannedBoxes));
+  } catch(e) {}
+}
+
+function loadScansFromSession() {
+  try {
+    const raw = sessionStorage.getItem(SCAN_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function clearScansFromSession() {
+  try { sessionStorage.removeItem(SCAN_STORAGE_KEY); } catch(e) {}
+}
+
 async function loadOrderItems() {
   const srIds = getSelectedSRs();
-  orderItems   = [];
-  scannedBoxes = [];
+  orderItems = [];
+  // ⚠️ Do NOT reset scannedBoxes — restore from sessionStorage instead
+  scannedBoxes = loadScansFromSession();
+
   document.getElementById('scan-log').innerHTML = '<div id="scan-log-placeholder" class="text-gray-400 text-xs">Scanned boxes will appear here</div>';
 
   if (srIds.length === 0) {
     document.getElementById('order-placeholder').style.display = 'block';
     document.getElementById('products-panel').style.display = 'none';
     document.getElementById('scan-btn').disabled = true;
+    rebuildScanLog();
     return;
   }
 
@@ -144,27 +170,59 @@ async function loadOrderItems() {
 
   (data.data || []).forEach(item => {
     const required = Math.ceil(item.qty_pieces / item.pieces_per_box);
-    orderItems.push({ product_id: item.product_id, product_name: item.product_name, required, scanned: 0, pieces_per_box: item.pieces_per_box });
+    // Count how many of this product are already in scannedBoxes
+    const alreadyScanned = scannedBoxes.filter(s => s.product_id == item.product_id).length;
+    orderItems.push({ product_id: item.product_id, product_name: item.product_name, required, scanned: alreadyScanned, pieces_per_box: item.pieces_per_box });
 
     const div = document.createElement('div');
     div.id    = 'prod-' + item.product_id;
     div.className = 'px-5 py-4';
+    const pct = Math.min((alreadyScanned / required) * 100, 100);
+    const isDone = alreadyScanned >= required;
     div.innerHTML = `
       <div class="flex items-center justify-between mb-2">
         <div class="font-medium text-gray-800">${item.product_name}</div>
-        <div class="text-sm text-gray-500"><span id="cnt-${item.product_id}">0</span> / ${required} boxes</div>
+        <div class="text-sm text-gray-500"><span id="cnt-${item.product_id}">${alreadyScanned}</span> / ${required} boxes</div>
       </div>
       <div class="progress-bar">
-        <div class="progress-fill" id="bar-${item.product_id}" style="width:0%"></div>
+        <div class="progress-fill ${isDone ? 'complete' : ''}" id="bar-${item.product_id}" style="width:${pct}%"></div>
       </div>
     `;
+    if (isDone) div.style.background = '#F0FDF4';
     list.appendChild(div);
   });
 
   document.getElementById('order-placeholder').style.display = 'none';
   document.getElementById('products-panel').style.display = 'block';
   document.getElementById('scan-btn').disabled = false;
+  rebuildScanLog();
   checkComplete();
+}
+
+// ── Rebuild scan log from current scannedBoxes array ────────────────────────
+function rebuildScanLog() {
+  const log = document.getElementById('scan-log');
+  log.innerHTML = '';
+  if (scannedBoxes.length === 0) {
+    log.innerHTML = '<div id="scan-log-placeholder" class="text-gray-400 text-xs">Scanned boxes will appear here</div>';
+    return;
+  }
+  [...scannedBoxes].reverse().forEach(box => {
+    const div = document.createElement('div');
+    div.className = 'flex items-center justify-between gap-2 py-1 border-b border-gray-50';
+    div.id = 'log-qr-' + box.qr_id;
+    div.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="text-green-500"><i class="fa-solid fa-check"></i></span>
+        <span class="font-mono text-xs">${box.qr_uid}</span>
+        <span class="text-gray-400 text-xs">${box.product_name || ''}</span>
+      </div>
+      <button type="button" onclick="undoScannedBox('${box.qr_id}', '${box.product_id}', '${box.qr_uid}')"
+        class="w-5 h-5 rounded bg-gray-100 hover:bg-red-50 text-red-500 flex items-center justify-center active:scale-75 transition ml-2 border border-gray-200" title="Undo Scan">
+        <i class="fa-solid fa-rotate-left text-[9px]"></i>
+      </button>`;
+    log.appendChild(div);
+  });
 }
 
 let isScanning = false;
@@ -175,7 +233,7 @@ async function processQRScan(uid) {
 
   // 1. Local Duplicate Check (Already fully scanned)
   if (scannedBoxes.some(s => s.qr_uid === uid)) {
-    // showToast('Already scanned: ' + uid, 'info');
+    showToast('Already scanned: ' + uid, 'info');
     return;
   }
 
@@ -199,7 +257,9 @@ async function processQRScan(uid) {
   }
 
   const qr = data.data;
-  scannedBoxes.push({ qr_id: qr.id, product_id: qr.product_id, qr_uid: uid, pieces_total: qr.pieces_total });
+  const newBox = { qr_id: qr.id, product_id: qr.product_id, qr_uid: uid, pieces_total: qr.pieces_total, product_name: qr.product_name };
+  scannedBoxes.push(newBox);
+  saveScansToSession(); // 💾 Persist immediately
 
   // Update product row
   const item = orderItems.find(i => i.product_id == qr.product_id);
@@ -261,6 +321,7 @@ function undoScannedBox(qrId, productId, uid) {
 
   // Remove from scannedBoxes array
   scannedBoxes.splice(idx, 1);
+  saveScansToSession(); // 💾 Update session
 
   // Update product row progress
   const item = orderItems.find(i => i.product_id == productId);
@@ -326,13 +387,18 @@ async function completeDelivery() {
   const srIds = getSelectedSRs();
   const dsrId = document.getElementById('dsr-select').value;
   if (!dsrId) { showToast('Select a DSR first', 'warning'); return; }
+  if (srIds.length === 0) { showToast('Select at least one SR first', 'warning'); return; }
 
-  // Warning check if not all boxes scanned
   const allDone = orderItems.length > 0 && orderItems.every(i => i.scanned >= i.required);
+
   if (!allDone) {
-    if (!confirm('Warning: You have not scanned all the ordered boxes for the selected SRs. Are you sure you want to complete this delivery dispatch with ONLY the scanned boxes? Unscanned boxes will not be loaded onto the van.')) {
-      return;
-    }
+    const unscannedItems = orderItems.filter(i => i.scanned === 0).map(i => i.product_name);
+    const partialItems   = orderItems.filter(i => i.scanned > 0 && i.scanned < i.required).map(i => i.product_name);
+    let warnMsg = 'Warning: Not all boxes have been scanned.\n\n';
+    if (unscannedItems.length > 0) warnMsg += `⚠ Not scanned at all: ${unscannedItems.join(', ')}\n`;
+    if (partialItems.length > 0)   warnMsg += `⚠ Partially scanned: ${partialItems.join(', ')}\n`;
+    warnMsg += '\nOnly SRs with at least one scanned product will be dispatched. SRs with zero scans will stay PENDING.\n\nContinue?';
+    if (!confirm(warnMsg)) return;
   }
 
   const btn = document.getElementById('complete-btn');
@@ -346,8 +412,13 @@ async function completeDelivery() {
   });
 
   if (data.success) {
-    showToast('Orders sent to van!');
-    setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/orders.php', 1500);
+    clearScansFromSession(); // ✅ Clear on success
+    const dispatched = data.dispatched_count || 0;
+    const skipped    = data.skipped_count || 0;
+    let msg = 'Orders sent to van!';
+    if (skipped > 0) msg += ` (${dispatched} dispatched, ${skipped} SR(s) had no scans — left pending)`;
+    showToast(msg, 'success');
+    setTimeout(() => window.location.href = '<?= rootPath() ?>/manager/orders.php', 2000);
   } else {
     showToast(data.message || 'Error', 'error');
     btn.disabled = false; btn.textContent = 'Complete — Send to Van';

@@ -152,7 +152,14 @@ include __DIR__ . '/../includes/header.php';
                 ?>
               </td>
               <td>
-                <button onclick="cancelOrder(<?= $o['order_id'] ?>)" class="btn btn-danger btn-sm">Cancel</button>
+                <div class="flex gap-1.5 justify-center">
+                  <?php if ($o['status'] === 'pending' || $o['status'] === 'out_for_delivery'): ?>
+                    <a href="<?= rootPath() ?>/manager/order_edit.php?id=<?= $o['order_id'] ?>" class="btn btn-indigo btn-sm py-1 px-2.5 text-xs"><i class="fa-solid fa-pen-to-square mr-1"></i>Edit</a>
+                  <?php endif; ?>
+                  <?php if ($o['status'] !== 'cancelled' && $o['status'] !== 'delivered'): ?>
+                    <button onclick="cancelOrder(<?= $o['order_id'] ?>)" class="btn btn-danger btn-sm py-1 px-2.5 text-xs"><i class="fa-solid fa-trash-can mr-1"></i>Cancel</button>
+                  <?php endif; ?>
+                </div>
               </td>
             </tr>
             <?php endforeach; ?>
@@ -295,7 +302,10 @@ window.addEventListener('DOMContentLoaded', () => {
 async function cancelOrder(id) {
   if (!confirmDelete('Cancel this order?')) return;
   const data = await api('<?= rootPath() ?>/api/orders.php?id=' + id, 'DELETE');
-  if (data.success) { showToast('Order cancelled'); location.reload(); }
+  if (data.success) {
+    showToast(data.message || 'Order cancelled');
+    setTimeout(() => location.reload(), 1500);
+  }
   else showToast(data.message || 'Error', 'error');
 }
 </script>

@@ -11,6 +11,7 @@ $totalRevenue  = $pdo->query("SELECT COALESCE(SUM(oi.qty_pieces * oi.unit_price)
 $activeDSRs    = $pdo->query("SELECT COUNT(*) FROM dsr WHERE status=1")->fetchColumn();
 $pendingRet    = $pdo->query("SELECT COUNT(*) FROM returns WHERE status='pending'")->fetchColumn();
 $stockValue    = $pdo->query("SELECT COALESCE(SUM( ((i.qty_boxes * GREATEST(p.pieces_per_box, 1)) + i.qty_pieces) * p.selling_price ),0) FROM inventory i JOIN products p ON p.id=i.product_id")->fetchColumn();
+$pendingApprovals = (int)$pdo->query("SELECT COUNT(*) FROM pending_approvals WHERE status='pending'")->fetchColumn();
 
 // Chart: orders last 7 days
 $ordersChart = $pdo->query("SELECT DATE(created_at) as d, COUNT(*) as c FROM orders WHERE created_at >= DATE_SUB(CURDATE(),INTERVAL 7 DAY) GROUP BY DATE(created_at) ORDER BY d")->fetchAll();
@@ -45,7 +46,7 @@ include __DIR__ . '/../includes/header.php';
       </div>
 
       <!-- Stat Cards (Compact) -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+      <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
         <div class="bg-white border border-gray-200 rounded-md p-3 shadow-sm flex items-center gap-3">
           <div class="w-10 h-10 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg"><i class="fa-solid fa-clipboard-list"></i></div>
           <div><div class="text-xs font-semibold text-gray-500 uppercase">Orders</div><div class="text-lg font-bold text-gray-800 leading-tight"><?= $totalOrders ?></div></div>
@@ -66,6 +67,10 @@ include __DIR__ . '/../includes/header.php';
           <div class="w-10 h-10 rounded bg-red-50 text-red-600 flex items-center justify-center text-lg"><i class="fa-solid fa-rotate-left"></i></div>
           <div><div class="text-xs font-semibold text-gray-500 uppercase">Returns</div><div class="text-lg font-bold text-gray-800 leading-tight"><?= $pendingRet ?></div></div>
         </div>
+        <a href="<?= rootPath() ?>/admin/approvals.php" class="bg-white border <?= $pendingApprovals > 0 ? 'border-amber-300 bg-amber-50' : 'border-gray-200' ?> rounded-md p-3 shadow-sm flex items-center gap-3 hover:shadow-md transition no-underline">
+          <div class="w-10 h-10 rounded <?= $pendingApprovals > 0 ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500' ?> flex items-center justify-center text-lg"><i class="fa-solid fa-check-double"></i></div>
+          <div><div class="text-xs font-semibold text-gray-500 uppercase">Approvals</div><div class="text-lg font-bold <?= $pendingApprovals > 0 ? 'text-amber-600' : 'text-gray-800' ?> leading-tight"><?= $pendingApprovals ?></div></div>
+        </a>
       </div>
 
       <!-- Charts Row -->

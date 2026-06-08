@@ -6,9 +6,20 @@ $role     = $_SESSION['role'] ?? '';
 $current  = $_SERVER['SCRIPT_NAME'] ?? '';
 $root     = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/..';
 
-function navLink(string $href, string $icon, string $label, string $current): string {
+// Pending approvals count for admin badge
+$_sidebar_pending_approvals = 0;
+if ($role === 'admin') {
+    try {
+        require_once __DIR__ . '/../config/db.php';
+        $_sidebar_pdo = getDB();
+        $_sidebar_pending_approvals = (int)$_sidebar_pdo->query("SELECT COUNT(*) FROM pending_approvals WHERE status='pending'")->fetchColumn();
+    } catch (Exception $e) { $_sidebar_pending_approvals = 0; }
+}
+
+function navLink(string $href, string $icon, string $label, string $current, string $badge = ''): string {
     $active = (strpos($current, $href) !== false) ? 'active' : '';
-    return '<a href="' . $href . '" class="sidebar-link ' . $active . '" title="' . $label . '"><span class="text-lg flex items-center justify-center w-6"><i class="' . $icon . '"></i></span><span class="sidebar-text">' . $label . '</span></a>';
+    $badgeHtml = $badge ? '<span class="ml-auto bg-amber-400 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">' . $badge . '</span>' : '';
+    return '<a href="' . $href . '" class="sidebar-link ' . $active . '" title="' . $label . '"><span class="text-lg flex items-center justify-center w-6"><i class="' . $icon . '"></i></span><span class="sidebar-text">' . $label . '</span>' . $badgeHtml . '</a>';
 }
 ?>
 <nav class="sidebar" id="app-sidebar">
@@ -42,6 +53,9 @@ function navLink(string $href, string $icon, string $label, string $current): st
 
       <div class="sidebar-section">Reports</div>
       <?= navLink(rootPath() . '/admin/reports.php', 'fa-solid fa-chart-bar', 'Reports', $current) ?>
+
+      <div class="sidebar-section">Approvals</div>
+      <?= navLink(rootPath() . '/admin/approvals.php', 'fa-solid fa-check-double', 'Approval Queue', $current, $_sidebar_pending_approvals > 0 ? (string)$_sidebar_pending_approvals : '') ?>
 
       <div class="sidebar-section">System</div>
       <?= navLink(rootPath() . '/admin/db_sync.php', 'fa-solid fa-sync', 'Database Sync', $current) ?>
